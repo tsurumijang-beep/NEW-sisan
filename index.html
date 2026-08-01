@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asset Management System</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Firebase SDK (사용자 키값 및 v12 버전 적용) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-analytics.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      deleteDoc, 
+      doc, 
+      onSnapshot, 
+      query, 
+      orderBy, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+    // 제공받은 Firebase 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0FpRSz2ygJFGS_dkrmD_bfEQDt2Z6mII",
+      authDomain: "sisan-kanri-657a6.firebaseapp.com",
+      projectId: "sisan-kanri-657a6",
+      storageBucket: "sisan-kanri-657a6.firebasestorage.app",
+      messagingSenderId: "323191644388",
+      appId: "1:323191644388:web:01bfc70d1d2e2dd70e8cf1",
+      measurementId: "G-PQ6ETSJWTJ"
+    };
+
+    // Firebase 초기화
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    // 전역 상태 변수
+    let savingsList = [];
+    let bankList = [];
+    let showBalance = false;
+
+    // 실시간 데이터 리스너 (Firestore Sync)
+    function initFirebaseListeners() {
+      // 積立投資 수신
+      const qSavings = query(collection(db, 'savings'), orderBy('createdAt', 'asc'));
+      onSnapshot(qSavings, (snapshot) => {
+        savingsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderSavingsTable();
+        calculateTotalAssets();
+      });
+
+      // 銀行預金 수신
+      const qBank = query(collection(db, 'bankAccounts'), orderBy('createdAt', 'asc'));
+      onSnapshot(qBank, (snapshot) => {
+        bankList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderBankList();
+        calculateTotalAssets();
+      });
+    }
+
+    // 화면 렌더링 함수들
+    function calculateTotalAssets() {
+      const savingsTotal = savingsList.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+      const bankTotal = bankList.reduce((sum, item) => sum + (Number(item.balance) || 0), 0);
+      const grandTotal = savingsTotal + bankTotal;
+
+      document.getElementById('grand-total').innerText = '¥' + grandTotal.toLocaleString();
+      document.getElementById('sub-savings-total').innerText = '積立: ¥' + savingsTotal.toLocaleString();
+      document.getElementById('sub-bank-total').innerText = '預金: ¥' + bankTotal.toLocaleString();
+    }
+
+    function renderSavingsTable() {
+      const tbody = document.getElementById('savings-tbody');
+      if (savingsList.length === 0) {
+        tbody.innerHTML = `<tr><td colSpan="8" class="py-8 text-center text-slate-400">データがありません。右上の「追加」ボタンから登録してください。</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = savingsList.map((item, idx) => `
+        <tr class="hover:bg-slate-50 border-b border-slate-100">
+          <td class="py-3 px-3 text-slate-400">${idx + 1}</td>
+          <td class="py-3 px-3 font-bold text-slate-800">${item.name}</td>
+          <td class="py-3 px-3 font-semibold text-slate-900">¥${Number(item.value).toLocaleString()}</td>
+          <td class="py-3 px-3 ${item.change?.startsWith('-') ? 'text-rose-500' : 'text-emerald-500'}">${item.change}</td>
+          <td class="py-3 px-3">¥${Number(item.monthly).toLocaleString()}</td>
+          <td class="py-3 px-3 text-slate-500">${item.startDate} ~</td>
+          <td class="py-3 px-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-50 text-emerald-600 font-medium">積立中</span>
+          </td>
+          <td class="py-3 px-3 text-center">
+            <button onclick="deleteSavingsItem('${item.id}')" class="text-slate-400 hover:text-rose-500">
+              <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function renderBankList() {
+      const container = document.getElementById('bank-list-container');
+      if (bankList.length === 0) {
+        container.innerHTML = `<p class="py-4 text-center text-slate-400 text-xs">登録された銀行口座がありません。</p>`;
+        return;
+      }
+
+      container.innerHTML = bankList.map(item => `
+        <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200">
+              ${item.bankName.slice(0, 1)}
+            </div>
+            <span class="text-xs font-semibold text-slate-700">${item.bankName}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-slate-800">
+              ${showBalance ? '¥' + Number(item.balance).toLocaleString() : '••••••••'}
+            </span>
+            <button onclick="deleteBankItem('${item.id}')" class="text-slate-400 hover:text-rose-500">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5 inline"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // 데이터 추가/삭제 이벤트 (전역 바인딩)
+    window.addSavingsItem = async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('savings-name').value;
+      const value = Number(document.getElementById('savings-value').value);
+      const monthly = Number(document.getElementById('savings-monthly').value);
+      const change = document.getElementById('savings-change').value;
+      const startDate = document.getElementById('savings-start').value;
+
+      await addDoc(collection(db, 'savings'), {
+        name, value, monthly, change, startDate,
+        createdAt: serverTimestamp()
+      });
+
+      closeModal('modal-savings');
+      document.getElementById('form-savings').reset();
+    };
+
+    window.addBankItem = async function(e) {
+      e.preventDefault();
+      const bankName = document.getElementById('bank-name').value;
+      const balance = Number(document.getElementById('bank-balance').value);
+
+      await addDoc(collection(db, 'bankAccounts'), {
+        bankName, balance,
+        createdAt: serverTimestamp()
+      });
+
+      closeModal('modal-bank');
+      document.getElementById('form-bank').reset();
+    };
+
+    window.deleteSavingsItem = async function(id) {
+      if (confirm('삭제하시겠습니까?')) await deleteDoc(doc(db, 'savings', id));
+    };
+
+    window.deleteBankItem = async function(id) {
+      if (confirm('삭제하시겠습니까?')) await deleteDoc(doc(db, 'bankAccounts', id));
+    };
+
+    window.toggleBankShow = function() {
+      showBalance = !showBalance;
+      renderBankList();
+    };
+
+    // DOM 로드 완료 시 실행
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initFirebaseListeners();
+    });
+  </script>
+
+  <script>
+    // 모달 open/close 용 일반 스크립트
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
+
+  <!-- 사이드바 -->
+  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between p-4">
+    <div>
+      <div class="flex items-center gap-2 mb-8 px-2">
+        <div class="p-2 bg-emerald-500 text-white rounded-lg">
+          <i data-lucide="trending-up" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-sm tracking-wider text-slate-900 leading-none">ASSET</h1>
+          <p class="text-[10px] text-slate-500 font-medium">MANAGEMENT SYSTEM</p>
+        </div>
+      </div>
+
+      <nav class="space-y-1 text-xs font-medium">
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-emerald-50 text-emerald-600">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> ダッシュボード
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
+          <i data-lucide="pie-chart" class="w-4 h-4"></i> 全投資資産
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
+          <i data-lucide="trending-up" class="w-4 h-4"></i> 資産推移 (グラフ)
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
+          <i data-lucide="piggy-bank" class="w-4 h-4"></i> 積立投資
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
+          <i data-lucide="briefcase" class="w-4 h-4"></i> 副業状況
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
+          <i data-lucide="building-2" class="w-4 h-4"></i> 銀行預金
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-3 bg-slate-100 rounded-xl flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">SH</div>
+      <div>
+        <p class="text-[10px] text-slate-400">Welcome back!</p>
+        <p class="text-xs font-bold">SUNGHO</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 메인 영역 -->
+  <main class="flex-1 overflow-y-auto p-8">
+    <header class="flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-900">ダッシュボード</h2>
+        <p class="text-xs text-slate-500">資産管理・運用 (Firebase 프로젝트 연동 완료)</p>
+      </div>
+      <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border text-xs text-slate-600">
+        <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+        <span>2026年8月1日 (土)</span>
+      </div>
+    </header>
+
+    <!-- 카드 영역 -->
+    <div class="grid grid-cols-12 gap-6 mb-6">
+      <div class="col-span-5 bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between">
+        <div>
+          <h3 class="font-bold text-slate-700 text-sm mb-1">全投資資産</h3>
+          <div id="grand-total" class="text-3xl font-extrabold text-slate-900 mb-1">¥0</div>
+          <div class="text-xs font-semibold text-emerald-500 mb-4">▲ +4.32% <span class="text-slate-400 font-normal">(前日比)</span></div>
+        </div>
+        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-500">
+          <div>
+            <p class="font-semibold text-slate-700 mb-0.5">ポートフォリオ</p>
+            <p class="text-[10px] text-slate-400">실시간 데이터 수신 중</p>
+          </div>
+          <div class="text-right font-medium">
+            <p id="sub-savings-total">積立: ¥0</p>
+            <p id="sub-bank-total">預金: ¥0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-span-7 bg-white p-6 rounded-2xl border border-slate-200">
+        <h3 class="font-bold text-slate-700 text-sm mb-4">資産推移（グラフ）</h3>
+        <div class="h-36 bg-emerald-50/50 rounded-xl flex items-center justify-center border border-dashed border-emerald-200 text-emerald-700 text-xs font-medium">
+          📈 [Firebase sisan-kanri-657a6 프로젝트 연동 성공]
+        </div>
+      </div>
+    </div>
+
+    <!-- 積立投資 테이블 -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-slate-700 text-sm">積立投資</h3>
+        <button onclick="openModal('modal-savings')" class="bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-emerald-600">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> 項目追加
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-500 border-b">
+            <tr>
+              <th class="py-2.5 px-3">No.</th>
+              <th class="py-2.5 px-3">サービス名</th>
+              <th class="py-2.5 px-3">評価額</th>
+              <th class="py-2.5 px-3">損益 (率)</th>
+              <th class="py-2.5 px-3">積立額 / 月</th>
+              <th class="py-2.5 px-3">積立開始</th>
+              <th class="py-2.5 px-3 text-center">ステータス</th>
+              <th class="py-2.5 px-3 text-center">操作</th>
+            </tr>
+          </thead>
+          <tbody id="savings-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 하단 은행 / 부업 영역 -->
+    <div class="grid grid-cols-12 gap-6">
+      <div class="col-span-7 bg-white p-6 rounded-2xl border border-slate-200">
+        <h3 class="font-bold text-slate-700 text-sm mb-4">副業状況</h3>
+        <div class="grid grid-cols-3 gap-3">
+          <div class="p-3 rounded-xl bg-slate-50 border">
+            <p class="text-xs font-semibold text-slate-700">メルカリ</p>
+            <p class="text-base font-bold text-slate-900 mt-1">¥85,000</p>
+            <p class="text-[10px] text-emerald-500 font-medium">▲ 18% (前月比)</p>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 border">
+            <p class="text-xs font-semibold text-slate-700">FX売買</p>
+            <p class="text-base font-bold text-slate-900 mt-1">¥235,000</p>
+            <p class="text-[10px] text-emerald-500 font-medium">▲ 22% (前月比)</p>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 border">
+            <p class="text-xs font-semibold text-slate-700">コンテンツ</p>
+            <p class="text-base font-bold text-slate-900 mt-1">¥52,000</p>
+            <p class="text-[10px] text-emerald-500 font-medium">▲ 12% (前月比)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-span-5 bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-slate-700 text-sm">銀行預金</h3>
+            <button onclick="openModal('modal-bank')" class="text-xs bg-emerald-500 text-white px-2.5 py-1 rounded-lg flex items-center gap-1">
+              <i data-lucide="plus" class="w-3 h-3"></i> 追加
+            </button>
+          </div>
+          <div id="bank-list-container" class="space-y-2"></div>
+        </div>
+        <button onclick="toggleBankShow()" class="w-full mt-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
+          잔액 표시 / 숨기기
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 모달: 積立投資 追加 -->
+  <div id="modal-savings" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl relative">
+      <button onclick="closeModal('modal-savings')" class="absolute top-4 right-4 text-slate-400">✕</button>
+      <h3 class="font-bold text-slate-900 mb-4 text-sm">積立投資の追加</h3>
+      <form id="form-savings" onsubmit="addSavingsItem(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block mb-1 text-slate-600 font-medium">サービス名</label>
+          <input type="text" id="savings-name" required placeholder="예: 楽天NISA" class="w-full border p-2 rounded-lg">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block mb-1 text-slate-600 font-medium">評価額 (¥)</label>
+            <input type="number" id="savings-value" required placeholder="3520000" class="w-full border p-2 rounded-lg">
+          </div>
+          <div>
+            <label class="block mb-1 text-slate-600 font-medium">毎月積立 (¥)</label>
+            <input type="number" id="savings-monthly" required placeholder="50000" class="w-full border p-2 rounded-lg">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block mb-1 text-slate-600 font-medium">損益率</label>
+            <input type="text" id="savings-change" value="+0.00%" class="w-full border p-2 rounded-lg">
+          </div>
+          <div>
+            <label class="block mb-1 text-slate-600 font-medium">開始年月</label>
+            <input type="text" id="savings-start" value="2024/01" class="w-full border p-2 rounded-lg">
+          </div>
+        </div>
+        <button type="submit" class="w-full py-2 bg-emerald-500 text-white font-bold rounded-lg mt-2">保存する</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 모달: 銀行口座 追加 -->
+  <div id="modal-bank" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl relative">
+      <button onclick="closeModal('modal-bank')" class="absolute top-4 right-4 text-slate-400">✕</button>
+      <h3 class="font-bold text-slate-900 mb-4 text-sm">銀行口座の追加</h3>
+      <form id="form-bank" onsubmit="addBankItem(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block mb-1 text-slate-600 font-medium">銀行名</label>
+          <input type="text" id="bank-name" required placeholder="예: 楽天銀行" class="w-full border p-2 rounded-lg">
+        </div>
+        <div>
+          <label class="block mb-1 text-slate-600 font-medium">預金残高 (¥)</label>
+          <input type="number" id="bank-balance" required placeholder="1200000" class="w-full border p-2 rounded-lg">
+        </div>
+        <button type="submit" class="w-full py-2 bg-emerald-500 text-white font-bold rounded-lg mt-2">保存する</button>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
