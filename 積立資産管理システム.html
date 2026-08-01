@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>マルチ資産 積立投資 自動資産管理システム</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            padding-bottom: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            font-size: 1.1rem;
+            color: #1a365d;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .filter-header-container, .lang-select-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-header-container label, .lang-select-container label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #2b6cb0;
+            white-space: nowrap;
+        }
+
+        .filter-header-container select, .lang-select-container select {
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 12px;
+            border: 1px solid var(--primary-color);
+            background-color: #f7fafc;
+            cursor: pointer;
+        }
+
+        /* 📱 모바일 전용 탭 메뉴 */
+        .tab-nav {
+            display: flex;
+            background: #e2e8f0;
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: #2b6cb0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 레이아웃 구조 */
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 14px;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card h2 {
+            font-size: 0.95rem;
+            margin: 0 0 10px 0;
+            color: #2b6cb0;
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 6px;
+        }
+
+        .form-group {
+            margin-bottom: 8px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #4a5568;
+        }
+
+        input[type="text"], input[type="date"], input[type="number"], select {
+            width: 100%;
+            height: 38px;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background-color: #fff;
+        }
+
+        .asset-item-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+
+        .asset-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .asset-title {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #2d3748;
+        }
+
+        .btn-remove-asset {
+            background-color: #e53e3e;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .btn-add-asset {
+            background-color: #319795;
+            color: white;
+            border: none;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        button.btn-primary {
+            width: 100%;
+            height: 38px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .summary-box {
+            background-color: #f8fafc;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .summary-box .label {
+            font-size: 0.75rem;
+            color: #718096;
+        }
+
+        .summary-box .value {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+
+        .positive { color: var(--success-color); }
+        .negative { color: var(--danger-color); }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 500px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            min-width: 400px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px 6px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.8rem;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background-color: #edf2f7;
+            color: #4a5568;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) {
+            text-align: center;
+        }
+
+        .asset-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .edit-btn, .delete-btn {
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .edit-btn { background-color: #feebc8; color: #dd6b20; }
+        .delete-btn { background-color: #fed7d7; color: #c53030; }
+
+        /* 💻 PC 반응형 스타일 */
+        @media (min-width: 1024px) {
+            header {
+                margin-bottom: 16px;
+            }
+
+            .tab-nav {
+                display: none;
+            }
+
+            .main-layout {
+                display: grid;
+                grid-template-columns: 1fr 1.1fr 1fr;
+                gap: 16px;
+                align-items: start;
+            }
+
+            .tab-content {
+                display: flex !important;
+            }
+
+            .chart-container {
+                height: 380px;
+            }
+
+            .table-scroll {
+                max-height: calc(100vh - 180px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <header>
+        <h1 data-i18n="title">📈 積立投資 自動資産管理</h1>
+        <div class="header-controls">
+            <div class="filter-header-container">
+                <label for="viewFilter" data-i18n="viewFilterLabel">🔍 表示対象:</label>
+                <select id="viewFilter" onchange="updateCalculations()">
+                    <option value="ALL" data-i18n="allAssets">全資産（合計）</option>
+                </select>
+            </div>
+            <!-- 언어 선택 메뉴 (일/영/한/중/스페인어) -->
+            <div class="lang-select-container">
+                <label for="langSelect">🌐</label>
+                <select id="langSelect" onchange="changeLanguage(this.value)">
+                    <option value="ja">日本語</option>
+                    <option value="en">English</option>
+                    <option value="ko">한국어</option>
+                    <option value="zh">中文</option>
+                    <option value="es">Español</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- 📱 모바일 탭 메뉴 -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('tab-summary', this)" data-i18n="tabSummary">📊 サマリー</button>
+        <button class="tab-btn" onclick="switchTab('tab-input', this)" data-i18n="tabInput">📝 記録・設定</button>
+        <button class="tab-btn" onclick="switchTab('tab-history', this)" data-i18n="tabHistory">📜 履歴</button>
+    </nav>
+
+    <div class="main-layout">
+        <!-- 1열 (PC) / 탭 1 (모바일): 요약 & 그래프 -->
+        <div id="tab-summary" class="tab-content active">
+            <div class="card">
+                <h2 data-i18n="sec1Title">1. リアルタイム全般状況</h2>
+                <div class="summary-grid">
+                    <div class="summary-box">
+                        <div class="label" data-i18n="lblDays">経過期間</div>
+                        <div class="value" id="summaryDays">0日</div>
+                    </div>
+                    <div class="summary-box">
+                        <div class="label" data-i18n="lblPrincipal">累計投資元本</div>
+                        <div class="value" id="summaryPrincipal">0 円</div>
+                    </div>
+                    <div class="summary-box">
+                        <div class="label" data-i18n="lblEval">最新評価額</div>
+                        <div class="value" id="summaryEval">0 円</div>
+                    </div>
+                    <div class="summary-box">
+                        <div class="label" data-i18n="lblProfit">評価損益 (率)</div>
+                        <div class="value" id="summaryProfit">0 円</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 data-i18n="sec2Title">2. 資産成長推移グラフ</h2>
+                <div class="chart-container">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2열 (PC) / 탭 2 (모바일): 기록 & 설정 -->
+        <div id="tab-input" class="tab-content">
+            <div class="card">
+                <h2 data-i18n="sec3Title">3. 評価額の記録・編集</h2>
+                <div class="form-group">
+                    <label for="recordAssetSelect" data-i18n="lblTargetAsset">対象資産</label>
+                    <select id="recordAssetSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label for="recordDate" data-i18n="lblRecordDate">記録日</label>
+                    <input type="date" id="recordDate">
+                </div>
+                <div class="form-group">
+                    <label for="evalAmt" data-i18n="lblCurrentEval">現在の評価額 (円)</label>
+                    <input type="number" id="evalAmt" inputmode="numeric" placeholder="例: 320000" step="10000">
+                </div>
+                <button id="saveBtn" class="btn-primary" onclick="addRecord()" data-i18n="btnSaveRecord">記録を保存</button>
+                <button id="cancelBtn" onclick="cancelEdit()" style="display:none; background-color: #a0aec0; color: white; border:none; height: 38px; border-radius:8px; width:100%; margin-top:6px; font-weight:bold; cursor:pointer; font-size: 0.85rem;" data-i18n="btnCancel">キャンセル</button>
+            </div>
+
+            <div class="card">
+                <h2 data-i18n="sec4Title">4. 投資ルール設定（資産別）</h2>
+                <div id="assetsConfigContainer"></div>
+                <button class="btn-add-asset" onclick="addNewAssetRule()" data-i18n="btnAddAsset">+ 資産を追加する</button>
+            </div>
+        </div>
+
+        <!-- 3열 (PC) / 탭 3 (모바일): 내역 -->
+        <div id="tab-history" class="tab-content">
+            <div class="card">
+                <h2 data-i18n="sec5Title">5. 投資記録履歴</h2>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="thAsset">資産</th>
+                                <th data-i18n="thDate">日付</th>
+                                <th data-i18n="thPrincipal">元本</th>
+                                <th data-i18n="thEval">評価額</th>
+                                <th data-i18n="thProfit">損益</th>
+                                <th data-i18n="thRate">率</th>
+                                <th data-i18n="thAction">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🌐 다국어 사전 (i18n) - ja, en, ko, zh, es
+    const i18n = {
+        ja: {
+            title: "📈 積立投資 自動資産管理",
+            viewFilterLabel: "🔍 表示対象:",
+            allAssets: "全資産（合計）",
+            tabSummary: "📊 サマリー",
+            tabInput: "📝 記録・設定",
+            tabHistory: "📜 履歴",
+            sec1Title: "1. リアルタイム全般状況",
+            lblDays: "経過期間",
+            lblPrincipal: "累計投資元本",
+            lblEval: "最新評価額",
+            lblProfit: "評価損益 (率)",
+            sec2Title: "2. 資産成長推移グラフ",
+            sec3Title: "3. 評価額の記録・編集",
+            lblTargetAsset: "対象資産",
+            lblRecordDate: "記録日",
+            lblCurrentEval: "現在の評価額 (円)",
+            btnSaveRecord: "記録を保存",
+            btnUpdateRecord: "変更を更新",
+            btnCancel: "キャンセル",
+            sec4Title: "4. 投資ルール設定（資産別）",
+            btnAddAsset: "+ 資産を追加する",
+            sec5Title: "5. 投資記録履歴",
+            thAsset: "資産",
+            thDate: "日付",
+            thPrincipal: "元本",
+            thEval: "評価額",
+            thProfit: "損益",
+            thRate: "率",
+            thAction: "操作",
+            chartPrincipal: "累計元本",
+            chartEval: "評価額",
+            btnEdit: "編集",
+            btnDelete: "削除",
+            lblDaily: "日(円)",
+            lblWeekly: "週(円)",
+            lblMonthly: "月(円)",
+            unitDays: "日",
+            unitMonths: "ヶ月",
+            confirmDeleteAsset: "この資産ルールを削除しますか？",
+            confirmDeleteRecord: "この記録を削除してもよろしいですか？",
+            alertFillInput: "正しい資産、日付、および評価額を入力してください。"
+        },
+        en: {
+            title: "📈 DCA Auto Asset Tracker",
+            viewFilterLabel: "🔍 Target:",
+            allAssets: "All Assets (Total)",
+            tabSummary: "📊 Summary",
+            tabInput: "📝 Record/Config",
+            tabHistory: "📜 History",
+            sec1Title: "1. Overall Status",
+            lblDays: "Elapsed Time",
+            lblPrincipal: "Total Principal",
+            lblEval: "Current Value",
+            lblProfit: "Profit/Loss (%)",
+            sec2Title: "2. Asset Growth Chart",
+            sec3Title: "3. Record Valuation",
+            lblTargetAsset: "Asset",
+            lblRecordDate: "Date",
+            lblCurrentEval: "Current Value (JPY)",
+            btnSaveRecord: "Save Record",
+            btnUpdateRecord: "Update Record",
+            btnCancel: "Cancel",
+            sec4Title: "4. Investment Rules (By Asset)",
+            btnAddAsset: "+ Add New Asset",
+            sec5Title: "5. History",
+            thAsset: "Asset",
+            thDate: "Date",
+            thPrincipal: "Principal",
+            thEval: "Value",
+            thProfit: "Profit/Loss",
+            thRate: "Rate",
+            thAction: "Action",
+            chartPrincipal: "Total Principal",
+            chartEval: "Valuation",
+            btnEdit: "Edit",
+            btnDelete: "Delete",
+            lblDaily: "Daily",
+            lblWeekly: "Weekly",
+            lblMonthly: "Monthly",
+            unitDays: "days",
+            unitMonths: "mos",
+            confirmDeleteAsset: "Are you sure you want to delete this asset rule?",
+            confirmDeleteRecord: "Are you sure you want to delete this record?",
+            alertFillInput: "Please enter a valid asset, date, and valuation amount."
+        },
+        ko: {
+            title: "📈 적립식 투자 自動 자산 관리",
+            viewFilterLabel: "🔍 표시 대상:",
+            allAssets: "전체 자산 (합계)",
+            tabSummary: "📊 요약",
+            tabInput: "📝 기록/설정",
+            tabHistory: "📜 내역",
+            sec1Title: "1. 실시간 종합 현황",
+            lblDays: "경과 기간",
+            lblPrincipal: "누적 투자 원금",
+            lblEval: "최신 평가액",
+            lblProfit: "평가 손익 (수익률)",
+            sec2Title: "2. 자산 성장 추이 그래프",
+            sec3Title: "3. 평가액 기록·수정",
+            lblTargetAsset: "대상 자산",
+            lblRecordDate: "기록일",
+            lblCurrentEval: "현재 평가액 (円)",
+            btnSaveRecord: "기록 저장",
+            btnUpdateRecord: "변경사항 업데이트",
+            btnCancel: "취소",
+            sec4Title: "4. 투자 규칙 설정 (자산별)",
+            btnAddAsset: "+ 자산 추가하기",
+            sec5Title: "5. 투자 기록 내역",
+            thAsset: "자산",
+            thDate: "날짜",
+            thPrincipal: "원금",
+            thEval: "평가액",
+            thProfit: "손익",
+            thRate: "수익률",
+            thAction: "관리",
+            chartPrincipal: "누적 원금",
+            chartEval: "평가액",
+            btnEdit: "수정",
+            btnDelete: "삭제",
+            lblDaily: "일(円)",
+            lblWeekly: "주(円)",
+            lblMonthly: "월(円)",
+            unitDays: "일",
+            unitMonths: "개월",
+            confirmDeleteAsset: "이 자산 규칙을 삭제하시겠습니까?",
+            confirmDeleteRecord: "이 기록을 삭제하시겠습니까?",
+            alertFillInput: "올바른 자산, 날짜 및 평가액을 입력해 주세요."
+        },
+        zh: {
+            title: "📈 定投自动资产管理系统",
+            viewFilterLabel: "🔍 显示对象:",
+            allAssets: "全部资产 (合计)",
+            tabSummary: "📊 概要",
+            tabInput: "📝 记录/设置",
+            tabHistory: "📜 历史记录",
+            sec1Title: "1. 实时综合状况",
+            lblDays: "已用时间",
+            lblPrincipal: "累计投资本金",
+            lblEval: "最新评估额",
+            lblProfit: "评估损益 (收益率)",
+            sec2Title: "2. 资产增长趋势图",
+            sec3Title: "3. 记录·编辑评估额",
+            lblTargetAsset: "目标资产",
+            lblRecordDate: "记录日期",
+            lblCurrentEval: "当前评估额 (日元)",
+            btnSaveRecord: "保存记录",
+            btnUpdateRecord: "更新修改",
+            btnCancel: "取消",
+            sec4Title: "4. 投资规则设置 (按资产)",
+            btnAddAsset: "+ 添加新资产",
+            sec5Title: "5. 投资记录历史",
+            thAsset: "资产",
+            thDate: "日期",
+            thPrincipal: "本金",
+            thEval: "评估额",
+            thProfit: "损益",
+            thRate: "收益率",
+            thAction: "操作",
+            chartPrincipal: "累计本金",
+            chartEval: "评估额",
+            btnEdit: "编辑",
+            btnDelete: "删除",
+            lblDaily: "日(日元)",
+            lblWeekly: "周(日元)",
+            lblMonthly: "月(日元)",
+            unitDays: "天",
+            unitMonths: "个月",
+            confirmDeleteAsset: "确定要删除此资产规则吗？",
+            confirmDeleteRecord: "确定要删除此记录吗？",
+            alertFillInput: "请输入有效的资产、日期和评估金额。"
+        },
+        es: {
+            title: "📈 Control de Activos Inversión DCA",
+            viewFilterLabel: "🔍 Mostrar:",
+            allAssets: "Todos los activos (Total)",
+            tabSummary: "📊 Resumen",
+            tabInput: "📝 Registro/Config",
+            tabHistory: "📜 Historial",
+            sec1Title: "1. Estado General en Tiempo Real",
+            lblDays: "Tiempo Transcurrido",
+            lblPrincipal: "Capital Total Invertido",
+            lblEval: "Valor Actual",
+            lblProfit: "Ganancia/Pérdida (%)",
+            sec2Title: "2. Gráfico de Crecimiento de Activos",
+            sec3Title: "3. Registrar/Editar Valoración",
+            lblTargetAsset: "Activo",
+            lblRecordDate: "Fecha de Registro",
+            lblCurrentEval: "Valor Actual (JPY)",
+            btnSaveRecord: "Guardar Registro",
+            btnUpdateRecord: "Actualizar Registro",
+            btnCancel: "Cancelar",
+            sec4Title: "4. Reglas de Inversión (Por Activo)",
+            btnAddAsset: "+ Agregar Nuevo Activo",
+            sec5Title: "5. Historial de Registros",
+            thAsset: "Activo",
+            thDate: "Fecha",
+            thPrincipal: "Capital",
+            thEval: "Valor",
+            thProfit: "Ganancia/Pérdida",
+            thRate: "Tasa (%)",
+            thAction: "Acción",
+            chartPrincipal: "Capital Acumulado",
+            chartEval: "Valoración",
+            btnEdit: "Editar",
+            btnDelete: "Eliminar",
+            lblDaily: "Diario",
+            lblWeekly: "Semanal",
+            lblMonthly: "Mensual",
+            unitDays: "días",
+            unitMonths: "meses",
+            confirmDeleteAsset: "¿Está seguro de eliminar esta regla de activo?",
+            confirmDeleteRecord: "¿Está seguro de eliminar este registro?",
+            alertFillInput: "Por favor ingrese un activo, fecha y monto válidos."
+        }
+    };
+
+    let currentLang = localStorage.getItem('dca_app_lang') || 'ja';
+
+    const STORAGE_ASSETS_KEY = 'dca_assets_config_v3';
+    const STORAGE_RECORDS_KEY = 'dca_investment_records_v3';
+
+    let assetRules = JSON.parse(localStorage.getItem(STORAGE_ASSETS_KEY)) || [
+        { id: 'asset_1', name: 'オルカン (S&P500)', startDate: '2026-01-01', daily: 0, weekly: 0, monthly: 50000 },
+        { id: 'asset_2', name: 'ビットコイン / Crypto', startDate: '2026-01-01', daily: 1000, weekly: 0, monthly: 0 }
+    ];
+
+    let records = JSON.parse(localStorage.getItem(STORAGE_RECORDS_KEY)) || [
+        { assetId: 'asset_1', date: '2026-01-01', evalAmt: 0 },
+        { assetId: 'asset_1', date: '2026-04-01', evalAmt: 155000 },
+        { assetId: 'asset_1', date: '2026-08-01', evalAmt: 365000 },
+        { assetId: 'asset_2', date: '2026-01-01', evalAmt: 0 },
+        { assetId: 'asset_2', date: '2026-04-01', evalAmt: 100000 },
+        { assetId: 'asset_2', date: '2026-08-01', evalAmt: 240000 }
+    ];
+
+    let editingIndex = -1;
+    let chartInstance = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('langSelect').value = currentLang;
+        document.getElementById('recordDate').valueAsDate = new Date();
+        
+        applyLanguageUI();
+        renderAssetRulesInputs();
+        updateAssetDropdowns();
+        initChart();
+        updateCalculations();
+        
+        if (chartInstance) {
+            setTimeout(() => chartInstance.resize(), 100);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (chartInstance) {
+            chartInstance.resize();
+        }
+    });
+
+    function changeLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('dca_app_lang', lang);
+        applyLanguageUI();
+        renderAssetRulesInputs();
+        updateAssetDropdowns();
+        updateCalculations();
+    }
+
+    function applyLanguageUI() {
+        const dict = i18n[currentLang];
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (dict[key]) {
+                el.innerText = dict[key];
+            }
+        });
+    }
+
+    function switchTab(tabId, btnElement) {
+        if (window.innerWidth >= 1024) return;
+        
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        btnElement.classList.add('active');
+
+        if (tabId === 'tab-summary' && chartInstance) {
+            setTimeout(() => chartInstance.resize(), 50);
+        }
+    }
+
+    function saveAssetRules() {
+        localStorage.setItem(STORAGE_ASSETS_KEY, JSON.stringify(assetRules));
+        updateAssetDropdowns();
+        updateCalculations();
+    }
+
+    function renderAssetRulesInputs() {
+        const container = document.getElementById('assetsConfigContainer');
+        const dict = i18n[currentLang];
+        container.innerHTML = '';
+
+        assetRules.forEach((asset, idx) => {
+            const card = document.createElement('div');
+            card.className = 'asset-item-card';
+            card.innerHTML = `
+                <div class="asset-item-header">
+                    <span class="asset-title">${dict.thAsset} #${idx + 1}</span>
+                    ${assetRules.length > 1 ? `<button class="btn-remove-asset" onclick="removeAssetRule(${idx})">${dict.btnDelete}</button>` : ''}
+                </div>
+                <div class="form-group">
+                    <input type="text" value="${asset.name}" placeholder="Name" onchange="updateAssetRuleField(${idx}, 'name', this.value)">
+                </div>
+                <div class="form-group">
+                    <input type="date" value="${asset.startDate}" onchange="updateAssetRuleField(${idx}, 'startDate', this.value)">
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
+                    <div>
+                        <label>${dict.lblDaily}</label>
+                        <input type="number" inputmode="numeric" value="${asset.daily}" oninput="updateAssetRuleField(${idx}, 'daily', parseFloat(this.value)||0)">
+                    </div>
+                    <div>
+                        <label>${dict.lblWeekly}</label>
+                        <input type="number" inputmode="numeric" value="${asset.weekly}" oninput="updateAssetRuleField(${idx}, 'weekly', parseFloat(this.value)||0)">
+                    </div>
+                    <div>
+                        <label>${dict.lblMonthly}</label>
+                        <input type="number" inputmode="numeric" value="${asset.monthly}" oninput="updateAssetRuleField(${idx}, 'monthly', parseFloat(this.value)||0)">
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function updateAssetRuleField(index, field, value) {
+        assetRules[index][field] = value;
+        saveAssetRules();
+    }
+
+    function addNewAssetRule() {
+        const newId = 'asset_' + Date.now();
+        assetRules.push({
+            id: newId,
+            name: `Asset ${assetRules.length + 1}`,
+            startDate: '2026-01-01',
+            daily: 0,
+            weekly: 0,
+            monthly: 30000
+        });
+        renderAssetRulesInputs();
+        saveAssetRules();
+    }
+
+    function removeAssetRule(index) {
+        if (confirm(`${assetRules[index].name}: ${i18n[currentLang].confirmDeleteAsset}`)) {
+            assetRules.splice(index, 1);
+            renderAssetRulesInputs();
+            saveAssetRules();
+        }
+    }
+
+    function updateAssetDropdowns() {
+        const recordSelect = document.getElementById('recordAssetSelect');
+        const viewFilter = document.getElementById('viewFilter');
+        const dict = i18n[currentLang];
+
+        const currentRecordAsset = recordSelect.value;
+        const currentViewFilter = viewFilter.value;
+
+        recordSelect.innerHTML = '';
+        viewFilter.innerHTML = `<option value="ALL">${dict.allAssets}</option>`;
+
+        assetRules.forEach(asset => {
+            const opt1 = document.createElement('option');
+            opt1.value = asset.id;
+            opt1.innerText = asset.name;
+            recordSelect.appendChild(opt1);
+
+            const opt2 = document.createElement('option');
+            opt2.value = asset.id;
+            opt2.innerText = asset.name;
+            viewFilter.appendChild(opt2);
+        });
+
+        if (assetRules.some(a => a.id === currentRecordAsset)) {
+            recordSelect.value = currentRecordAsset;
+        }
+        if (currentViewFilter === 'ALL' || assetRules.some(a => a.id === currentViewFilter)) {
+            viewFilter.value = currentViewFilter;
+        }
+    }
+
+    function formatDateShort(dateStr) {
+        const d = new Date(dateStr + 'T00:00:00');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${month}/${day}`;
+    }
+
+    function calculatePrincipalForAsset(asset, targetDateStr) {
+        const start = new Date(asset.startDate + 'T00:00:00');
+        const target = new Date(targetDateStr + 'T00:00:00');
+        if (target < start) return 0;
+
+        const diffDays = Math.floor((target - start) / (1000 * 60 * 60 * 24));
+        const diffWeeks = Math.floor(diffDays / 7);
+
+        let diffMonths = (target.getFullYear() - start.getFullYear()) * 12 + (target.getMonth() - start.getMonth());
+        if (target.getDate() < start.getDate()) diffMonths--;
+        diffMonths = Math.max(0, diffMonths);
+
+        return (diffDays * asset.daily) + (diffWeeks * asset.weekly) + (diffMonths * asset.monthly);
+    }
+
+    function formatJPY(val) {
+        return new Intl.NumberFormat('ja-JP').format(Math.round(val)) + '円';
+    }
+
+    function addRecord() {
+        const dict = i18n[currentLang];
+        const assetId = document.getElementById('recordAssetSelect').value;
+        const date = document.getElementById('recordDate').value;
+        const evalAmt = parseFloat(document.getElementById('evalAmt').value);
+
+        if (!assetId || !date || isNaN(evalAmt)) {
+            alert(dict.alertFillInput);
+            return;
+        }
+
+        if (editingIndex >= 0) {
+            records[editingIndex] = { assetId, date, evalAmt };
+            editingIndex = -1;
+            resetEditForm();
+        } else {
+            const existingIdx = records.findIndex(r => r.assetId === assetId && r.date === date);
+            if (existingIdx >= 0) {
+                records[existingIdx].evalAmt = evalAmt;
+            } else {
+                records.push({ assetId, date, evalAmt });
+            }
+        }
+
+        records.sort((a, b) => new Date(a.date) - new Date(b.date));
+        saveAndRenderRecords();
+        document.getElementById('evalAmt').value = '';
+
+        if (window.innerWidth < 1024) {
+            switchTab('tab-summary', document.querySelectorAll('.tab-btn')[0]);
+        }
+    }
+
+    function editRecord(index) {
+        const dict = i18n[currentLang];
+        editingIndex = index;
+        const rec = records[index];
+        document.getElementById('recordAssetSelect').value = rec.assetId;
+        document.getElementById('recordDate').value = rec.date;
+        document.getElementById('evalAmt').value = rec.evalAmt;
+        
+        document.getElementById('saveBtn').innerText = dict.btnUpdateRecord;
+        document.getElementById('cancelBtn').style.display = 'block';
+
+        if (window.innerWidth < 1024) {
+            switchTab('tab-input', document.querySelectorAll('.tab-btn')[1]);
+        }
+    }
+
+    function cancelEdit() {
+        editingIndex = -1;
+        resetEditForm();
+        document.getElementById('evalAmt').value = '';
+    }
+
+    function resetEditForm() {
+        const dict = i18n[currentLang];
+        document.getElementById('saveBtn').innerText = dict.btnSaveRecord;
+        document.getElementById('cancelBtn').style.display = 'none';
+        document.getElementById('recordDate').valueAsDate = new Date();
+    }
+
+    function deleteRecord(index) {
+        const dict = i18n[currentLang];
+        if (confirm(dict.confirmDeleteRecord)) {
+            if (editingIndex === index) cancelEdit();
+            records.splice(index, 1);
+            saveAndRenderRecords();
+        }
+    }
+
+    function saveAndRenderRecords() {
+        localStorage.setItem(STORAGE_RECORDS_KEY, JSON.stringify(records));
+        updateCalculations();
+    }
+
+    function updateCalculations() {
+        const selectedFilter = document.getElementById('viewFilter').value;
+        const tableBody = document.getElementById('historyTableBody');
+        const dict = i18n[currentLang];
+        tableBody.innerHTML = '';
+
+        const filteredRecords = selectedFilter === 'ALL' 
+            ? [...records] 
+            : records.filter(r => r.assetId === selectedFilter);
+
+        filteredRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        filteredRecords.forEach((rec) => {
+            const asset = assetRules.find(a => a.id === rec.assetId);
+            if (!asset) return;
+
+            const principal = calculatePrincipalForAsset(asset, rec.date);
+            const profit = rec.evalAmt - principal;
+            const rate = principal > 0 ? ((profit / principal) * 100).toFixed(1) : '0.0';
+
+            const rawRecordIndex = records.indexOf(rec);
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><span class="asset-badge">${asset.name}</span></td>
+                <td>${formatDateShort(rec.date)}</td>
+                <td>${formatJPY(principal)}</td>
+                <td>${formatJPY(rec.evalAmt)}</td>
+                <td class="${profit >= 0 ? 'positive' : 'negative'}">${formatJPY(profit)}</td>
+                <td class="${profit >= 0 ? 'positive' : 'negative'}">${rate}%</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="edit-btn" onclick="editRecord(${rawRecordIndex})">${dict.btnEdit}</button>
+                        <button class="delete-btn" onclick="deleteRecord(${rawRecordIndex})">${dict.btnDelete}</button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        buildSummaryAndChartData(selectedFilter);
+    }
+
+    function buildSummaryAndChartData(filterAssetId) {
+        const dict = i18n[currentLang];
+        const filteredRecords = filterAssetId === 'ALL' 
+            ? records 
+            : records.filter(r => r.assetId === filterAssetId);
+
+        const uniqueDates = [...new Set(filteredRecords.map(r => r.date))].sort((a, b) => new Date(a) - new Date(b));
+
+        const chartLabels = [];
+        const principalSeries = [];
+        var evalSeries = [];
+
+        let latestPrincipal = 0;
+        let latestEval = 0;
+        let latestDateStr = null;
+
+        uniqueDates.forEach(dateStr => {
+            let dayPrincipalTotal = 0;
+            let dayEvalTotal = 0;
+            let hasData = false;
+
+            const activeAssets = filterAssetId === 'ALL' 
+                ? assetRules 
+                : assetRules.filter(a => a.id === filterAssetId);
+
+            activeAssets.forEach(asset => {
+                const p = calculatePrincipalForAsset(asset, dateStr);
+                const assetRecs = records.filter(r => r.assetId === asset.id && r.date <= dateStr).sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                if (assetRecs.length > 0) {
+                    dayPrincipalTotal += p;
+                    dayEvalTotal += assetRecs[0].evalAmt;
+                    hasData = true;
+                }
+            });
+
+            if (hasData) {
+                chartLabels.push(formatDateShort(dateStr));
+                principalSeries.push(dayPrincipalTotal);
+                evalSeries.push(dayEvalTotal);
+
+                latestPrincipal = dayPrincipalTotal;
+                latestEval = dayEvalTotal;
+                latestDateStr = dateStr;
+            }
+        });
+
+        if (latestDateStr && assetRules.length > 0) {
+            let startDateStr;
+            if (filterAssetId === 'ALL') {
+                startDateStr = assetRules.reduce((earliest, a) => a.startDate < earliest ? a.startDate : earliest, assetRules[0].startDate);
+            } else {
+                const targetAsset = assetRules.find(a => a.id === filterAssetId);
+                startDateStr = targetAsset ? targetAsset.startDate : assetRules[0].startDate;
+            }
+
+            const start = new Date(startDateStr + 'T00:00:00');
+            const end = new Date(latestDateStr + 'T00:00:00');
+            const diffDays = Math.max(0, Math.floor((end - start) / (1000 * 60 * 60 * 24)));
+            const diffMonths = Math.max(0, (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()));
+
+            document.getElementById('summaryDays').innerText = `${diffDays}${dict.unitDays} (${diffMonths}${dict.unitMonths})`;
+            document.getElementById('summaryPrincipal').innerText = formatJPY(latestPrincipal);
+            document.getElementById('summaryEval').innerText = formatJPY(latestEval);
+
+            const totalProfit = latestEval - latestPrincipal;
+            const totalRate = latestPrincipal > 0 ? ((totalProfit / latestPrincipal) * 100).toFixed(2) : '0.00';
+            const profitElem = document.getElementById('summaryProfit');
+            profitElem.innerText = `${formatJPY(totalProfit)} (${totalRate}%)`;
+            profitElem.className = `value ${totalProfit >= 0 ? 'positive' : 'negative'}`;
+        } else {
+            document.getElementById('summaryDays').innerText = `0${dict.unitDays}`;
+            document.getElementById('summaryPrincipal').innerText = '0 円';
+            document.getElementById('summaryEval').innerText = '0 円';
+            document.getElementById('summaryProfit').innerText = '0 円 (0.00%)';
+        }
+
+        updateChart(chartLabels, principalSeries, evalSeries);
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        const dict = i18n[currentLang];
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: dict.chartPrincipal,
+                        data: [],
+                        borderColor: '#718096',
+                        backgroundColor: 'rgba(113, 128, 150, 0.1)',
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.2
+                    },
+                    {
+                        label: dict.chartEval,
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.15)',
+                        fill: true,
+                        tension: 0.2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 9 },
+                            callback: value => value.toLocaleString('ja-JP') + '円'
+                        }
+                    },
+                    x: {
+                        ticks: { font: { size: 9 } }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateChart(labels, principalData, evalData) {
+        if (!chartInstance) return;
+        const dict = i18n[currentLang];
+        
+        const latestEval = evalData[evalData.length - 1] || 0;
+        const latestPrincipal = principalData[principalData.length - 1] || 0;
+        const isProfit = latestEval >= latestPrincipal;
+
+        const borderColor = isProfit ? '#3498db' : '#e74c3c';
+        const backgroundColor = isProfit ? 'rgba(52, 152, 219, 0.15)' : 'rgba(231, 76, 60, 0.15)';
+
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].label = dict.chartPrincipal;
+        chartInstance.data.datasets[0].data = principalData;
+        
+        chartInstance.data.datasets[1].label = dict.chartEval;
+        chartInstance.data.datasets[1].data = evalData;
+        chartInstance.data.datasets[1].borderColor = borderColor;
+        chartInstance.data.datasets[1].backgroundColor = backgroundColor;
+
+        chartInstance.update();
+    }
+</script>
+</body>
+</html>
