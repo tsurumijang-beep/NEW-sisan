@@ -1,476 +1,1092 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asset Management System</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASSET MANAGEMENT SYSTEM</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#f4f6f9;
+  --sidebar:#111826;
+  --sidebar-hover:#1c2536;
+  --green:#17b26a;
+  --green-dark:#0e9f5c;
+  --green-soft:#e7f8ef;
+  --red:#ef4444;
+  --red-soft:#fdecec;
+  --purple:#8b5cf6;
+  --purple-soft:#f1ebfe;
+  --blue:#2563eb;
+  --blue-soft:#e9f0fe;
+  --text:#111827;
+  --text-sub:#6b7280;
+  --text-faint:#9ca3af;
+  --border:#e8eaee;
+  --card:#ffffff;
+  --radius:18px;
+  --radius-sm:12px;
+  --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.04);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+a{text-decoration:none;color:inherit;}
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+/* ===== Layout ===== */
+#app{display:none;}
+.layout{display:flex;min-height:100vh;}
 
-  <!-- Firebase SDK (v12) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-analytics.js";
-    import { 
-      getFirestore, 
-      collection, 
-      addDoc, 
-      deleteDoc, 
-      doc, 
-      onSnapshot, 
-      query, 
-      orderBy, 
-      serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+/* ===== Sidebar ===== */
+.sidebar{
+  width:250px;flex-shrink:0;background:var(--sidebar);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:26px 22px 22px;}
+.brand-icon{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,var(--green),#0a7a45);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.brand-icon svg{width:18px;height:18px;}
+.brand-text{color:#fff;font-size:12.5px;font-weight:800;line-height:1.35;letter-spacing:.02em;}
+.brand-text small{display:block;font-size:9.5px;color:#7c879c;font-weight:600;letter-spacing:.08em;}
 
-    // Firebase 설정
-    const firebaseConfig = {
-      apiKey: "AIzaSyA0FpRSz2ygJFGS_dkrmD_bfEQDt2Z6mII",
-      authDomain: "sisan-kanri-657a6.firebaseapp.com",
-      projectId: "sisan-kanri-657a6",
-      storageBucket: "sisan-kanri-657a6.firebasestorage.app",
-      messagingSenderId: "323191644388",
-      appId: "1:323191644388:web:01bfc70d1d2e2dd70e8cf1",
-      measurementId: "G-PQ6ETSJWTJ"
-    };
+.nav{padding:8px 14px;display:flex;flex-direction:column;gap:2px;flex:1;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:11px;color:#aab2c5;
+  font-size:14px;font-weight:600;border:none;background:transparent;
+  width:100%;text-align:left;transition:background .15s,color .15s;
+}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.85;}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff;}
+.nav-item.active{background:var(--green);color:#fff;}
+.nav-item.active svg{opacity:1;}
 
-    // Firebase 초기화
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
+.sidebar-footer{padding:14px;border-top:1px solid #1f2734;}
+.profile-card{
+  display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;
+  background:var(--sidebar-hover);
+}
+.avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--green),#0a7a45);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;
+}
+.profile-meta{flex:1;min-width:0;}
+.profile-meta .hello{font-size:10.5px;color:#8992a6;}
+.profile-meta .name{font-size:13px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.logout-btn{background:none;border:none;color:#8992a6;padding:4px;flex-shrink:0;}
+.logout-btn svg{width:16px;height:16px;}
+.logout-btn:hover{color:#fff;}
 
-    // 전역 상태 변수
-    let savingsList = [];
-    let bankList = [];
-    let showBalance = false;
-    let assetChart = null;
+/* ===== Main ===== */
+.main{margin-left:250px;flex:1;min-width:0;padding:26px 32px 60px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.page-title{font-size:22px;font-weight:800;margin:0;}
+.page-sub{font-size:13px;color:var(--text-sub);margin:4px 0 0;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.icon-btn{
+  position:relative;width:38px;height:38px;border-radius:11px;background:#fff;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);
+}
+.icon-btn svg{width:17px;height:17px;color:var(--text-sub);}
+.dot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--red);border:1.5px solid #fff;}
+.date-pill{
+  display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);
+  border-radius:11px;padding:9px 14px;font-size:13px;font-weight:600;box-shadow:var(--shadow);color:var(--text);
+}
+.date-pill svg{width:15px;height:15px;color:var(--text-sub);}
 
-    // 1. 실시간 데이터 리스너 (Firestore Sync)
-    function initFirebaseListeners() {
-      // 積立投資 수신
-      const qSavings = query(collection(db, 'savings'), orderBy('createdAt', 'asc'));
-      onSnapshot(qSavings, (snapshot) => {
-        savingsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderSavingsTable();
-        calculateTotalAssets();
-      });
+/* ===== Cards / grid ===== */
+.grid{display:grid;gap:20px;}
+.grid-2{grid-template-columns:1.15fr 1.85fr;}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-1-2{grid-template-columns:1fr 1fr;}
+@media(max-width:1100px){.grid-2,.grid-1-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}}
 
-      // 銀行預金 수신
-      const qBank = query(collection(db, 'bankAccounts'), orderBy('createdAt', 'asc'));
-      onSnapshot(qBank, (snapshot) => {
-        bankList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderBankList();
-        calculateTotalAssets();
-      });
-    }
+.card{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-size:14.5px;font-weight:800;margin:0;}
+.link-more{font-size:12.5px;color:var(--text-sub);font-weight:600;display:flex;align-items:center;gap:3px;background:none;border:none;}
+.link-more:hover{color:var(--green-dark);}
+.link-more svg{width:13px;height:13px;}
 
-    // 2. 자산 합계 계산 및 차트 업데이트
-    function calculateTotalAssets() {
-      const savingsTotal = savingsList.reduce((sum, item) => sum + (Number(item.value) || 0), 0);
-      const bankTotal = bankList.reduce((sum, item) => sum + (Number(item.balance) || 0), 0);
-      const grandTotal = savingsTotal + bankTotal;
+/* total asset card */
+.total-amount{font-size:32px;font-weight:800;letter-spacing:-.5px;margin:2px 0 6px;}
+.change-badge{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.change-up{color:var(--green-dark);background:var(--green-soft);}
+.change-down{color:var(--red);background:var(--red-soft);}
+.mini-chart-wrap{margin-top:14px;height:80px;}
+.portfolio-mini{
+  margin-top:16px;border:1px solid var(--border);border-radius:14px;padding:14px;
+  display:flex;flex-direction:column;align-items:flex-start;gap:10px;background:#fafbfc;
+}
+.portfolio-mini .p-icon{
+  width:34px;height:34px;border-radius:10px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;
+}
+.portfolio-mini .p-icon svg{width:17px;height:17px;color:var(--green-dark);}
+.portfolio-mini .p-title{font-size:13px;font-weight:700;}
+.portfolio-mini .p-link{font-size:12px;color:var(--text-sub);font-weight:600;display:flex;align-items:center;gap:3px;}
 
-      document.getElementById('grand-total').innerText = '¥' + grandTotal.toLocaleString();
-      document.getElementById('sub-savings-total').innerText = '積立: ¥' + savingsTotal.toLocaleString();
-      document.getElementById('sub-bank-total').innerText = '預金: ¥' + bankTotal.toLocaleString();
+/* trend chart card */
+.period-toggle{display:flex;gap:4px;background:#f2f3f6;padding:4px;border-radius:10px;}
+.period-toggle button{
+  border:none;background:transparent;font-size:12px;font-weight:700;color:var(--text-sub);
+  padding:6px 11px;border-radius:8px;
+}
+.period-toggle button.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(16,24,40,.08);}
+.trend-chart-wrap{height:280px;position:relative;}
 
-      // 차트의 마지막 달(현재) 데이터 갱신
-      if (assetChart) {
-        assetChart.data.datasets[0].data[assetChart.data.datasets[0].data.length - 1] = grandTotal;
-        assetChart.update();
-      }
-    }
+/* table */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{
+  text-align:left;color:var(--text-faint);font-weight:700;font-size:11.5px;text-transform:none;
+  padding:0 10px 10px;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+td{padding:13px 10px;border-bottom:1px solid #f1f2f5;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+.svc-cell{display:flex;align-items:center;gap:9px;font-weight:700;}
+.svc-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0;}
+.up{color:var(--green-dark);font-weight:700;}
+.down{color:var(--red);font-weight:700;}
+.badge{padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;}
+.badge-green{background:var(--green-soft);color:var(--green-dark);}
+.badge-gray{background:#eef0f3;color:var(--text-sub);}
+.row-actions{display:flex;gap:6px;}
+.row-actions button{border:none;background:#f2f3f6;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.row-actions button svg{width:13px;height:13px;color:var(--text-sub);}
+.row-actions button:hover{background:#e6e8ec;}
 
-    // 3. Chart.js 자산 추이 그래프 렌더링
-    function initChart() {
-      const ctx = document.getElementById('assetChart').getContext('2d');
-      
-      // 배경 그라데이션 효과
-      const gradient = ctx.createLinearGradient(0, 0, 0, 160);
-      gradient.addColorStop(0, 'rgba(16, 185, 129, 0.25)');
-      gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+/* bottom grid */
+.side-card{border-radius:16px;padding:18px;color:#fff;position:relative;overflow:hidden;}
+.side-card .sc-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.side-card .sc-icon{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.side-card .sc-name{font-weight:800;font-size:13.5px;}
+.side-card .sc-label{font-size:11.5px;opacity:.85;margin-bottom:4px;}
+.side-card .sc-amount{font-size:21px;font-weight:800;margin-bottom:8px;}
+.side-card .sc-change{font-size:11.5px;font-weight:700;background:rgba(255,255,255,.2);display:inline-block;padding:3px 8px;border-radius:20px;}
+.side-card .sc-spark{height:40px;margin-top:10px;}
+.sc-red{background:linear-gradient(135deg,#ff8a8a,#ef4444);}
+.sc-purple{background:linear-gradient(135deg,#a78bfa,#7c3aed);}
+.sc-blue{background:linear-gradient(135deg,#60a5fa,#2563eb);}
+.sc-green{background:linear-gradient(135deg,#4ade80,#16a34a);}
+.sc-amber{background:linear-gradient(135deg,#fbbf24,#d97706);}
 
-      assetChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['3月', '4月', '5月', '6月', '7月', '8月'],
-          datasets: [{
-            label: '総資産 (円)',
-            data: [3200000, 3500000, 3800000, 4100000, 4400000, 0], // 마지막 항목은 실시간 연동값
-            borderColor: '#10b981',
-            borderWidth: 2.5,
-            backgroundColor: gradient,
-            fill: true,
-            tension: 0.35,
-            pointBackgroundColor: '#10b981',
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return ' 총자산: ¥' + context.parsed.y.toLocaleString();
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { font: { size: 10 }, color: '#94a3b8' }
-            },
-            y: {
-              border: { dash: [4, 4] },
-              grid: { color: '#f1f5f9' },
-              ticks: {
-                font: { size: 10 },
-                color: '#94a3b8',
-                callback: function(value) {
-                  return '¥' + (value / 10000) + '万';
-                }
-              }
-            }
-          }
-        }
-      });
-    }
+.bank-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid #f1f2f5;}
+.bank-row:last-of-type{border-bottom:none;}
+.bank-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;flex-shrink:0;}
+.bank-name{font-weight:700;font-size:13.5px;flex:1;}
+.bank-balance{font-family:monospace;letter-spacing:1px;color:var(--text-sub);font-size:13px;}
+.eye-btn{
+  display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--text-sub);
+  background:#f2f3f6;border:none;padding:6px 11px;border-radius:20px;
+}
+.eye-btn svg{width:13px;height:13px;}
+.eye-btn:hover{background:#e6e8ec;}
 
-    // 4. 테이블 및 리스트 렌더링
-    function renderSavingsTable() {
-      const tbody = document.getElementById('savings-tbody');
-      if (savingsList.length === 0) {
-        tbody.innerHTML = `<tr><td colSpan="8" class="py-8 text-center text-slate-400">データがありません。右上の「追加」ボタンから登録してください。</td></tr>`;
-        return;
-      }
+.add-btn{
+  display:flex;align-items:center;gap:6px;background:var(--green);color:#fff;border:none;
+  padding:9px 15px;border-radius:11px;font-size:12.5px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.06);
+}
+.add-btn:hover{background:var(--green-dark);}
+.add-btn svg{width:14px;height:14px;}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text-faint);font-size:13px;}
+.empty-state svg{width:34px;height:34px;margin-bottom:10px;color:#d3d7de;}
 
-      tbody.innerHTML = savingsList.map((item, idx) => `
-        <tr class="hover:bg-slate-50 border-b border-slate-100">
-          <td class="py-3 px-3 text-slate-400">${idx + 1}</td>
-          <td class="py-3 px-3 font-bold text-slate-800">${item.name}</td>
-          <td class="py-3 px-3 font-semibold text-slate-900">¥${Number(item.value).toLocaleString()}</td>
-          <td class="py-3 px-3 ${item.change?.startsWith('-') ? 'text-rose-500' : 'text-emerald-500'}">${item.change}</td>
-          <td class="py-3 px-3">¥${Number(item.monthly).toLocaleString()}</td>
-          <td class="py-3 px-3 text-slate-500">${item.startDate} ~</td>
-          <td class="py-3 px-3 text-center">
-            <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-50 text-emerald-600 font-medium">積立中</span>
-          </td>
-          <td class="py-3 px-3 text-center">
-            <button onclick="deleteSavingsItem('${item.id}')" class="text-slate-400 hover:text-rose-500">
-              <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
-      lucide.createIcons();
-    }
+/* Auth / gate screens */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px;}
+.gate-box{width:100%;max-width:420px;background:#fff;border-radius:20px;padding:36px 32px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.gate-logo{display:flex;align-items:center;gap:10px;margin-bottom:26px;}
+.gate-title{font-size:18px;font-weight:800;margin:0 0 6px;}
+.gate-sub{font-size:13px;color:var(--text-sub);margin:0 0 22px;line-height:1.6;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--text-sub);margin-bottom:6px;}
+.field input,.field textarea,.field select{
+  width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--border);font-size:13.5px;background:#fbfbfc;
+}
+.field textarea{font-family:monospace;font-size:12px;min-height:110px;resize:vertical;}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--green);background:#fff;}
+.gate-btn{
+  width:100%;background:var(--green);color:#fff;border:none;padding:12px;border-radius:11px;
+  font-weight:700;font-size:14px;margin-top:6px;
+}
+.gate-btn:hover{background:var(--green-dark);}
+.gate-btn.secondary{background:#f2f3f6;color:var(--text);margin-top:8px;}
+.gate-btn.secondary:hover{background:#e6e8ec;}
+.gate-switch{text-align:center;margin-top:16px;font-size:12.5px;color:var(--text-sub);}
+.gate-switch button{background:none;border:none;color:var(--green-dark);font-weight:700;}
+.gate-error{background:var(--red-soft);color:var(--red);font-size:12.5px;padding:10px 12px;border-radius:10px;margin-bottom:14px;font-weight:600;}
+.gate-note{font-size:11.5px;color:var(--text-faint);margin-top:16px;line-height:1.7;background:#fafbfc;border:1px dashed var(--border);padding:10px 12px;border-radius:10px;}
 
-    function renderBankList() {
-      const container = document.getElementById('bank-list-container');
-      if (bankList.length === 0) {
-        container.innerHTML = `<p class="py-4 text-center text-slate-400 text-xs">登録された銀行口座がありません。</p>`;
-        return;
-      }
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(15,20,30,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:#fff;border-radius:18px;width:100%;max-width:440px;padding:26px;max-height:90vh;overflow-y:auto;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-size:16px;font-weight:800;margin:0;}
+.modal-close{border:none;background:#f2f3f6;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.modal-close svg{width:14px;height:14px;}
+.modal-actions{display:flex;gap:8px;margin-top:18px;}
+.modal-actions .gate-btn{margin-top:0;}
+.modal-actions .danger{background:var(--red-soft);color:var(--red);}
 
-      container.innerHTML = bankList.map(item => `
-        <div class="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50">
-          <div class="flex items-center gap-3">
-            <div class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center border border-slate-200">
-              ${item.bankName.slice(0, 1)}
-            </div>
-            <span class="text-xs font-semibold text-slate-700">${item.bankName}</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-xs font-bold text-slate-800">
-              ${showBalance ? '¥' + Number(item.balance).toLocaleString() : '••••••••'}
-            </span>
-            <button onclick="deleteBankItem('${item.id}')" class="text-slate-400 hover:text-rose-500">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5 inline"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
-      lucide.createIcons();
-    }
-
-    // 5. 데이터 추가/삭제 핸들러
-    window.addSavingsItem = async function(e) {
-      e.preventDefault();
-      const name = document.getElementById('savings-name').value;
-      const value = Number(document.getElementById('savings-value').value);
-      const monthly = Number(document.getElementById('savings-monthly').value);
-      const change = document.getElementById('savings-change').value;
-      const startDate = document.getElementById('savings-start').value;
-
-      await addDoc(collection(db, 'savings'), {
-        name, value, monthly, change, startDate,
-        createdAt: serverTimestamp()
-      });
-
-      closeModal('modal-savings');
-      document.getElementById('form-savings').reset();
-    };
-
-    window.addBankItem = async function(e) {
-      e.preventDefault();
-      const bankName = document.getElementById('bank-name').value;
-      const balance = Number(document.getElementById('bank-balance').value);
-
-      await addDoc(collection(db, 'bankAccounts'), {
-        bankName, balance,
-        createdAt: serverTimestamp()
-      });
-
-      closeModal('modal-bank');
-      document.getElementById('form-bank').reset();
-    };
-
-    window.deleteSavingsItem = async function(id) {
-      if (confirm('삭제하시겠습니까?')) await deleteDoc(doc(db, 'savings', id));
-    };
-
-    window.deleteBankItem = async function(id) {
-      if (confirm('삭제하시겠습니까?')) await deleteDoc(doc(db, 'bankAccounts', id));
-    };
-
-    window.toggleBankShow = function() {
-      showBalance = !showBalance;
-      renderBankList();
-    };
-
-    // DOM 로드 완료 시 초기화
-    window.addEventListener('DOMContentLoaded', () => {
-      lucide.createIcons();
-      initChart();
-      initFirebaseListeners();
-    });
-  </script>
-
-  <script>
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-  </script>
+.section-title{font-size:15px;font-weight:800;margin:26px 0 12px;}
+.section-title:first-child{margin-top:0;}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:900px){.settings-grid{grid-template-columns:1fr;}}
+.toast{position:fixed;bottom:24px;right:24px;background:#111826;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:200;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--text-sub);font-size:13px;}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
+<body>
 
-  <!-- 사이드바 -->
-  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between p-4">
-    <div>
-      <div class="flex items-center gap-2 mb-8 px-2">
-        <div class="p-2 bg-emerald-500 text-white rounded-lg">
-          <i data-lucide="trending-up" class="w-6 h-6"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-sm tracking-wider text-slate-900 leading-none">ASSET</h1>
-          <p class="text-[10px] text-slate-500 font-medium">MANAGEMENT SYSTEM</p>
-        </div>
-      </div>
+<div id="loading" class="loading-screen">불러오는 중...</div>
 
-      <nav class="space-y-1 text-xs font-medium">
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-emerald-50 text-emerald-600">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> ダッシュボード
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
-          <i data-lucide="pie-chart" class="w-4 h-4"></i> 全投資資産
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
-          <i data-lucide="trending-up" class="w-4 h-4"></i> 資産推移 (グラフ)
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
-          <i data-lucide="piggy-bank" class="w-4 h-4"></i> 積立投資
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
-          <i data-lucide="briefcase" class="w-4 h-4"></i> 副業状況
-        </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100">
-          <i data-lucide="building-2" class="w-4 h-4"></i> 銀行預金
-        </a>
-      </nav>
+<!-- ============ SETUP GATE (Firebase 설정) ============ -->
+<div id="setupGate" class="gate" style="display:none;">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M6 21V9l6-4 6 4v12M9 21v-6h6v6"/></svg></div>
+      <div style="font-weight:800;font-size:14px;">ASSET MANAGEMENT<br><span style="font-size:10px;color:var(--text-faint);font-weight:700;">SYSTEM</span></div>
     </div>
+    <p class="gate-title">Firebase 연동 설정</p>
+    <p class="gate-sub">실제 데이터를 기기 간 동기화하려면 본인의 Firebase 프로젝트 설정(firebaseConfig)을 붙여넣어 주세요. Firestore와 Authentication(이메일/비밀번호)을 활성화한 프로젝트여야 합니다.</p>
+    <div id="setupError"></div>
+    <div class="field">
+      <label>Firebase Config (JSON)</label>
+      <textarea id="setupConfigInput" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+    </div>
+    <button class="gate-btn" onclick="saveFirebaseConfig()">연결하고 시작하기</button>
+    <div class="gate-note">Firebase 콘솔(console.firebase.google.com) → 프로젝트 설정 → 일반 → '내 앱'에서 SDK 설정 값(config 객체)을 그대로 복사해 붙여넣으면 됩니다. 값은 이 브라우저에만 저장되며 서버로 전송되지 않습니다.</div>
+  </div>
+</div>
 
-    <div class="p-3 bg-slate-100 rounded-xl flex items-center gap-3">
-      <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">SH</div>
-      <div>
-        <p class="text-[10px] text-slate-400">Welcome back!</p>
-        <p class="text-xs font-bold">SUNGHO</p>
+<!-- ============ AUTH GATE (로그인/회원가입) ============ -->
+<div id="authGate" class="gate" style="display:none;">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M6 21V9l6-4 6 4v12M9 21v-6h6v6"/></svg></div>
+      <div style="font-weight:800;font-size:14px;">ASSET MANAGEMENT<br><span style="font-size:10px;color:var(--text-faint);font-weight:700;">SYSTEM</span></div>
+    </div>
+    <p class="gate-title" id="authTitle">로그인</p>
+    <p class="gate-sub" id="authSub">계정으로 로그인하고 자산 현황을 확인하세요.</p>
+    <div id="authError"></div>
+    <div class="field"><label>이메일</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
+    <div class="field"><label>비밀번호</label><input type="password" id="authPassword" placeholder="6자 이상"></div>
+    <button class="gate-btn" id="authSubmitBtn" onclick="submitAuth()">로그인</button>
+    <div class="gate-switch">
+      <span id="authSwitchText">계정이 없으신가요?</span>
+      <button onclick="toggleAuthMode()" id="authSwitchBtn">회원가입</button>
+    </div>
+    <div class="gate-note">Firebase 프로젝트 설정을 변경하려면 <button style="background:none;border:none;color:var(--green-dark);font-weight:700;padding:0;" onclick="resetFirebaseConfig()">여기</button>를 눌러 초기화할 수 있습니다.</div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="app">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M6 21V9l6-4 6 4v12M9 21v-6h6v6"/></svg></div>
+      <div class="brand-text">ASSET<br>MANAGEMENT<small>SYSTEM</small></div>
+    </div>
+    <nav class="nav" id="navList"></nav>
+    <div class="sidebar-footer">
+      <div class="profile-card">
+        <div class="avatar" id="avatarInitial">U</div>
+        <div class="profile-meta">
+          <div class="hello">Welcome back!</div>
+          <div class="name" id="userEmailLabel">-</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="로그아웃">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
       </div>
     </div>
   </aside>
 
-  <!-- 메인 콘텐츠 -->
-  <main class="flex-1 overflow-y-auto p-8">
-    <header class="flex justify-between items-center mb-6">
+  <main class="main">
+    <div class="topbar">
       <div>
-        <h2 class="text-2xl font-bold text-slate-900">ダッシュボード</h2>
-        <p class="text-xs text-slate-500">資産管理・運用 (Chart.js 그래프 연동 완료)</p>
+        <h1 class="page-title" id="pageTitle">대시보드</h1>
+        <p class="page-sub" id="pageSub">당신의 자산 현황을 한눈에 파악하세요</p>
       </div>
-      <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border text-xs text-slate-600">
-        <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
-        <span>2026年8月1日 (土)</span>
-      </div>
-    </header>
-
-    <!-- 대시보드 상단 카드 & Chart 영역 -->
-    <div class="grid grid-cols-12 gap-6 mb-6">
-      <div class="col-span-5 bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between">
-        <div>
-          <h3 class="font-bold text-slate-700 text-sm mb-1">全投資資産</h3>
-          <div id="grand-total" class="text-3xl font-extrabold text-slate-900 mb-1">¥0</div>
-          <div class="text-xs font-semibold text-emerald-500 mb-4">▲ +4.32% <span class="text-slate-400 font-normal">(前日比)</span></div>
-        </div>
-        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-500">
-          <div>
-            <p class="font-semibold text-slate-700 mb-0.5">ポートフォリオ</p>
-            <p class="text-[10px] text-slate-400">실시간 데이터 연동 중</p>
-          </div>
-          <div class="text-right font-medium">
-            <p id="sub-savings-total">積立: ¥0</p>
-            <p id="sub-bank-total">預金: ¥0</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chart.js 캔버스 등록 영역 -->
-      <div class="col-span-7 bg-white p-6 rounded-2xl border border-slate-200">
-        <h3 class="font-bold text-slate-700 text-sm mb-2">資産推移（グラフ）</h3>
-        <div class="h-40 w-full relative">
-          <canvas id="assetChart"></canvas>
-        </div>
+      <div class="topbar-right">
+        <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="dot"></span></button>
+        <div class="date-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="todayLabel"></span></div>
       </div>
     </div>
 
-    <!-- 積立投資 테이블 -->
-    <div class="bg-white p-6 rounded-2xl border border-slate-200 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-slate-700 text-sm">積立投資</h3>
-        <button onclick="openModal('modal-savings')" class="bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-emerald-600">
-          <i data-lucide="plus" class="w-3.5 h-3.5"></i> 項目追加
-        </button>
+    <div id="pageContent"></div>
+  </main>
+</div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 class="modal-title" id="modalTitle">항목 추가</h3>
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="gate-btn danger" id="modalDeleteBtn" style="display:none;" onclick="modalDelete()">삭제</button>
+      <button class="gate-btn" onclick="modalSubmit()" style="flex:1;">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   ASSET MANAGEMENT SYSTEM
+   단일 파일 SPA + Firebase(Auth+Firestore) 실데이터 연동
+   ========================================================= */
+
+/* ---------- 공통 유틸 ---------- */
+const fmt = n => (Math.round(n||0)).toLocaleString('ko-KR');
+const won = n => '\u20A9' + fmt(n);
+const todayStr = () => {
+  const d = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getFullYear()}\uB144 ${d.getMonth()+1}\uC6D4 ${d.getDate()}\uC77C (${days[d.getDay()]})`;
+};
+document.getElementById('todayLabel').textContent = todayStr();
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+const ICONS = {
+  dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+  assets:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+  dca:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>',
+  side:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>',
+  bank:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M4 21V10l8-6 8 6v11M9 21v-6h6v6"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>',
+  arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeoff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C5 20 1 12 1 12a21.6 21.6 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>',
+  wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/></svg>',
+  empty:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'
+};
+
+const PAGES = [
+  {key:'dashboard', label:'대시보드', icon:'dashboard', sub:'당신의 자산 현황을 한눈에 파악하세요'},
+  {key:'assets',    label:'전체자산', icon:'assets', sub:'보유한 모든 자산 항목을 관리하세요'},
+  {key:'trend',     label:'자산추이 (그래프)', icon:'trend', sub:'기간별 자산 변화를 확인하세요'},
+  {key:'dca',       label:'적립투자', icon:'dca', sub:'정기 적립 투자 현황을 관리하세요'},
+  {key:'side',      label:'부업현황', icon:'side', sub:'부수입 현황을 관리하세요'},
+  {key:'bank',      label:'은행예금', icon:'bank', sub:'은행 계좌별 예금 현황을 관리하세요'},
+  {key:'settings',  label:'설정', icon:'settings', sub:'계정 및 연동 설정을 관리하세요'},
+];
+
+const COLOR_OPTIONS = [
+  {key:'green', label:'그린', hex:'#17b26a'},
+  {key:'red', label:'레드', hex:'#ef4444'},
+  {key:'purple', label:'퍼플', hex:'#8b5cf6'},
+  {key:'blue', label:'블루', hex:'#2563eb'},
+  {key:'amber', label:'앰버', hex:'#d97706'},
+];
+const colorHex = k => (COLOR_OPTIONS.find(c=>c.key===k)||COLOR_OPTIONS[0]).hex;
+
+/* ---------- 상태 ---------- */
+let firebaseApp=null, auth=null, db=null, currentUser=null;
+let authMode='login';
+let currentPage='dashboard';
+let unsub = [];
+let bankVisible = {};
+let data = { assets:[], dca:[], side:[], bank:[], trend:[] };
+let charts = {};
+
+/* ---------- Firebase config 저장/로드 ---------- */
+function loadStoredConfig(){
+  try{ return JSON.parse(localStorage.getItem('ams_firebase_config')||'null'); }catch(e){ return null; }
+}
+function saveFirebaseConfig(){
+  const raw = document.getElementById('setupConfigInput').value.trim();
+  const errBox = document.getElementById('setupError');
+  errBox.innerHTML='';
+  let cfg;
+  try{ cfg = JSON.parse(raw); }
+  catch(e){ errBox.innerHTML = '<div class="gate-error">JSON 형식이 올바르지 않습니다. Firebase 콘솔의 config 객체를 그대로 붙여넣어 주세요.</div>'; return; }
+  if(!cfg.apiKey || !cfg.projectId){ errBox.innerHTML = '<div class="gate-error">apiKey, projectId 등 필수 값이 없습니다.</div>'; return; }
+  localStorage.setItem('ams_firebase_config', JSON.stringify(cfg));
+  initFirebase(cfg);
+}
+function resetFirebaseConfig(){
+  if(!confirm('Firebase 연동 설정을 초기화하고 다시 입력하시겠습니까?')) return;
+  localStorage.removeItem('ams_firebase_config');
+  location.reload();
+}
+
+function initFirebase(cfg){
+  try{
+    firebaseApp = firebase.initializeApp(cfg);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    document.getElementById('setupGate').style.display='none';
+    document.getElementById('loading').style.display='none';
+    auth.onAuthStateChanged(handleAuthChange);
+  }catch(e){
+    console.error(e);
+    document.getElementById('setupError').innerHTML = '<div class="gate-error">Firebase 초기화에 실패했습니다: '+e.message+'</div>';
+    document.getElementById('setupGate').style.display='flex';
+  }
+}
+
+function handleAuthChange(user){
+  if(user){
+    currentUser = user;
+    document.getElementById('authGate').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('userEmailLabel').textContent = user.email || '사용자';
+    document.getElementById('avatarInitial').textContent = (user.email||'U').charAt(0).toUpperCase();
+    attachListeners();
+    buildNav();
+    renderPage();
+  } else {
+    currentUser = null;
+    unsub.forEach(f=>f()); unsub=[];
+    document.getElementById('app').style.display='none';
+    document.getElementById('authGate').style.display='flex';
+  }
+}
+
+/* ---------- 인증 ---------- */
+function toggleAuthMode(){
+  authMode = authMode==='login' ? 'signup' : 'login';
+  document.getElementById('authTitle').textContent = authMode==='login' ? '로그인' : '회원가입';
+  document.getElementById('authSub').textContent = authMode==='login' ? '계정으로 로그인하고 자산 현황을 확인하세요.' : '이메일과 비밀번호로 새 계정을 만드세요.';
+  document.getElementById('authSubmitBtn').textContent = authMode==='login' ? '로그인' : '회원가입';
+  document.getElementById('authSwitchText').textContent = authMode==='login' ? '계정이 없으신가요?' : '이미 계정이 있으신가요?';
+  document.getElementById('authSwitchBtn').textContent = authMode==='login' ? '회원가입' : '로그인';
+  document.getElementById('authError').innerHTML='';
+}
+function submitAuth(){
+  const email = document.getElementById('authEmail').value.trim();
+  const pw = document.getElementById('authPassword').value;
+  const errBox = document.getElementById('authError');
+  errBox.innerHTML='';
+  if(!email || !pw){ errBox.innerHTML='<div class="gate-error">이메일과 비밀번호를 입력해 주세요.</div>'; return; }
+  const action = authMode==='login'
+    ? auth.signInWithEmailAndPassword(email, pw)
+    : auth.createUserWithEmailAndPassword(email, pw);
+  action.catch(e=>{ errBox.innerHTML = '<div class="gate-error">'+authErrorMsg(e)+'</div>'; });
+}
+function authErrorMsg(e){
+  const map = {
+    'auth/invalid-email':'이메일 형식이 올바르지 않습니다.',
+    'auth/user-not-found':'등록되지 않은 이메일입니다.',
+    'auth/wrong-password':'비밀번호가 일치하지 않습니다.',
+    'auth/email-already-in-use':'이미 사용 중인 이메일입니다.',
+    'auth/weak-password':'비밀번호는 6자 이상이어야 합니다.',
+    'auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않습니다.'
+  };
+  return map[e.code] || e.message;
+}
+function doLogout(){ auth.signOut(); }
+
+/* ---------- Firestore 실시간 리스너 ---------- */
+function userCol(name){ return db.collection('users').doc(currentUser.uid).collection(name); }
+
+function attachListeners(){
+  unsub.forEach(f=>f()); unsub=[];
+  const cols = ['assets','dca','side','bank','trend'];
+  cols.forEach(name=>{
+    const orderField = name==='trend' ? 'date' : null;
+    let ref = userCol(name);
+    const off = ref.onSnapshot(snap=>{
+      data[name] = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      if(orderField){ data[name].sort((a,b)=> (a.date||'').localeCompare(b.date||'')); }
+      renderPage();
+    }, err=>console.error(name, err));
+    unsub.push(off);
+  });
+}
+
+/* ---------- 네비게이션 ---------- */
+function buildNav(){
+  const nav = document.getElementById('navList');
+  nav.innerHTML = PAGES.map(p=>`
+    <button class="nav-item ${p.key===currentPage?'active':''}" data-page="${p.key}" onclick="goPage('${p.key}')">
+      ${ICONS[p.icon]}<span>${p.label}</span>
+    </button>`).join('');
+}
+function goPage(key){
+  currentPage = key;
+  buildNav();
+  const p = PAGES.find(x=>x.key===key);
+  document.getElementById('pageTitle').textContent = p.label.replace(' (그래프)','');
+  document.getElementById('pageSub').textContent = p.sub;
+  renderPage();
+}
+
+function renderPage(){
+  if(!currentUser) return;
+  const map = {dashboard:renderDashboard, assets:renderAssets, trend:renderTrend, dca:renderDCA, side:renderSide, bank:renderBank, settings:renderSettings};
+  (map[currentPage]||renderDashboard)();
+}
+
+/* =========================================================
+   대시보드
+   ========================================================= */
+function renderDashboard(){
+  const totalAssets = data.assets.reduce((s,a)=>s+Number(a.amount||0),0);
+  const trend = data.trend;
+  const last = trend[trend.length-1], prev = trend[trend.length-2];
+  const changePct = (last && prev && prev.amount) ? ((last.amount-prev.amount)/prev.amount*100) : 0;
+  const up = changePct >= 0;
+
+  const el = document.getElementById('pageContent');
+  el.innerHTML = `
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h3 class="card-title">전체자산</h3>
+          <button class="link-more" onclick="goPage('assets')">상세 보기 ${ICONS.arrow}</button>
+        </div>
+        <div class="total-amount">${won(totalAssets)}</div>
+        <span class="change-badge ${up?'change-up':'change-down'}">${up?'▲':'▼'} ${Math.abs(changePct).toFixed(2)}% (전일대비)</span>
+        <div class="mini-chart-wrap"><canvas id="miniTrendChart"></canvas></div>
+        <div class="portfolio-mini">
+          <div class="p-icon">${ICONS.wallet}</div>
+          <div class="p-title">포트폴리오</div>
+          <button class="p-link" onclick="goPage('assets')">자산배분 확인하기 ${ICONS.arrow}</button>
+        </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 text-slate-500 border-b">
-            <tr>
-              <th class="py-2.5 px-3">No.</th>
-              <th class="py-2.5 px-3">サービス名</th>
-              <th class="py-2.5 px-3">評価額</th>
-              <th class="py-2.5 px-3">損益 (率)</th>
-              <th class="py-2.5 px-3">積立額 / 月</th>
-              <th class="py-2.5 px-3">積立開始</th>
-              <th class="py-2.5 px-3 text-center">ステータス</th>
-              <th class="py-2.5 px-3 text-center">操作</th>
-            </tr>
-          </thead>
-          <tbody id="savings-tbody"></tbody>
+
+      <div class="card">
+        <div class="card-head">
+          <h3 class="card-title">자산추이 (그래프)</h3>
+          <div class="period-toggle" id="dashPeriodToggle"></div>
+        </div>
+        <div class="trend-chart-wrap"><canvas id="dashTrendChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-head">
+        <h3 class="card-title">적립투자</h3>
+        <button class="link-more" onclick="goPage('dca')">적립투자의 상세를 보기 ${ICONS.arrow}</button>
+      </div>
+      ${renderDCATable(data.dca.slice(0,8), false)}
+    </div>
+
+    <div class="grid grid-2" style="margin-top:20px;grid-template-columns:1.6fr 1fr;">
+      <div>
+        <div class="card-head" style="margin-bottom:12px;"><h3 class="card-title">부업현황</h3></div>
+        <div class="grid grid-3">${renderSideCards(data.side.length? latestSideByName().slice(0,3) : [])}</div>
+        <div style="text-align:right;margin-top:10px;"><button class="link-more" onclick="goPage('side')" style="margin-left:auto;">부업현황의 상세를 보기 ${ICONS.arrow}</button></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">은행예금</h3></div>
+        ${renderBankList(data.bank.slice(0,4), true)}
+        <button class="add-btn" style="width:100%;justify-content:center;margin-top:12px;" onclick="goPage('bank')">${ICONS.eye} 모든 은행 보기</button>
+      </div>
+    </div>
+  `;
+
+  buildPeriodToggle('dashPeriodToggle', 'dashTrendChart', trend);
+  drawMiniSpark('miniTrendChart', trend.map(t=>t.amount), up?'#17b26a':'#ef4444');
+}
+
+function latestSideByName(){
+  const byName = {};
+  data.side.forEach(r=>{
+    if(!byName[r.name] || (r.month||'') > (byName[r.name].month||'')) byName[r.name]=r;
+  });
+  return Object.values(byName);
+}
+
+/* =========================================================
+   전체자산
+   ========================================================= */
+function renderAssets(){
+  const total = data.assets.reduce((s,a)=>s+Number(a.amount||0),0);
+  const el = document.getElementById('pageContent');
+  const byCat = {};
+  data.assets.forEach(a=>{ byCat[a.category||'기타']=(byCat[a.category||'기타']||0)+Number(a.amount||0); });
+
+  el.innerHTML = `
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">전체자산 합계</h3></div>
+        <div class="total-amount">${won(total)}</div>
+        <div style="font-size:12.5px;color:var(--text-sub);margin-top:4px;">등록된 자산 항목 ${data.assets.length}건의 합계입니다</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3 class="card-title">카테고리 비중</h3></div>
+        <div class="trend-chart-wrap" style="height:200px;"><canvas id="assetPie"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px;">
+      <div class="card-head">
+        <h3 class="card-title">자산 목록</h3>
+        <button class="add-btn" onclick="openAssetModal()">${ICONS.plus} 자산 추가</button>
+      </div>
+      ${data.assets.length? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>항목명</th><th>카테고리</th><th>금액</th><th>메모</th><th></th></tr></thead>
+        <tbody>
+        ${data.assets.map(a=>`
+          <tr>
+            <td style="font-weight:700;">${escapeHtml(a.name)}</td>
+            <td><span class="badge badge-gray">${escapeHtml(a.category||'기타')}</span></td>
+            <td style="font-weight:700;">${won(a.amount)}</td>
+            <td style="color:var(--text-sub);">${escapeHtml(a.note||'-')}</td>
+            <td><div class="row-actions"><button onclick="openAssetModal('${a.id}')">${ICONS.edit}</button><button onclick="quickDelete('assets','${a.id}')">${ICONS.trash}</button></div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>` : emptyState('아직 등록된 자산이 없습니다. 자산을 추가해 보세요.')}
+    </div>
+  `;
+  drawPie('assetPie', byCat);
+}
+
+/* =========================================================
+   자산추이 (그래프)
+   ========================================================= */
+function renderTrend(){
+  const el = document.getElementById('pageContent');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">자산추이</h3>
+        <div class="period-toggle" id="trendPeriodToggle"></div>
+      </div>
+      <div class="trend-chart-wrap" style="height:340px;"><canvas id="fullTrendChart"></canvas></div>
+    </div>
+    <div class="card" style="margin-top:20px;">
+      <div class="card-head">
+        <h3 class="card-title">기록 목록</h3>
+        <button class="add-btn" onclick="openTrendModal()">${ICONS.plus} 기록 추가</button>
+      </div>
+      ${data.trend.length? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>날짜</th><th>총자산</th><th></th></tr></thead>
+        <tbody>
+        ${[...data.trend].reverse().map(t=>`
+          <tr>
+            <td style="font-weight:700;">${t.date}</td>
+            <td>${won(t.amount)}</td>
+            <td><div class="row-actions"><button onclick="openTrendModal('${t.id}')">${ICONS.edit}</button><button onclick="quickDelete('trend','${t.id}')">${ICONS.trash}</button></div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>` : emptyState('아직 자산 추이 기록이 없습니다. 날짜별 총자산을 추가해 보세요.')}
+    </div>
+  `;
+  buildPeriodToggle('trendPeriodToggle', 'fullTrendChart', data.trend, true);
+}
+
+/* =========================================================
+   적립투자
+   ========================================================= */
+function renderDCATable(rows, showActions=true){
+  if(!rows.length) return emptyState('등록된 적립투자가 없습니다.');
+  return `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>No.</th><th>서비스명</th><th>평가액</th><th>손익(율)</th><th>적립액/월</th><th>적립기간</th><th>상태</th>${showActions?'<th></th>':''}
+      </tr></thead>
+      <tbody>
+      ${rows.map((r,i)=>{
+        const up = Number(r.profitRate||0) >= 0;
+        return `<tr>
+          <td>${i+1}</td>
+          <td><div class="svc-cell"><span class="svc-icon" style="background:${colorHex(r.color)}">${escapeHtml((r.icon||r.name||'?').charAt(0))}</span>${escapeHtml(r.name)}</div></td>
+          <td style="font-weight:700;">${won(r.evalAmount)}</td>
+          <td class="${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(Number(r.profitRate||0)).toFixed(2)}%</td>
+          <td>${won(r.monthlyAmount)}</td>
+          <td>${escapeHtml(r.startDate||'-')} ~</td>
+          <td><span class="badge ${r.status==='적립중'?'badge-green':'badge-gray'}">${escapeHtml(r.status||'준비중')}</span></td>
+          ${showActions?`<td><div class="row-actions"><button onclick="openDCAModal('${r.id}')">${ICONS.edit}</button><button onclick="quickDelete('dca','${r.id}')">${ICONS.trash}</button></div></td>`:''}
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table></div>`;
+}
+function renderDCA(){
+  const el = document.getElementById('pageContent');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">적립투자 목록</h3>
+        <button class="add-btn" onclick="openDCAModal()">${ICONS.plus} 적립투자 추가</button>
+      </div>
+      ${renderDCATable(data.dca, true)}
+    </div>
+  `;
+}
+
+/* =========================================================
+   부업현황
+   ========================================================= */
+function renderSideCards(rows){
+  if(!rows.length) return `<div style="grid-column:1/-1;">${emptyState('등록된 부업이 없습니다.')}</div>`;
+  return rows.map((r,idx)=>{
+    const hist = data.side.filter(x=>x.name===r.name).sort((a,b)=>(a.month||'').localeCompare(b.month||''));
+    const cur = hist[hist.length-1], prevM = hist[hist.length-2];
+    const change = (cur && prevM && prevM.profit) ? ((cur.profit-prevM.profit)/prevM.profit*100) : 0;
+    const cid = 'side-spark-'+r.id;
+    setTimeout(()=>drawMiniSpark(cid, hist.map(h=>h.profit), '#ffffff', true), 0);
+    return `
+    <div class="side-card sc-${r.color||'red'}">
+      <div class="sc-top"><div class="sc-icon">${escapeHtml((r.icon||r.name||'?').charAt(0))}</div><div class="sc-name">${escapeHtml(r.name)}</div></div>
+      <div class="sc-label">이번달 수익</div>
+      <div class="sc-amount">${won(r.profit)}</div>
+      <span class="sc-change">${change>=0?'▲':'▼'} ${Math.abs(change).toFixed(0)}% (전월비)</span>
+      <div class="sc-spark"><canvas id="${cid}"></canvas></div>
+    </div>`;
+  }).join('');
+}
+function renderSide(){
+  const el = document.getElementById('pageContent');
+  const latest = latestSideByName();
+  el.innerHTML = `
+    <div class="card-head" style="margin-bottom:14px;">
+      <h3 class="card-title" style="font-size:16px;">부업 현황</h3>
+      <button class="add-btn" onclick="openSideModal()">${ICONS.plus} 부업 기록 추가</button>
+    </div>
+    <div class="grid grid-3">${renderSideCards(latest)}</div>
+    <div class="card" style="margin-top:20px;">
+      <div class="card-head"><h3 class="card-title">월별 기록</h3></div>
+      ${data.side.length? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>부업명</th><th>월</th><th>수익</th><th></th></tr></thead>
+        <tbody>
+        ${[...data.side].sort((a,b)=>(b.month||'').localeCompare(a.month||'')).map(r=>`
+          <tr>
+            <td style="font-weight:700;">${escapeHtml(r.name)}</td>
+            <td>${escapeHtml(r.month||'-')}</td>
+            <td>${won(r.profit)}</td>
+            <td><div class="row-actions"><button onclick="openSideModal('${r.id}')">${ICONS.edit}</button><button onclick="quickDelete('side','${r.id}')">${ICONS.trash}</button></div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>` : emptyState('아직 부업 기록이 없습니다.')}
+    </div>
+  `;
+}
+
+/* =========================================================
+   은행예금
+   ========================================================= */
+function renderBankList(rows, compact){
+  if(!rows.length) return emptyState('등록된 계좌가 없습니다.');
+  return rows.map(b=>{
+    const visible = !!bankVisible[b.id];
+    return `
+    <div class="bank-row">
+      <div class="bank-icon" style="background:${colorHex(b.color)}">${escapeHtml((b.icon||b.name||'?').charAt(0))}</div>
+      <div class="bank-name">${escapeHtml(b.name)}</div>
+      <div class="bank-balance">${visible? won(b.balance) : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022'}</div>
+      <button class="eye-btn" onclick="toggleBankVisible('${b.id}')">${visible?ICONS.eyeoff:ICONS.eye} ${visible?'숨김':'표시'}</button>
+      ${compact?'':`<div class="row-actions" style="margin-left:8px;"><button onclick="openBankModal('${b.id}')">${ICONS.edit}</button><button onclick="quickDelete('bank','${b.id}')">${ICONS.trash}</button></div>`}
+    </div>`;
+  }).join('');
+}
+function toggleBankVisible(id){ bankVisible[id]=!bankVisible[id]; renderPage(); }
+function renderBank(){
+  const total = data.bank.reduce((s,b)=>s+Number(b.balance||0),0);
+  const el = document.getElementById('pageContent');
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3 class="card-title">예금 총액</h3></div>
+      <div class="total-amount">${won(total)}</div>
+    </div>
+    <div class="card" style="margin-top:20px;">
+      <div class="card-head">
+        <h3 class="card-title">계좌 목록</h3>
+        <button class="add-btn" onclick="openBankModal()">${ICONS.plus} 계좌 추가</button>
+      </div>
+      ${renderBankList(data.bank, false)}
+    </div>
+  `;
+}
+
+/* =========================================================
+   설정
+   ========================================================= */
+function renderSettings(){
+  const el = document.getElementById('pageContent');
+  el.innerHTML = `
+    <div class="settings-grid">
+      <div class="card">
+        <h3 class="card-title" style="margin-bottom:14px;">계정</h3>
+        <div class="field"><label>로그인 이메일</label><input value="${escapeHtml(currentUser.email||'')}" disabled></div>
+        <button class="gate-btn secondary" onclick="doLogout()">로그아웃</button>
+      </div>
+      <div class="card">
+        <h3 class="card-title" style="margin-bottom:14px;">Firebase 연동</h3>
+        <p style="font-size:12.5px;color:var(--text-sub);line-height:1.6;margin-top:0;">현재 이 브라우저는 지정된 Firebase 프로젝트와 연동되어 실시간으로 데이터가 저장됩니다. 다른 기기에서도 같은 Firebase 프로젝트 설정을 등록하고 동일 계정으로 로그인하면 데이터가 동기화됩니다.</p>
+        <button class="gate-btn secondary" onclick="resetFirebaseConfig()">Firebase 설정 초기화</button>
+      </div>
+      <div class="card">
+        <h3 class="card-title" style="margin-bottom:14px;">데이터 요약</h3>
+        <table>
+          <tbody>
+            <tr><td>전체자산 항목</td><td style="text-align:right;font-weight:700;">${data.assets.length}건</td></tr>
+            <tr><td>적립투자</td><td style="text-align:right;font-weight:700;">${data.dca.length}건</td></tr>
+            <tr><td>부업 기록</td><td style="text-align:right;font-weight:700;">${data.side.length}건</td></tr>
+            <tr><td>은행 계좌</td><td style="text-align:right;font-weight:700;">${data.bank.length}건</td></tr>
+            <tr><td>자산추이 기록</td><td style="text-align:right;font-weight:700;">${data.trend.length}건</td></tr>
+          </tbody>
         </table>
       </div>
     </div>
+  `;
+}
 
-    <!-- 하단 부업 / 은행 영역 -->
-    <div class="grid grid-cols-12 gap-6">
-      <div class="col-span-7 bg-white p-6 rounded-2xl border border-slate-200">
-        <h3 class="font-bold text-slate-700 text-sm mb-4">副業状況</h3>
-        <div class="grid grid-cols-3 gap-3">
-          <div class="p-3 rounded-xl bg-slate-50 border">
-            <p class="text-xs font-semibold text-slate-700">メルカリ</p>
-            <p class="text-base font-bold text-slate-900 mt-1">¥85,000</p>
-            <p class="text-[10px] text-emerald-500 font-medium">▲ 18% (前月比)</p>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-50 border">
-            <p class="text-xs font-semibold text-slate-700">FX売買</p>
-            <p class="text-base font-bold text-slate-900 mt-1">¥235,000</p>
-            <p class="text-[10px] text-emerald-500 font-medium">▲ 22% (前月比)</p>
-          </div>
-          <div class="p-3 rounded-xl bg-slate-50 border">
-            <p class="text-xs font-semibold text-slate-700">コンテンツ</p>
-            <p class="text-base font-bold text-slate-900 mt-1">¥52,000</p>
-            <p class="text-[10px] text-emerald-500 font-medium">▲ 12% (前月比)</p>
-          </div>
-        </div>
-      </div>
+/* =========================================================
+   차트 유틸
+   ========================================================= */
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+function drawMiniSpark(canvasId, values, color, transparent){
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId); if(!ctx) return;
+  if(!values.length) values=[0,0];
+  charts[canvasId] = new Chart(ctx, {
+    type:'line',
+    data:{ labels:values.map((_,i)=>i), datasets:[{ data:values, borderColor:color, borderWidth:2, pointRadius:0, tension:.35, fill:true,
+      backgroundColor:(ctxx)=>{ const g=ctxx.chart.ctx.createLinearGradient(0,0,0,ctxx.chart.height); g.addColorStop(0, hexAlpha(color,.35)); g.addColorStop(1, hexAlpha(color,0)); return g; } }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{ x:{display:false}, y:{display:false} }, elements:{point:{radius:0}} }
+  });
+}
+function hexAlpha(hex, a){
+  if(hex==='#ffffff') return `rgba(255,255,255,${a})`;
+  const c = hex.replace('#','');
+  const r=parseInt(c.substring(0,2),16), g=parseInt(c.substring(2,4),16), b=parseInt(c.substring(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function drawPie(canvasId, byCat){
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId); if(!ctx) return;
+  const labels = Object.keys(byCat);
+  const values = Object.values(byCat);
+  const palette = ['#17b26a','#2563eb','#8b5cf6','#d97706','#ef4444','#0ea5e9','#84cc16'];
+  charts[canvasId] = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data: values.length?values:[1], backgroundColor: labels.length? palette.slice(0,labels.length):['#eef0f3'], borderWidth:2, borderColor:'#fff' }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ boxWidth:10, font:{size:11} } } }, cutout:'65%' }
+  });
+}
+function filterByPeriod(trend, period){
+  if(period==='all' || !trend.length) return trend;
+  const days = {'1m':30,'3m':90,'6m':180,'1y':365}[period];
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-days);
+  return trend.filter(t=> new Date(t.date) >= cutoff);
+}
+function buildPeriodToggle(toggleId, chartId, trend, big){
+  const el = document.getElementById(toggleId);
+  const opts = [['1m','1개월'],['3m','3개월'],['6m','6개월'],['1y','1년'],['all','전체']];
+  let active = '1y';
+  function draw(period){
+    active = period;
+    el.innerHTML = opts.map(([k,l])=>`<button class="${k===active?'active':''}" onclick="event.stopPropagation();window.__ptChange('${toggleId}','${chartId}','${k}',${!!big})">${l}</button>`).join('');
+    const filtered = filterByPeriod(trend, period);
+    drawTrendChart(chartId, filtered, big);
+  }
+  window.__ptChange = (tId,cId,period,bigFlag)=>{
+    const toggleEl = document.getElementById(tId);
+    toggleEl.innerHTML = opts.map(([k,l])=>`<button class="${k===period?'active':''}" onclick="window.__ptChange('${tId}','${cId}','${k}',${bigFlag})">${l}</button>`).join('');
+    drawTrendChart(cId, filterByPeriod(trend, period), bigFlag);
+  };
+  draw(active);
+}
+function drawTrendChart(canvasId, trend, big){
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId); if(!ctx) return;
+  const labels = trend.map(t=>t.date);
+  const values = trend.map(t=>t.amount);
+  charts[canvasId] = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[{ data: values, borderColor:'#17b26a', borderWidth:2.5, pointRadius:0, pointHoverRadius:4, tension:.3, fill:true,
+      backgroundColor:(ctxx)=>{ const g=ctxx.chart.ctx.createLinearGradient(0,0,0,ctxx.chart.height); g.addColorStop(0,'rgba(23,177,106,.25)'); g.addColorStop(1,'rgba(23,177,106,0)'); return g; } }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(c)=> won(c.parsed.y) } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ maxTicksLimit: big?8:6, font:{size:10.5}, color:'#9ca3af' } },
+        y:{ grid:{color:'#f1f2f5'}, ticks:{ font:{size:10.5}, color:'#9ca3af', callback:(v)=> (v/10000)+'\uB9CC' } }
+      },
+      interaction:{ intersect:false, mode:'index' }
+    }
+  });
+}
 
-      <div class="col-span-5 bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between">
-        <div>
-          <div class="flex justify-between items-center mb-3">
-            <h3 class="font-bold text-slate-700 text-sm">銀行預金</h3>
-            <button onclick="openModal('modal-bank')" class="text-xs bg-emerald-500 text-white px-2.5 py-1 rounded-lg flex items-center gap-1">
-              <i data-lucide="plus" class="w-3 h-3"></i> 追加
-            </button>
-          </div>
-          <div id="bank-list-container" class="space-y-2"></div>
-        </div>
-        <button onclick="toggleBankShow()" class="w-full mt-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
-          잔액 표시 / 숨기기
-        </button>
-      </div>
-    </div>
-  </main>
+/* =========================================================
+   Firestore CRUD 헬퍼 + 모달
+   ========================================================= */
+function escapeHtml(s){ return (s===undefined||s===null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function emptyState(msg){ return `<div class="empty-state">${ICONS.empty}<div>${msg}</div></div>`; }
 
-  <!-- 모달: 積立投資 追加 -->
-  <div id="modal-savings" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl relative">
-      <button onclick="closeModal('modal-savings')" class="absolute top-4 right-4 text-slate-400">✕</button>
-      <h3 class="font-bold text-slate-900 mb-4 text-sm">積立投資の追加</h3>
-      <form id="form-savings" onsubmit="addSavingsItem(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block mb-1 text-slate-600 font-medium">サービス名</label>
-          <input type="text" id="savings-name" required placeholder="예: 楽天NISA" class="w-full border p-2 rounded-lg">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block mb-1 text-slate-600 font-medium">評価額 (¥)</label>
-            <input type="number" id="savings-value" required placeholder="3520000" class="w-full border p-2 rounded-lg">
-          </div>
-          <div>
-            <label class="block mb-1 text-slate-600 font-medium">毎月積立 (¥)</label>
-            <input type="number" id="savings-monthly" required placeholder="50000" class="w-full border p-2 rounded-lg">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block mb-1 text-slate-600 font-medium">損益率</label>
-            <input type="text" id="savings-change" value="+0.00%" class="w-full border p-2 rounded-lg">
-          </div>
-          <div>
-            <label class="block mb-1 text-slate-600 font-medium">開始年月</label>
-            <input type="text" id="savings-start" value="2024/01" class="w-full border p-2 rounded-lg">
-          </div>
-        </div>
-        <button type="submit" class="w-full py-2 bg-emerald-500 text-white font-bold rounded-lg mt-2">保存する</button>
-      </form>
-    </div>
-  </div>
+let modalCtx = null; // {col, id, fields}
 
-  <!-- 모달: 銀行口座 追加 -->
-  <div id="modal-bank" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl relative">
-      <button onclick="closeModal('modal-bank')" class="absolute top-4 right-4 text-slate-400">✕</button>
-      <h3 class="font-bold text-slate-900 mb-4 text-sm">銀行口座の追加</h3>
-      <form id="form-bank" onsubmit="addBankItem(event)" class="space-y-3 text-xs">
-        <div>
-          <label class="block mb-1 text-slate-600 font-medium">銀行名</label>
-          <input type="text" id="bank-name" required placeholder="예: 楽天銀行" class="w-full border p-2 rounded-lg">
-        </div>
-        <div>
-          <label class="block mb-1 text-slate-600 font-medium">預金残高 (¥)</label>
-          <input type="number" id="bank-balance" required placeholder="1200000" class="w-full border p-2 rounded-lg">
-        </div>
-        <button type="submit" class="w-full py-2 bg-emerald-500 text-white font-bold rounded-lg mt-2">保存する</button>
-      </form>
-    </div>
-  </div>
+function openModal(title, bodyHtml, ctx){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalDeleteBtn').style.display = ctx.id ? 'block' : 'none';
+  modalCtx = ctx;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); modalCtx=null; }
 
+function fieldRow(label, inputHtml){
+  return `<div class="field"><label>${label}</label>${inputHtml}</div>`;
+}
+function colorSelect(id, val){
+  return `<select id="${id}">${COLOR_OPTIONS.map(c=>`<option value="${c.key}" ${val===c.key?'selected':''}>${c.label}</option>`).join('')}</select>`;
+}
+
+function openAssetModal(id){
+  const item = id ? data.assets.find(a=>a.id===id) : {};
+  const body = `
+    ${fieldRow('항목명', `<input id="f_name" value="${escapeHtml(item.name||'')}" placeholder="예: 삼성전자 주식">`)}
+    ${fieldRow('카테고리', `<input id="f_category" value="${escapeHtml(item.category||'')}" placeholder="예: 주식 / 부동산 / 현금 / 코인">`)}
+    ${fieldRow('금액 (원)', `<input id="f_amount" type="number" value="${item.amount||''}" placeholder="0">`)}
+    ${fieldRow('메모', `<input id="f_note" value="${escapeHtml(item.note||'')}" placeholder="선택 입력">`)}
+  `;
+  openModal(id?'자산 수정':'자산 추가', body, {col:'assets', id, build:()=>({
+    name: val('f_name'), category: val('f_category'), amount: Number(val('f_amount'))||0, note: val('f_note')
+  }), required:['f_name','f_amount']});
+}
+
+function openTrendModal(id){
+  const item = id ? data.trend.find(a=>a.id===id) : {};
+  const body = `
+    ${fieldRow('날짜', `<input id="f_date" type="date" value="${item.date||new Date().toISOString().slice(0,10)}">`)}
+    ${fieldRow('총자산 (원)', `<input id="f_amount" type="number" value="${item.amount||''}" placeholder="0">`)}
+  `;
+  openModal(id?'자산추이 기록 수정':'자산추이 기록 추가', body, {col:'trend', id, build:()=>({
+    date: val('f_date'), amount: Number(val('f_amount'))||0
+  }), required:['f_date','f_amount']});
+}
+
+function openDCAModal(id){
+  const item = id ? data.dca.find(a=>a.id===id) : {};
+  const body = `
+    ${fieldRow('서비스명', `<input id="f_name" value="${escapeHtml(item.name||'')}" placeholder="예: 라쿠텐 NISA">`)}
+    ${fieldRow('아이콘 표시 글자', `<input id="f_icon" maxlength="2" value="${escapeHtml(item.icon||'')}" placeholder="예: R">`)}
+    ${fieldRow('색상', colorSelect('f_color', item.color||'green'))}
+    ${fieldRow('평가액 (원)', `<input id="f_evalAmount" type="number" value="${item.evalAmount||''}">`)}
+    ${fieldRow('손익률 (%, 마이너스 가능)', `<input id="f_profitRate" type="number" step="0.01" value="${item.profitRate||''}">`)}
+    ${fieldRow('적립액 / 월 (원)', `<input id="f_monthlyAmount" type="number" value="${item.monthlyAmount||''}">`)}
+    ${fieldRow('시작일', `<input id="f_startDate" type="date" value="${item.startDate||''}">`)}
+    ${fieldRow('상태', `<select id="f_status"><option value="적립중" ${item.status==='적립중'?'selected':''}>적립중</option><option value="준비중" ${item.status==='준비중'?'selected':''}>준비중</option><option value="중단" ${item.status==='중단'?'selected':''}>중단</option></select>`)}
+  `;
+  openModal(id?'적립투자 수정':'적립투자 추가', body, {col:'dca', id, build:()=>({
+    name: val('f_name'), icon: val('f_icon')||val('f_name').charAt(0), color: val('f_color'),
+    evalAmount: Number(val('f_evalAmount'))||0, profitRate: Number(val('f_profitRate'))||0,
+    monthlyAmount: Number(val('f_monthlyAmount'))||0, startDate: val('f_startDate'), status: val('f_status')
+  }), required:['f_name']});
+}
+
+function openSideModal(id){
+  const item = id ? data.side.find(a=>a.id===id) : {};
+  const body = `
+    ${fieldRow('부업명', `<input id="f_name" value="${escapeHtml(item.name||'')}" placeholder="예: 메르카리">`)}
+    ${fieldRow('아이콘 표시 글자', `<input id="f_icon" maxlength="2" value="${escapeHtml(item.icon||'')}" placeholder="예: M">`)}
+    ${fieldRow('색상', colorSelect('f_color', item.color||'red'))}
+    ${fieldRow('월 (YYYY-MM)', `<input id="f_month" type="month" value="${item.month||new Date().toISOString().slice(0,7)}">`)}
+    ${fieldRow('이번달 수익 (원)', `<input id="f_profit" type="number" value="${item.profit||''}">`)}
+  `;
+  openModal(id?'부업 기록 수정':'부업 기록 추가', body, {col:'side', id, build:()=>({
+    name: val('f_name'), icon: val('f_icon')||val('f_name').charAt(0), color: val('f_color'),
+    month: val('f_month'), profit: Number(val('f_profit'))||0
+  }), required:['f_name','f_month']});
+}
+
+function openBankModal(id){
+  const item = id ? data.bank.find(a=>a.id===id) : {};
+  const body = `
+    ${fieldRow('은행명', `<input id="f_name" value="${escapeHtml(item.name||'')}" placeholder="예: 라쿠텐은행">`)}
+    ${fieldRow('아이콘 표시 글자', `<input id="f_icon" maxlength="2" value="${escapeHtml(item.icon||'')}" placeholder="예: R">`)}
+    ${fieldRow('색상', colorSelect('f_color', item.color||'blue'))}
+    ${fieldRow('예금 잔액 (원)', `<input id="f_balance" type="number" value="${item.balance||''}">`)}
+  `;
+  openModal(id?'계좌 수정':'계좌 추가', body, {col:'bank', id, build:()=>({
+    name: val('f_name'), icon: val('f_icon')||val('f_name').charAt(0), color: val('f_color'),
+    balance: Number(val('f_balance'))||0
+  }), required:['f_name','f_balance']});
+}
+
+function val(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
+
+function modalSubmit(){
+  if(!modalCtx) return;
+  const missing = (modalCtx.required||[]).some(id=>!val(id));
+  if(missing){ showToast('필수 항목을 입력해 주세요.'); return; }
+  const payload = modalCtx.build();
+  const col = userCol(modalCtx.col);
+  const action = modalCtx.id ? col.doc(modalCtx.id).set(payload, {merge:true}) : col.add(payload);
+  action.then(()=>{ showToast('저장되었습니다.'); closeModal(); })
+        .catch(e=>{ console.error(e); showToast('저장에 실패했습니다: '+e.message); });
+}
+function modalDelete(){
+  if(!modalCtx || !modalCtx.id) return;
+  if(!confirm('이 항목을 삭제하시겠습니까?')) return;
+  userCol(modalCtx.col).doc(modalCtx.id).delete()
+    .then(()=>{ showToast('삭제되었습니다.'); closeModal(); })
+    .catch(e=>{ console.error(e); showToast('삭제에 실패했습니다: '+e.message); });
+}
+function quickDelete(col, id){
+  if(!confirm('이 항목을 삭제하시겠습니까?')) return;
+  userCol(col).doc(id).delete()
+    .then(()=>showToast('삭제되었습니다.'))
+    .catch(e=>{ console.error(e); showToast('삭제에 실패했습니다: '+e.message); });
+}
+
+/* ---------- 초기 부팅 ---------- */
+const EMBEDDED_FIREBASE_CONFIG = {
+  "apiKey": "AIzaSyD0uF9PCvc-oQd58a0ccoUkFgxJt73NdXY",
+  "authDomain": "jang-c7944.firebaseapp.com",
+  "projectId": "jang-c7944",
+  "storageBucket": "jang-c7944.firebasestorage.app",
+  "messagingSenderId": "678846230407",
+  "appId": "1:678846230407:web:2884e6ddb71a0d43652d22"
+};
+
+(function boot(){
+  let cfg = loadStoredConfig();
+  document.getElementById('loading').style.display='none';
+  if(!cfg && EMBEDDED_FIREBASE_CONFIG.apiKey){
+    cfg = EMBEDDED_FIREBASE_CONFIG;
+    localStorage.setItem('ams_firebase_config', JSON.stringify(cfg));
+  }
+  if(cfg){
+    initFirebase(cfg);
+  } else {
+    document.getElementById('setupGate').style.display='flex';
+  }
+})();
+
+</script>
 </body>
 </html>
