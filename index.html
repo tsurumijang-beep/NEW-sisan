@@ -301,14 +301,14 @@
     }
 
     .info-tile-large {
-      padding: 12px 14px;
+      padding: 10px 12px;
       border-radius: 12px;
       box-shadow: 3px 3px 8px rgba(0,0,0,0.06), -3px -3px 8px #ffffff;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       border: 1px solid rgba(0, 0, 0, 0.08);
-      min-height: 110px;
+      min-height: 120px;
       transition: all 0.2s ease;
       cursor: pointer;
     }
@@ -319,21 +319,73 @@
       border-color: var(--primary-color);
     }
 
-    .info-tile-large .tile-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-    .info-tile-large .tile-label { color: var(--text-main); font-weight: bold; font-size: 0.9rem; }
+    .info-tile-large .tile-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
+    .info-tile-large .tile-label { color: var(--text-main); font-weight: bold; font-size: 0.85rem; }
     
     .info-tile-large .tile-sub { 
       color: #ffffff; 
-      font-size: 1.05rem; 
+      font-size: 0.85rem; 
       font-weight: 900;
       background: #000000; 
-      padding: 2px 8px; 
+      padding: 2px 6px; 
       border-radius: 6px; 
       box-shadow: inset 1px 1px 2px rgba(255,255,255,0.2); 
     }
 
+    .tile-plans {
+      font-size: 0.72rem;
+      font-weight: bold;
+      color: var(--text-sub);
+      display: flex;
+      gap: 8px;
+      margin: 2px 0;
+      background: rgba(255,255,255,0.6);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
     .info-tile-large .tile-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
-    .info-tile-large .tile-value { font-size: 1.1rem; font-weight: 900; color: var(--primary-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+    .info-tile-large .tile-value { font-size: 1.05rem; font-weight: 900; color: var(--primary-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+
+    /* 今月の定期積立一覧表（余白スペース用カード）スタイル */
+    .monthly-plan-card {
+      grid-column: span 2;
+      background: linear-gradient(145deg, #ffffff, #f0f4fa);
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 3px 3px 8px rgba(0,0,0,0.05), -3px -3px 8px #ffffff;
+      border: 1px solid rgba(58, 123, 213, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .monthly-plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: var(--primary-dark);
+    }
+    .monthly-plan-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-height: 130px;
+      overflow-y: auto;
+    }
+    .monthly-plan-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    .monthly-plan-row:nth-child(odd) { background: #ffffff; }
 
     .private-mask {
       filter: blur(5px);
@@ -807,6 +859,14 @@
               <label for="input-cumulative-inv">累積投資額</label>
               <input type="number" id="input-cumulative-inv" class="form-control" required>
             </div>
+            <div class="form-group">
+              <label for="input-daily-inv">毎日投資額</label>
+              <input type="number" id="input-daily-inv" class="form-control" value="0">
+            </div>
+            <div class="form-group">
+              <label for="input-monthly-inv">毎月投資額</label>
+              <input type="number" id="input-monthly-inv" class="form-control" value="0">
+            </div>
             <button type="submit" class="btn-submit" style="background:#27ae60; padding:6px; font-size:0.8rem;">設定を保存する</button>
           </form>
 
@@ -887,15 +947,15 @@
     const db = getFirestore(app);
 
     const defaultData = {
-      nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, note: '8月'}] },
-      ideco: { name: '② 楽天iDeCo', category: '積立投資', assetDivision: '年金/iDeCo', current: 1026743, cumulativeInvestment: 1000000, history: [{date: '2026-05-01', amount: 1000000, investment: 1000000, note: '初回'}, {date: '2026-08-01', amount: 1026743, investment: 23000, note: '8月'}] },
-      moomoo: { name: '③ MOOMOO証券', category: '積立投資', assetDivision: '米国株', current: 1244330, cumulativeInvestment: 1100000, history: [{date: '2026-05-01', amount: 1100000, investment: 1100000, note: '初回'}, {date: '2026-08-01', amount: 1244330, investment: 80000, note: '8月'}] },
-      jfx: { name: '④ JFX高金利積立', category: '積立投資', assetDivision: 'FX/高金利', current: 1200377, cumulativeInvestment: 1150000, history: [{date: '2026-05-01', amount: 1150000, investment: 1150000, note: '初回'}, {date: '2026-08-01', amount: 1200377, investment: 430000, note: '8月'}] },
-      gmo: { name: '⑤ GMOコイン', category: '積立投資', assetDivision: '暗号資産', current: 790990, cumulativeInvestment: 750000, history: [{date: '2026-05-01', amount: 750000, investment: 750000, note: '初回'}, {date: '2026-08-01', amount: 790990, investment: 50000, note: '8月'}] },
-      melcoin: { name: '⑥ メルコイン', category: '積立投資', assetDivision: '暗号資産', current: 26293, cumulativeInvestment: 25000, history: [{date: '2026-06-01', amount: 25000, investment: 25000, note: '初回'}, {date: '2026-08-01', amount: 26293, investment: 5000, note: '8月'}] },
-      gold: { name: '⑦ GOLD投資', category: '積立投資', assetDivision: 'コモディティ', current: 500000, cumulativeInvestment: 500000, history: [{date: '2026-05-01', amount: 500000, investment: 500000, note: '初回'}, {date: '2026-08-01', amount: 500000, investment: 500000, note: '8月'}] },
-      paypay_pt: { name: '⑧ PAYPAYポイント', category: '積立投資', assetDivision: 'ポイント', current: 18400, cumulativeInvestment: 0, history: [{date: '2026-07-01', amount: 16200, investment: 0, note: '初回'}] },
-      rakuten_pt: { name: '⑨ 楽天ポイント', category: '積立投資', assetDivision: 'ポイント', current: 24500, cumulativeInvestment: 0, history: [{date: '2026-07-01', amount: 28000, investment: 0, note: '初回'}] },
+      nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, dailyInvestment: 1000, monthlyInvestment: 30000, history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, note: '8月'}] },
+      ideco: { name: '② 楽天iDeCo', category: '積立投資', assetDivision: '年金/iDeCo', current: 1026743, cumulativeInvestment: 1000000, dailyInvestment: 0, monthlyInvestment: 23000, history: [{date: '2026-05-01', amount: 1000000, investment: 1000000, note: '初回'}, {date: '2026-08-01', amount: 1026743, investment: 23000, note: '8月'}] },
+      moomoo: { name: '③ MOOMOO証券', category: '積立投資', assetDivision: '米国株', current: 1244330, cumulativeInvestment: 1100000, dailyInvestment: 0, monthlyInvestment: 50000, history: [{date: '2026-05-01', amount: 1100000, investment: 1100000, note: '初回'}, {date: '2026-08-01', amount: 1244330, investment: 80000, note: '8月'}] },
+      jfx: { name: '④ JFX高金利積立', category: '積立投資', assetDivision: 'FX/高金利', current: 1200377, cumulativeInvestment: 1150000, dailyInvestment: 0, monthlyInvestment: 0, history: [{date: '2026-05-01', amount: 1150000, investment: 1150000, note: '初回'}, {date: '2026-08-01', amount: 1200377, investment: 430000, note: '8月'}] },
+      gmo: { name: '⑤ GMOコイン', category: '積立投資', assetDivision: '暗号資産', current: 790990, cumulativeInvestment: 750000, dailyInvestment: 500, monthlyInvestment: 15000, history: [{date: '2026-05-01', amount: 750000, investment: 750000, note: '初回'}, {date: '2026-08-01', amount: 790990, investment: 50000, note: '8月'}] },
+      melcoin: { name: '⑥ メルコイン', category: '積立投資', assetDivision: '暗号資産', current: 26293, cumulativeInvestment: 25000, dailyInvestment: 0, monthlyInvestment: 5000, history: [{date: '2026-06-01', amount: 25000, investment: 25000, note: '初回'}, {date: '2026-08-01', amount: 26293, investment: 5000, note: '8月'}] },
+      gold: { name: '⑦ GOLD投資', category: '積立投資', assetDivision: 'コモディティ', current: 500000, cumulativeInvestment: 500000, dailyInvestment: 0, monthlyInvestment: 10000, history: [{date: '2026-05-01', amount: 500000, investment: 500000, note: '初回'}, {date: '2026-08-01', amount: 500000, investment: 500000, note: '8月'}] },
+      paypay_pt: { name: '⑧ PAYPAYポイント', category: '積立投資', assetDivision: 'ポイント', current: 18400, cumulativeInvestment: 0, dailyInvestment: 0, monthlyInvestment: 0, history: [{date: '2026-07-01', amount: 16200, investment: 0, note: '初回'}] },
+      rakuten_pt: { name: '⑨ 楽天ポイント', category: '積立投資', assetDivision: 'ポイント', current: 24500, cumulativeInvestment: 0, dailyInvestment: 0, monthlyInvestment: 0, history: [{date: '2026-07-01', amount: 28000, investment: 0, note: '初回'}] },
 
       mercari: { name: '① メルカリ売上', category: '副業状況', assetDivision: '物販', current: 85000, cumulativeInvestment: 0, history: [{date: '2026-05-01', amount: 80000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 85000, investment: 0, note: '8月'}] },
       fx: { name: '② FX売買', category: '副業状況', assetDivision: 'FX', current: 42000, cumulativeInvestment: 0, history: [{date: '2026-05-01', amount: 45000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 42000, investment: 0, note: '8月'}] },
@@ -1019,7 +1079,6 @@
       return { diffVal, diffPct, prev };
     }
 
-    // 累積投資に対する損益率・損益額を計算する関数
     function calcProfitLoss(item) {
       const current = item.current;
       const cumulative = item.cumulativeInvestment || 0;
@@ -1246,6 +1305,9 @@
       document.getElementById('input-item-category').value = item.assetDivision || '';
       document.getElementById('input-item-name').value = item.name;
       document.getElementById('input-cumulative-inv').value = item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0;
+      document.getElementById('input-daily-inv').value = item.dailyInvestment !== undefined ? item.dailyInvestment : 0;
+      document.getElementById('input-monthly-inv').value = item.monthlyInvestment !== undefined ? item.monthlyInvestment : 0;
+      
       document.getElementById('edit-item-display-name').textContent = item.name;
       document.getElementById('edit-item-current-amount').textContent = `¥${item.current.toLocaleString()}`;
       document.getElementById('edit-item-last-update').textContent = `最終更新: ${item.history?.[0]?.date || '未登録'}`;
@@ -1324,11 +1386,15 @@
       const newDivision = document.getElementById('input-item-category').value.trim();
       const newName = document.getElementById('input-item-name').value.trim();
       const newCumulative = parseFloat(document.getElementById('input-cumulative-inv').value);
+      const newDaily = parseFloat(document.getElementById('input-daily-inv').value) || 0;
+      const newMonthly = parseFloat(document.getElementById('input-monthly-inv').value) || 0;
       if (!newName || isNaN(newCumulative)) return;
 
       appData[activeItemKey].assetDivision = newDivision;
       appData[activeItemKey].name = newName;
       appData[activeItemKey].cumulativeInvestment = newCumulative;
+      appData[activeItemKey].dailyInvestment = newDaily;
+      appData[activeItemKey].monthlyInvestment = newMonthly;
 
       saveData();
       renderSidebarMenu();
@@ -1347,6 +1413,8 @@
         assetDivision: '未設定',
         current: 0,
         cumulativeInvestment: 0,
+        dailyInvestment: 0,
+        monthlyInvestment: 0,
         history: [{ date: new Date().toISOString().split('T')[0], amount: 0, investment: 0, note: '初回' }]
       };
       saveData();
@@ -1556,10 +1624,28 @@
       ];
 
       let colorIndex = 0;
+      let totalMonthlyExpected = 0;
+      let monthlyPlanRowsHtml = '';
+
       tsumitateKeys.forEach(key => {
         const item = appData[key];
         const { diffVal, diffPct } = calcProfitLoss(item);
         const elapsedDays = calcElapsedDays(item);
+
+        // 今月の積立予定額計算（毎日 × 31日 ＋ 毎月）
+        const daily = item.dailyInvestment || 0;
+        const monthly = item.monthlyInvestment || 0;
+        const itemExpected = (daily * 31) + monthly;
+        if (itemExpected > 0) {
+          totalMonthlyExpected += itemExpected;
+          monthlyPlanRowsHtml += `
+            <div class="monthly-plan-row">
+              <span style="font-weight:600;">${item.name}</span>
+              <span style="color:var(--primary-dark); font-weight:bold;">¥${itemExpected.toLocaleString()} <span style="font-size:0.65rem; color:var(--text-sub);">(日¥${daily.toLocaleString()}+月¥${monthly.toLocaleString()})</span></span>
+            </div>
+          `;
+        }
+
         const tile = document.createElement('div');
         tile.className = 'info-tile-large';
         tile.style.background = betterPastelColors[colorIndex % betterPastelColors.length];
@@ -1568,11 +1654,16 @@
         tile.onclick = () => openItemEdit(key);
 
         const amtStr = `¥${item.current.toLocaleString()}`;
+        const dailyText = (daily > 0) ? `毎日 ¥${daily.toLocaleString()} 定期積立` : '';
+        const monthlyText = (monthly > 0) ? `毎月 ¥${monthly.toLocaleString()} 定期積立` : '';
+        const plansHtml = (dailyText || monthlyText) ? `<div class="tile-plans"><span>${dailyText}</span><span>${monthlyText}</span></div>` : '';
+
         tile.innerHTML = `
           <div class="tile-top">
             <div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.7rem; color:#3a7bd5; margin-right:3px;"></i>${item.name}</div>
             <div class="tile-sub"><i class="fa-solid fa-clock"></i> ${elapsedDays}日経過</div>
           </div>
+          ${plansHtml}
           <div class="tile-bottom">
             <div class="tile-value">${amtStr}</div>
             <div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>
@@ -1580,6 +1671,22 @@
         `;
         tsumitateGrid.appendChild(tile);
       });
+
+      // 余白部分に「今月の定期積立一覧」カードを追加挿入
+      if (selectedTsumitateFilter === '全体' && monthlyPlanRowsHtml !== '') {
+        const monthlyCard = document.createElement('div');
+        monthlyCard.className = 'monthly-plan-card';
+        monthlyCard.innerHTML = `
+          <div class="monthly-plan-header">
+            <span><i class="fa-solid fa-calendar-days" style="color:var(--primary-color); margin-right:4px;"></i> 今月の定期積立一覧 (8月)</span>
+            <span style="color:var(--accent-green); font-size:0.85rem;">合計: ¥${totalMonthlyExpected.toLocaleString()}</span>
+          </div>
+          <div class="monthly-plan-list">
+            ${monthlyPlanRowsHtml}
+          </div>
+        `;
+        tsumitateGrid.appendChild(monthlyCard);
+      }
 
       // 副業状況カードの並び替え（番号順）
       const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
