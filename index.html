@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -350,11 +351,11 @@
     /* 今月の定期積立一覧表（余白スペース用カード）スタイル */
     .monthly-plan-card {
       grid-column: span 2;
-      background: linear-gradient(145deg, #ffffff, #f0f4fa);
+      background: linear-gradient(145deg, #ffffff, #f4f7fc);
       border-radius: 12px;
       padding: 10px 14px;
-      box-shadow: 3px 3px 8px rgba(0,0,0,0.05), -3px -3px 8px #ffffff;
-      border: 1px solid rgba(58, 123, 213, 0.2);
+      box-shadow: 4px 4px 10px rgba(58, 123, 213, 0.08), -4px -4px 10px #ffffff;
+      border: 1px solid rgba(58, 123, 213, 0.25);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -363,29 +364,35 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 4px;
-      font-size: 0.8rem;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 6px;
+      font-size: 0.82rem;
       font-weight: bold;
       color: var(--primary-dark);
     }
     .monthly-plan-list {
       display: flex;
       flex-direction: column;
-      gap: 3px;
-      max-height: 130px;
+      gap: 4px;
+      max-height: 140px;
       overflow-y: auto;
+      padding-right: 2px;
     }
     .monthly-plan-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.75rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.8);
+      font-size: 0.76rem;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 1px solid #edf2f7;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .monthly-plan-row:nth-child(odd) { background: #ffffff; }
+    .monthly-plan-row:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
 
     .private-mask {
       filter: blur(5px);
@@ -733,7 +740,7 @@
             </div>
             <!-- 2.資産推移の区分選択フィルター -->
             <div class="filter-bar" id="trend-filter-bar"></div>
-            <div class="chart-box" style="height: 70px;"><canvas id="trendChart"></canvas></div>
+            <div class="chart-box" style="height: 295px;"><canvas id="trendChart"></canvas></div>
             
             <div class="trend-metrics-container">
               <div class="metric-3d-box">
@@ -763,7 +770,7 @@
           <div class="card" style="flex-grow: 1;">
             <div class="card-title">4. 副業状況 (月別集計)</div>
             <div class="grid-2col" id="dashboard-sidejob-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2px;"></div>
-            <div class="chart-box" style="height: 70px;"><canvas id="sideJobBarChart"></canvas></div>
+            <div class="chart-box" style="height: 140px;"><canvas id="sideJobBarChart"></canvas></div>
           </div>
 
           <div class="card" style="flex-grow: 1;">
@@ -1632,7 +1639,6 @@
         const { diffVal, diffPct } = calcProfitLoss(item);
         const elapsedDays = calcElapsedDays(item);
 
-        // 今月の積立予定額計算（毎日 × 31日 ＋ 毎月）
         const daily = item.dailyInvestment || 0;
         const monthly = item.monthlyInvestment || 0;
         const itemExpected = (daily * 31) + monthly;
@@ -1656,7 +1662,7 @@
         const amtStr = `¥${item.current.toLocaleString()}`;
         const dailyText = (daily > 0) ? `毎日 ¥${daily.toLocaleString()} 定期積立` : '';
         const monthlyText = (monthly > 0) ? `毎月 ¥${monthly.toLocaleString()} 定期積立` : '';
-        const plansHtml = (dailyText || monthlyText) ? `<div class="tile-plans"><span>${dailyText}</span><span>${monthlyText}</span></div>` : '';
+        const plansHtml = (dailyText || monthlyText) ? `<div class="tile-plans"><span>${dailyText}</span><span>${monthlyText}</span></div>` : `<div class="tile-plans" style="color:var(--text-sub);"><span>非定期積立</span></div>`;
 
         tile.innerHTML = `
           <div class="tile-top">
@@ -1755,8 +1761,23 @@
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { type: 'linear', display: true, position: 'left', grid: { display: false } },
-            y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+            y: { 
+              type: 'linear', 
+              display: true, 
+              position: 'right', 
+              grid: { display: false },
+              min: 0,
+              max: 20000000,
+              ticks: {
+                stepSize: 1000000,
+                callback: function(value) {
+                  return (value / 10000) + '万';
+                }
+              }
+            },
+            y1: { 
+              display: false
+            }
           }
         }
       });
