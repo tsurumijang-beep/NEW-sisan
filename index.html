@@ -558,7 +558,7 @@
 
     .edit-split-container {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1fr 1fr;
       gap: 14px;
       height: 100%;
     }
@@ -664,6 +664,32 @@
 
     .toast.show { opacity: 1; transform: translateY(0); }
 
+    /* --- データ取り込みモーダル用スタイル --- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 14px;
+      width: 90%;
+      max-width: 650px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     @media screen and (max-width: 900px) {
       body {
         flex-direction: column;
@@ -707,8 +733,8 @@
     <div class="nav-item" id="menu-all-assets" onclick="switchNav('all-assets')">
       <span><i class="fa-solid fa-chart-pie"></i> 1.全資産</span>
     </div>
-    <div class="nav-item" id="menu-trend" onclick="switchNav('trend')">
-      <span><i class="fa-solid fa-chart-line"></i> 2.資産損益</span>
+    <div class="nav-item" id="menu-rakuten-nisa-status" onclick="switchNav('rakuten-nisa-status')">
+      <span><i class="fa-solid fa-chart-line"></i> 2.楽天NISA状況</span>
     </div>
     <div class="nav-item" id="menu-realtime-tsumitate" onclick="window.open('https://tsurumijang-beep.github.io/DCA-Auto-Asset-Tracker/', '_blank')">
       <span><i class="fa-solid fa-bolt"></i> ※リアルタイム積立※</span>
@@ -814,7 +840,7 @@
         <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
           <span><i class="fa-solid fa-chart-pie"></i> 1.全資産 (前回比較一覧)</span>
         </div>
-        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">設定された「区分」と項目名ごとに前回比較を一覧表示しています。</p>
+        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">設定された「区分」と項目名ごとに前回比較および損益額を一覧表示しています。</p>
         <div class="export-buttons">
           <button class="btn-export" onclick="exportTableToCSV('all-assets-table-body', '全資産_前回比較一覧.csv')"><i class="fa-solid fa-download"></i> CSVダウンロード</button>
           <button class="btn-export" style="background:#27ae60;" onclick="copyTableToClipboard('all-assets-table-body')"><i class="fa-solid fa-copy"></i> クリップボードにコピー</button>
@@ -827,8 +853,9 @@
                 <th>項目名</th>
                 <th>今回金額</th>
                 <th>前回金額</th>
-                <th>前回比 増減額</th>
-                <th>前回比 騰落率 (%)</th>
+                <th>前回比 増減額 (%)</th>
+                <th>累積投資額</th>
+                <th>損益額 (%)</th>
               </tr>
             </thead>
             <tbody id="all-assets-table-body"></tbody>
@@ -837,31 +864,79 @@
       </div>
     </section>
 
-    <!-- 3. 「2. 資産損益」詳細ビュー -->
-    <section id="view-trend" class="view-section">
-      <div class="detail-container">
-        <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
-          <span><i class="fa-solid fa-chart-line"></i> 2.資産損益一覧</span>
+    <!-- 3. 「2. 楽天NISA状況」専用 保有銘柄詳細ページ（ブログ風クリーンデザイン） -->
+    <section id="view-rakuten-nisa-status" class="view-section">
+      <div class="detail-container" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="card-title" style="font-size: 1.1rem; color: var(--primary-color);">
+          <span><i class="fa-solid fa-chart-line"></i> 2. 楽天NISA 保有銘柄詳細</span>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-export" onclick="openImportModal()" style="font-size:0.7rem; padding:6px 12px; background:var(--accent-orange);"><i class="fa-solid fa-file-import"></i> データ取り込み</button>
+            <button class="btn-export" onclick="switchNav('dashboard')" style="font-size:0.7rem; padding:6px 12px;"><i class="fa-solid fa-arrow-left"></i> ダッシュボードへ戻る</button>
+          </div>
         </div>
-        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">設定された「区分」と累積投資額を基準に損益一覧を表示します。</p>
-        <div class="export-buttons">
-          <button class="btn-export" onclick="exportTableToCSV('profit-loss-table-body', '資産損益一覧.csv')"><i class="fa-solid fa-download"></i> CSVダウンロード</button>
-          <button class="btn-export" style="background:#27ae60;" onclick="copyTableToClipboard('profit-loss-table-body')"><i class="fa-solid fa-copy"></i> クリップボードにコピー</button>
+        <p style="font-size: 0.82rem; color: var(--text-sub);">楽天NISA口座で保有している日本市場、米国市場、中国市場の各銘柄ごとの詳細状況です。</p>
+
+        <!-- 日本市場 -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="font-size: 0.85rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px; border-left: 4px solid #3a7bd5; padding-left: 6px;">■ 日本市場 (国内株式・投資信託)</div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+              <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+                  <th style="padding: 10px; color: #64748b;">銘柄</th>
+                  <th style="padding: 10px; color: #64748b;">数量</th>
+                  <th style="padding: 10px; color: #64748b;">現在値</th>
+                  <th style="padding: 10px; color: #64748b;">評価額</th>
+                  <th style="padding: 10px; color: #64748b;">収益率</th>
+                </tr>
+              </thead>
+              <tbody id="nisa-table-jp">
+                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px;">eMAXIS Slim 新興国</td><td style="padding: 10px;">12,055口</td><td style="padding: 10px;">25,394円</td><td style="padding: 10px;">325,183円</td><td style="padding: 10px; color: #16a34a; font-weight: bold;">+22.7%</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>区分</th>
-                <th>項目名</th>
-                <th>今回金額</th>
-                <th>累積投資額</th>
-                <th>増減額 (損益)</th>
-                <th>騰落率 (%)</th>
-              </tr>
-            </thead>
-            <tbody id="profit-loss-table-body"></tbody>
-          </table>
+
+        <!-- 米国市場 -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="font-size: 0.85rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px; border-left: 4px solid #3a7bd5; padding-left: 6px;">■ 米国市場</div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+              <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+                  <th style="padding: 10px; color: #64748b;">銘柄</th>
+                  <th style="padding: 10px; color: #64748b;">数量</th>
+                  <th style="padding: 10px; color: #64748b;">現在値</th>
+                  <th style="padding: 10px; color: #64748b;">評価額</th>
+                  <th style="padding: 10px; color: #64748b;">収益率</th>
+                </tr>
+              </thead>
+              <tbody id="nisa-table-us">
+                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px;">BABA アリババ</td><td style="padding: 10px;">20株</td><td style="padding: 10px;">122.25 USD</td><td style="padding: 10px;">385,845円</td><td style="padding: 10px; color: #16a34a; font-weight: bold;">+75.6%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 中国市場 -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="font-size: 0.85rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px; border-left: 4px solid #3a7bd5; padding-left: 6px;">■ 中国市場 (香港株)</div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+              <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+                  <th style="padding: 10px; color: #64748b;">銘柄</th>
+                  <th style="padding: 10px; color: #64748b;">数量</th>
+                  <th style="padding: 10px; color: #64748b;">現在値</th>
+                  <th style="padding: 10px; color: #64748b;">評価額</th>
+                  <th style="padding: 10px; color: #64748b;">収益率</th>
+                </tr>
+              </thead>
+              <tbody id="nisa-table-cn">
+                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px;">00700 テンセント</td><td style="padding: 10px;">100株</td><td style="padding: 10px;">475.20 HKD</td><td style="padding: 10px;">954,676円</td><td style="padding: 10px; color: #16a34a; font-weight: bold;">+73.7%</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -954,6 +1029,25 @@
       </div>
     </section>
   </main>
+
+  <!-- データ取り込みモーダル -->
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal-content">
+      <div class="card-title" style="color: var(--primary-color);">
+        <span><i class="fa-solid fa-file-import"></i> 楽天NISA 保有銘柄データ取り込み</span>
+        <button onclick="closeImportModal()" style="border:none; background:none; cursor:pointer; font-size:1rem;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p style="font-size:0.75rem; color:var(--text-sub);">
+        楽天証券の「保有商品詳細（すべて）」のテキストをそのまま貼り付けてください。<br>
+        ※コピーした複数行のテキストデータから、すべての銘柄を自動で正しく解析して仕分けます。
+      </p>
+      <textarea id="import-textarea" class="form-control" rows="12" placeholder="ここにコピーしたテキストを貼り付けてください..."></textarea>
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="btn-submit" style="background:#95a5a6; padding:6px 14px;" onclick="closeImportModal()">キャンセル</button>
+        <button class="btn-submit" style="background:#27ae60; padding:6px 14px;" onclick="processDataImport()">取り込んで反映する</button>
+      </div>
+    </div>
+  </div>
 
   <div id="toast" class="toast">
     <i class="fa-solid fa-circle-check"></i>
@@ -1192,12 +1286,13 @@
       return Math.max(0, diffDays);
     }
 
-    function renderDiffHtml(diffVal, diffPct) {
-      if (diffVal === 0) return `<span class="diff-badge zero">±0 (0%)</span>`;
+    function renderDiffHtml(diffVal, diffPct, hidePct = false) {
+      if (diffVal === 0) return `<span class="diff-badge zero">±0${hidePct ? '' : ' (0%)'}</span>`;
       const isPlus = diffVal > 0;
       const sign = isPlus ? '+' : '';
       const cls = isPlus ? 'plus' : 'minus';
-      return `<span class="diff-badge ${cls}">${sign}${diffVal.toLocaleString()}円 (${sign}${diffPct.toFixed(1)}%)</span>`;
+      const pctText = hidePct ? '' : ` (${sign}${diffPct.toFixed(1)}%)`;
+      return `<span class="diff-badge ${cls}">${sign}${diffVal.toLocaleString()}円${pctText}</span>`;
     }
 
     window.switchNav = function(targetView) {
@@ -1215,11 +1310,10 @@
         document.getElementById('menu-all-assets').classList.add('active');
         document.getElementById('header-view-title').textContent = '1.全資産 (前回比較一覧)';
         renderAllAssetsTable();
-      } else if (targetView === 'trend') {
-        document.getElementById('view-trend').classList.add('active');
-        document.getElementById('menu-trend').classList.add('active');
-        document.getElementById('header-view-title').textContent = '2.資産損益一覧';
-        renderProfitLossTable();
+      } else if (targetView === 'rakuten-nisa-status') {
+        document.getElementById('view-rakuten-nisa-status').classList.add('active');
+        document.getElementById('menu-rakuten-nisa-status').classList.add('active');
+        document.getElementById('header-view-title').textContent = '2. 楽天NISA 保有銘柄詳細';
       }
     };
 
@@ -1227,20 +1321,29 @@
       const tbody = document.getElementById('all-assets-table-body');
       tbody.innerHTML = '';
 
-      let sumCurrent = 0, sumPrev = 0, sumDiff = 0;
+      let sumCurrent = 0, sumPrev = 0, sumDiff = 0, sumCumulative = 0, sumProfit = 0;
 
       const sortedKeys = sortKeysByMenuOrder(Object.keys(appData));
       sortedKeys.forEach(key => {
         const item = appData[key];
         const { diffVal, diffPct, prev } = calcDiff(item);
+        const cumulativeInv = item.cumulativeInvestment || 0;
+        const profitVal = item.current - cumulativeInv;
+        const profitPct = cumulativeInv !== 0 ? (profitVal / cumulativeInv) * 100 : 0;
+
         sumCurrent += item.current;
         sumPrev += prev;
         sumDiff += diffVal;
+        sumCumulative += cumulativeInv;
+        sumProfit += profitVal;
 
         const division = item.assetDivision || '未設定';
         const tr = document.createElement('tr');
         const curStr = `¥${item.current.toLocaleString()}`;
         const prevStr = `¥${prev.toLocaleString()}`;
+        const invStr = `¥${cumulativeInv.toLocaleString()}`;
+
+        const hideProfitPct = (item.category === '副業状況' || item.category === '銀行預金');
 
         tr.innerHTML = `
           <td><span style="font-size:0.75rem; background:#e0e8f5; padding:3px 8px; border-radius:10px; font-weight:bold;">${division}</span></td>
@@ -1248,12 +1351,14 @@
           <td>${curStr}</td>
           <td>${prevStr}</td>
           <td>${renderDiffHtml(diffVal, diffPct)}</td>
-          <td>${diffVal !== 0 ? (diffVal > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`) : '0.0%'}</td>
+          <td>${invStr}</td>
+          <td>${renderDiffHtml(profitVal, profitPct, hideProfitPct)}</td>
         `;
         tbody.appendChild(tr);
       });
 
       const sumPct = sumPrev !== 0 ? (sumDiff / sumPrev) * 100 : 0;
+      const sumProfitPct = sumCumulative !== 0 ? (sumProfit / sumCumulative) * 100 : 0;
       const totalTr = document.createElement('tr');
       totalTr.className = 'total-row';
       totalTr.innerHTML = `
@@ -1261,54 +1366,8 @@
         <td>¥${sumCurrent.toLocaleString()}</td>
         <td>¥${sumPrev.toLocaleString()}</td>
         <td>${renderDiffHtml(sumDiff, sumPct)}</td>
-        <td>${sumDiff !== 0 ? (sumDiff > 0 ? `+${sumPct.toFixed(1)}%` : `${sumPct.toFixed(1)}%`) : '0.0%'}</td>
-      `;
-      tbody.insertBefore(totalTr, tbody.firstChild);
-    }
-
-    function renderProfitLossTable() {
-      const tbody = document.getElementById('profit-loss-table-body');
-      tbody.innerHTML = '';
-
-      let sumCurrent = 0, sumCumulative = 0, sumProfit = 0;
-
-      const sortedKeys = sortKeysByMenuOrder(Object.keys(appData));
-      sortedKeys.forEach(key => {
-        const item = appData[key];
-        const curAmt = item.current;
-        const cumulativeInv = item.cumulativeInvestment || 0;
-        const diffVal = curAmt - cumulativeInv;
-        const diffPct = cumulativeInv !== 0 ? (diffVal / cumulativeInv) * 100 : 0;
-
-        sumCurrent += curAmt;
-        sumCumulative += cumulativeInv;
-        sumProfit += diffVal;
-
-        const division = item.assetDivision || '未設定';
-        const tr = document.createElement('tr');
-        const curStr = `¥${curAmt.toLocaleString()}`;
-        const invStr = `¥${cumulativeInv.toLocaleString()}`;
-
-        tr.innerHTML = `
-          <td><span style="font-size:0.75rem; background:#e0e8f5; padding:3px 8px; border-radius:10px; font-weight:bold;">${division}</span></td>
-          <td style="font-weight:600;">${item.name}</td>
-          <td>${curStr}</td>
-          <td>${invStr}</td>
-          <td>${renderDiffHtml(diffVal, diffPct)}</td>
-          <td>${diffVal !== 0 ? (diffVal > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`) : '0.0%'}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      const sumProfitPct = sumCumulative !== 0 ? (sumProfit / sumCumulative) * 100 : 0;
-      const totalTr = document.createElement('tr');
-      totalTr.className = 'total-row';
-      totalTr.innerHTML = `
-        <td colspan="2">合計</td>
-        <td>¥${sumCurrent.toLocaleString()}</td>
         <td>¥${sumCumulative.toLocaleString()}</td>
         <td>${renderDiffHtml(sumProfit, sumProfitPct)}</td>
-        <td>${sumProfit !== 0 ? (sumProfit > 0 ? `+${sumProfitPct.toFixed(1)}%` : `${sumProfitPct.toFixed(1)}%`) : '0.0%'}</td>
       `;
       tbody.insertBefore(totalTr, tbody.firstChild);
     }
@@ -1380,7 +1439,7 @@
       showToast('履歴CSVをダウンロードしました。');
     };
 
-    function openItemEdit(itemKey) {
+    window.openItemEdit = function(itemKey) {
       activeItemKey = itemKey;
       const item = appData[itemKey];
       if (!item) return;
@@ -1568,18 +1627,170 @@
       setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
+    // --- 楽天証券のコピーテキスト対応 堅牢型パーサー ---
+    window.openImportModal = function() {
+      document.getElementById('import-modal').classList.add('active');
+    };
+    window.closeImportModal = function() {
+      document.getElementById('import-modal').classList.remove('active');
+    };
+
+    window.processDataImport = function() {
+      const rawText = document.getElementById('import-textarea').value.trim();
+      if (!rawText) {
+        alert('テキストを入力してください。');
+        return;
+      }
+
+      const lines = rawText.split('\n').map(l => l.trim()).filter(l => l !== '');
+      
+      let jpRows = [];
+      let usRows = [];
+      let cnRows = [];
+
+      let i = 0;
+      while (i < lines.length) {
+        let line = lines[i];
+
+        // 各行が種別（国内株式、米国株式、中国株式、投資信託）かどうかを判定
+        if (line === '国内株式' || line === '米国株式' || line === '中国株式' || line === '投資信託') {
+          let assetType = line;
+          i++;
+          if (i >= lines.length) break;
+
+          let codeOrName = lines[i]; // 銘柄コード or 投資信託名
+          i++;
+
+          let name = '';
+          let account = '';
+
+          // 銘柄名・口座情報の取得
+          if (assetType === '投資信託') {
+            name = codeOrName;
+            if (i < lines.length && (lines[i].includes('NISA') || lines[i].includes('一般') || lines[i].includes('特定'))) {
+              account = lines[i];
+              i++;
+            }
+          } else {
+            // 株式の場合
+            if (i < lines.length && !lines[i].includes('株') && !lines[i].includes('口') && !lines[i].includes('USD') && !lines[i].includes('HKD') && !lines[i].includes('円')) {
+              name = lines[i];
+              i++;
+            }
+            if (i < lines.length && (lines[i].includes('NISA') || lines[i].includes('一般') || lines[i].includes('特定') || lines[i].includes('銘柄情報'))) {
+              account = lines[i];
+              i++;
+              // 銘柄情報の続き行がある場合はスキップ
+              if (account.includes('銘柄情報') && i < lines.length && !lines[i].includes('株') && !lines[i].includes('口')) {
+                i++;
+              }
+            }
+          }
+
+          // 数値フィールド（保有数量、平均取得価額、現在値、前日比、時価評価額、評価損益など）を次の種別が出るまですべて回収
+          let blockLines = [];
+          while (i < lines.length) {
+            let nextLine = lines[i];
+            if (nextLine === '国内株式' || nextLine === '米国株式' || nextLine === '中国株式' || nextLine === '投資信託') {
+              break;
+            }
+            blockLines.push(nextLine);
+            i++;
+          }
+
+          // blockLinesから「数量」「現在値」「時価評価額」「平均取得価額」を探し出す
+          let qty = '';
+          let curPrice = '';
+          let marketVal = '';
+          let avgPrice = '';
+
+          for (let b = 0; b < blockLines.length; b++) {
+            let valStr = blockLines[b];
+            // 数量 (例: "100 株", "120,710 口")
+            if ((valStr.includes('株') || valStr.includes('口')) && !qty) {
+              qty = valStr;
+            }
+            // 平均取得価額と現在値の判別 (金額/通貨単位が含まれる行)
+            if (valStr.includes('円') || valStr.includes('USD') || valStr.includes('HKD')) {
+              if (!avgPrice) {
+                avgPrice = valStr;
+              } else if (!curPrice) {
+                curPrice = valStr;
+              } else if (!marketVal) {
+                // その次の金額系データを時価評価額候補とする
+                marketVal = valStr;
+              }
+            }
+          }
+
+          // 万が一marketValが取れていない場合の後方フォールバック
+          if (!marketVal && blockLines.length >= 5) {
+            marketVal = blockLines[blockLines.length - 2];
+          }
+          if (!curPrice && blockLines.length >= 3) {
+            curPrice = blockLines[2];
+          }
+
+          // 収益率の算出 (平均取得価額 と 現在値 から計算)
+          let rawAvg = parseFloat(String(avgPrice).replace(/[^0-9.]/g, ''));
+          let rawCur = parseFloat(String(curPrice).replace(/[^0-9.]/g, ''));
+          let rateStr = "+0.0%";
+          if (!isNaN(rawAvg) && !isNaN(rawCur) && rawAvg > 0) {
+            let pct = ((rawCur - rawAvg) / rawAvg) * 100;
+            rateStr = (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%";
+          }
+
+          let isPlus = !rateStr.includes('-');
+          let colorStyle = isPlus ? 'color: #16a34a; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
+
+          let displayName = (assetType === '投資信託') ? name : `${codeOrName} ${name}`;
+          if (account.includes('一般')) {
+            displayName += ` <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>`;
+          }
+
+          let rowHtml = `<tr style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 10px;">${displayName}</td>
+            <td style="padding: 10px;">${qty || '-'}</td>
+            <td style="padding: 10px;">${curPrice || '-'}</td>
+            <td style="padding: 10px;">${marketVal || '-'}</td>
+            <td style="padding: 10px; ${colorStyle}">${rateStr}</td>
+          </tr>`;
+
+          if (assetType === '国内株式' || assetType === '投資信託') {
+            jpRows.push(rowHtml);
+          } else if (assetType === '米国株式') {
+            usRows.push(rowHtml);
+          } else if (assetType === '中国株式') {
+            cnRows.push(rowHtml);
+          }
+        } else {
+          i++;
+        }
+      }
+
+      // テーブルへの反映
+      if (jpRows.length > 0) document.getElementById('nisa-table-jp').innerHTML = jpRows.join('');
+      if (usRows.length > 0) document.getElementById('nisa-table-us').innerHTML = usRows.join('');
+      if (cnRows.length > 0) document.getElementById('nisa-table-cn').innerHTML = cnRows.join('');
+
+      closeImportModal();
+      showToast('すべての保有商品データを正常に取り込んで表を更新しました！');
+    };
+
     function updateDashboard() {
-      let totalAssets = 0, prevTotalAssets = 0;
+      let totalAssets = 0, prevTotalAssets = 0, totalCumulative = 0;
       let sideJobTotal = 0, prevSideJobTotal = 0;
 
       for (let key in appData) {
         const item = appData[key];
         const curAmt = item.current;
         const prevAmt = (item.history && item.history.length > 1) ? item.history[1].amount : curAmt;
+        const cumulative = item.cumulativeInvestment || 0;
 
         if (item.category !== '副業状況' && item.category !== '銀行預金') {
           totalAssets += curAmt;
           prevTotalAssets += prevAmt;
+          totalCumulative += cumulative;
         }
 
         if (item.category === '副業状況') {
@@ -1596,7 +1807,7 @@
       document.getElementById('header-side-income').textContent = `+¥${sideJobTotal.toLocaleString()}`;
       const sDiff = sideJobTotal - prevSideJobTotal;
       const sPct = prevSideJobTotal !== 0 ? (sDiff / prevSideJobTotal) * 100 : 0;
-      document.getElementById('header-side-diff').outerHTML = `<span id="header-side-diff">${renderDiffHtml(sDiff, sPct)}</span>`;
+      document.getElementById('header-side-diff').outerHTML = `<span id="header-side-diff">${renderDiffHtml(sDiff, sPct, true)}</span>`;
 
       renderFilterBars();
       renderDashboardGrids();
@@ -1682,27 +1893,51 @@
 
         const div = item.assetDivision || '未設定';
         if (!divisionMap[div]) {
-          divisionMap[div] = { current: 0, cumulative: 0, items: [] };
+          divisionMap[div] = { current: 0, cumulative: 0, items: [], category: item.category };
         }
         divisionMap[div].current += item.current;
         divisionMap[div].cumulative += (item.cumulativeInvestment || 0);
         divisionMap[div].items.push(item.name);
       }
 
+      const categoryOrder = { '積立投資': 1, '副業状況': 2, '銀行預金': 3 };
+
       let sortedDivisions = Object.keys(divisionMap).sort((a, b) => {
+        const catA = divisionMap[a].category || '積立投資';
+        const catB = divisionMap[b].category || '積立投資';
+        const orderA = categoryOrder[catA] || 99;
+        const orderB = categoryOrder[catB] || 99;
+
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
         return divisionMap[b].current - divisionMap[a].current;
       });
 
       sortedDivisions.forEach(div => {
         const data = divisionMap[div];
-        const diffVal = data.current - data.cumulative;
-        const diffPct = data.cumulative !== 0 ? (diffVal / data.cumulative) * 100 : 0;
+        
+        let divPrevTotal = 0;
+        let divCumulative = 0;
+        for (let key in appData) {
+          const item = appData[key];
+          if ((item.assetDivision || '未設定') === div) {
+            const prevAmt = (item.history && item.history.length > 1) ? item.history[1].amount : item.current;
+            divPrevTotal += prevAmt;
+            divCumulative += (item.cumulativeInvestment || 0);
+          }
+        }
+
+        const profitVal = data.current - divCumulative;
+        const profitPct = divCumulative !== 0 ? (profitVal / divCumulative) * 100 : 0;
         const ratio = grandTotal !== 0 ? (data.current / grandTotal) * 100 : 0;
 
         const row = document.createElement('div');
         row.className = 'asset-row';
         const amtStr = `¥${data.current.toLocaleString()}`;
         const itemsStr = data.items.join(' ');
+
+        const hideProfitPct = (data.category === '副業状況' || data.category === '銀行預金');
 
         row.innerHTML = `
           <div class="asset-row-left">
@@ -1712,7 +1947,7 @@
           <div class="asset-row-right">
             <strong>${amtStr}</strong>
             <span style="font-size:0.58rem; color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
-            ${renderDiffHtml(diffVal, diffPct)}
+            ${renderDiffHtml(profitVal, profitPct, hideProfitPct)}
           </div>
         `;
         assetListEl.appendChild(row);
@@ -1830,7 +2065,7 @@
         const tile = document.createElement('div');
         tile.className = 'info-tile';
         tile.onclick = () => openItemEdit(key);
-        tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}</div><div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div><div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>`;
+        tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}</div><div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div><div class="tile-diff">${renderDiffHtml(diffVal, diffPct, true)}</div>`;
         sidejobGrid.appendChild(tile);
       });
 
@@ -1858,7 +2093,7 @@
         tile.onclick = () => openItemEdit(key);
         const amtStr = isBankPrivate ? '¥*,***,***' : `¥${item.current.toLocaleString()}`;
         const maskClass = isBankPrivate ? 'private-mask' : '';
-        const diffHtml = isBankPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(diffVal, diffPct);
+        const diffHtml = isBankPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(diffVal, diffPct, true);
         tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#2c3e50; margin-right:2px;"></i>${item.name}</div><div class="tile-value ${maskClass}" style="color:var(--text-main);">${amtStr}</div><div class="tile-diff">${diffHtml}</div>`;
         bankGrid.appendChild(tile);
       });
@@ -1922,21 +2157,12 @@
     function updateAssetTrendChart() {
       const monthMap = {};
 
-      if (selectedTrendFilter === '全体') {
-        for (let key in appData) {
-          const item = appData[key];
-          if (item.category === '副業状況' || item.category === '銀行預金') continue;
-          item.history?.forEach(h => {
-            if (h.date) monthMap[h.date.substring(0, 7)] = true;
-          });
-        }
-      } else {
-        const targetItem = appData[selectedTrendFilter];
-        if (targetItem && targetItem.history) {
-          targetItem.history.forEach(h => {
-            if (h.date) monthMap[h.date.substring(0, 7)] = true;
-          });
-        }
+      for (let key in appData) {
+        const item = appData[key];
+        if (item.category === '副業状況' || item.category === '銀行預金') continue;
+        item.history?.forEach(h => {
+          if (h.date) monthMap[h.date.substring(0, 7)] = true;
+        });
       }
 
       const sortedMonths = Object.keys(monthMap).sort();
@@ -1952,30 +2178,17 @@
         let monthTotalAsset = 0;
         let monthTotalInv = 0;
 
-        if (selectedTrendFilter === '全体') {
-          for (let key in appData) {
-            const item = appData[key];
-            if (item.category === '副業状況' || item.category === '銀行預金') continue;
+        for (let key in appData) {
+          const item = appData[key];
+          if (item.category === '副業状況' || item.category === '銀行預金') continue;
 
-            let targetAmt = item.current;
-            if (item.history && item.history.length > 0) {
-              const matched = item.history.find(h => h.date.startsWith(m));
-              if (matched) targetAmt = matched.amount;
-            }
-            monthTotalAsset += targetAmt;
-            monthTotalInv += (item.cumulativeInvestment || 0);
+          let targetAmt = item.current;
+          if (item.history && item.history.length > 0) {
+            const matched = item.history.find(h => h.date.startsWith(m));
+            if (matched) targetAmt = matched.amount;
           }
-        } else {
-          const item = appData[selectedTrendFilter];
-          if (item) {
-            let targetAmt = item.current;
-            if (item.history && item.history.length > 0) {
-              const matched = item.history.find(h => h.date.startsWith(m));
-              if (matched) targetAmt = matched.amount;
-            }
-            monthTotalAsset = targetAmt;
-            monthTotalInv = (item.cumulativeInvestment || 0);
-          }
+          monthTotalAsset += targetAmt;
+          monthTotalInv += (item.cumulativeInvestment || 0);
         }
 
         totalAssetsPerMonth.push(monthTotalAsset);
@@ -1995,11 +2208,6 @@
         latestTotalAsset = monthTotalAsset;
       });
 
-      let datasetLabel = '全資産';
-      if (selectedTrendFilter !== '全体' && appData[selectedTrendFilter]) {
-        datasetLabel = appData[selectedTrendFilter].name;
-      }
-
       if (trendChart) {
         let dynamicMaxY = latestTotalAsset > 0 ? latestTotalAsset / 0.7 : 20000000;
         if (maxAssetInHistory > dynamicMaxY) {
@@ -2012,7 +2220,7 @@
         trendChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
         trendChart.data.datasets = [
           {
-            label: datasetLabel,
+            label: '全資産',
             data: totalAssetsPerMonth.length > 0 ? totalAssetsPerMonth : [0,0,0],
             borderColor: '#2ecc71',
             backgroundColor: 'rgba(46, 204, 113, 0.1)',
@@ -2034,7 +2242,7 @@
         trendChart.update();
       }
 
-      document.getElementById('metric-label-title').textContent = datasetLabel;
+      document.getElementById('metric-label-title').textContent = '全資産';
       const assetEl = document.getElementById('metric-total-asset');
       const rateEl = document.getElementById('metric-profit-rate');
       if (assetEl) assetEl.textContent = `¥${latestTotalAsset.toLocaleString()}`;
