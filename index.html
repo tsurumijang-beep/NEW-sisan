@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+  <style>
     :root {
       --bg-gradient: linear-gradient(135deg, #eef2f7 0%, #dbe3ee 100%);
       --panel-bg: rgba(255, 255, 255, 0.9);
@@ -621,8 +621,7 @@
       flex-direction: column;
       gap: 12px;
     }
-
-    /* --- 3D風パステルNISA個別ページ専用 スタイル (位置統一・カード最適化) --- */
+    /* --- 3D風パステルNISA個別ページ専用 スタイル --- */
     .nisa-market-panel {
       background: linear-gradient(145deg, #ffffff, #f4f7fc);
       border: 1px solid rgba(255,255,255,0.9);
@@ -662,8 +661,6 @@
       vertical-align: middle;
     }
     .nisa-table-desktop tr:hover { background: rgba(230, 235, 245, 0.4); }
-
-    /* スマホ・6インチ等向け3Dパステルカード */
     .nisa-card-mobile {
       display: none;
       flex-direction: column;
@@ -714,7 +711,7 @@
     .text-plus { color: var(--accent-green); font-weight: bold; }
     .text-minus { color: var(--accent-red); font-weight: bold; }
 
-    /* --- 모바일 스마트폰 6인치(768px 이하) 최적화 미디어 쿼리 (우측 짤림 방지 완벽 대책) --- */
+    /* --- レスポンシブ対応 (768px以下) --- */
     @media screen and (max-width: 768px) {
       body {
         flex-direction: column;
@@ -935,7 +932,7 @@
       </div>
     </section>
 
-    <!-- 3. 「2. 楽天NISA状況」専用 保有銘柄詳細ページ（3Dパステル・位置統一スタイル） -->
+    <!-- 3. 「2. 楽天NISA状況」専用 保有銘柄詳細ページ -->
     <section id="view-rakuten-nisa-status" class="view-section">
       <div class="detail-container" style="display: flex; flex-direction: column; gap: 16px;">
         <div class="card-title" style="font-size: 1.1rem; color: var(--primary-color); flex-wrap: wrap; gap: 8px;">
@@ -1104,6 +1101,7 @@
           </div>
           <button type="button" class="btn-submit btn-danger" style="padding:6px; font-size:0.8rem;" onclick="deleteCurrentItem()">この項目を削除</button>
         </div>
+
         <div class="panel-box">
           <div class="current-val-card">
             <div class="label" id="edit-item-display-name">項目名</div>
@@ -1136,8 +1134,6 @@
               <button type="button" id="btn-cancel-edit" class="btn-submit" style="background:#95a5a6; display:none; padding:8px;" onclick="resetHistoryForm()">キャンセル</button>
             </div>
           </form>
-
-          <!-- 대시보드 카드 프리뷰 영역 (요청하신 하단 여백 반영) -->
           <div class="card-title" style="margin-top: 8px; color: var(--primary-color);">
             <span><i class="fa-solid fa-id-card"></i> 該当項目のダッシュボードカード プレビュー</span>
           </div>
@@ -1306,7 +1302,6 @@
     let currentNisaSortOrder = 'asc';
 
     const circleNums = {'①':1, '②':2, '③':3, '④':4, '⑤':5, '⑥':6, '⑦':7, '⑧':8, '⑨':9, '⑩':10};
-
     function getSortNum(name) {
       const char = (name || '').charAt(0);
       return circleNums[char] !== undefined ? circleNums[char] : 999;
@@ -1539,7 +1534,7 @@
           `;
           tbody.appendChild(tr);
 
-          // スマホカード用要素 (位置統一グリッド)
+          // スマホカード用要素
           const card = document.createElement('div');
           card.className = 'nisa-m-card';
           card.innerHTML = `
@@ -1861,7 +1856,6 @@
       renderItemCardPreview();
     }
 
-    // 編集画面하단에 해당 항목의 대시보드 카드 프리뷰 렌더링
     function renderItemCardPreview() {
       const container = document.getElementById('edit-item-card-preview');
       if (!container || !activeItemKey || !appData[activeItemKey]) {
@@ -1880,8 +1874,6 @@
       const plansHtml = (dailyText || monthlyText) ? `<div class="tile-plans"><span>${dailyText}</span><span>${monthlyText}</span></div>` : `<div class="tile-plans" style="color:var(--text-sub);"><span>非定期積立</span></div>`;
 
       const amtStr = `¥${item.current.toLocaleString()}`;
-
-      // 대시보드와 동일한 info-tile-large 구조 적용 (파스텔 배경)
       const pastelColors = [
         'linear-gradient(145deg, #ffffff, #ffc9c9)',
         'linear-gradient(145deg, #ffffff, #bbf7d0)',
@@ -1893,7 +1885,7 @@
         'linear-gradient(145deg, #ffffff, #f3e8ff)',
         'linear-gradient(145deg, #ffffff, #e4e4e7)'
       ];
-      // 키 값 기반으로 일정한 파스텔톤 부여
+
       let hash = 0;
       for (let i = 0; i < activeItemKey.length; i++) {
         hash = activeItemKey.charCodeAt(i) + ((hash << 5) - hash);
@@ -2267,7 +2259,7 @@
 
       const optAll = document.createElement('option');
       optAll.value = '全体';
-      optAll.textContent = '全体 (전체)';
+      optAll.textContent = '全体';
       if (selectedTrendFilter === '全体') optAll.selected = true;
       select.appendChild(optAll);
 
@@ -2338,7 +2330,6 @@
 
       sortedDivisions.forEach(div => {
         const data = divisionMap[div];
-        
         let divPrevTotal = 0;
         let divCumulative = 0;
         for (let key in appData) {
@@ -2578,12 +2569,21 @@
     function updateAssetTrendChart() {
       const monthMap = {};
 
-      for (let key in appData) {
-        const item = appData[key];
-        if (item.category === '副業状況' || item.category === '銀行預金') continue;
-        item.history?.forEach(h => {
-          if (h.date) monthMap[h.date.substring(0, 7)] = true;
-        });
+      if (selectedTrendFilter === '全体') {
+        for (let key in appData) {
+          const item = appData[key];
+          if (item.category === '副業状況' || item.category === '銀行預金') continue;
+          item.history?.forEach(h => {
+            if (h.date) monthMap[h.date.substring(0, 7)] = true;
+          });
+        }
+      } else {
+        const selectedItem = appData[selectedTrendFilter];
+        if (selectedItem && selectedItem.history) {
+          selectedItem.history.forEach(h => {
+            if (h.date) monthMap[h.date.substring(0, 7)] = true;
+          });
+        }
       }
 
       const sortedMonths = Object.keys(monthMap).sort();
@@ -2599,17 +2599,30 @@
         let monthTotalAsset = 0;
         let monthTotalInv = 0;
 
-        for (let key in appData) {
-          const item = appData[key];
-          if (item.category === '副業状況' || item.category === '銀行預金') continue;
+        if (selectedTrendFilter === '全体') {
+          for (let key in appData) {
+            const item = appData[key];
+            if (item.category === '副業状況' || item.category === '銀行預金') continue;
 
-          let targetAmt = item.current;
-          if (item.history && item.history.length > 0) {
-            const matched = item.history.find(h => h.date.startsWith(m));
-            if (matched) targetAmt = matched.amount;
+            let targetAmt = item.current;
+            if (item.history && item.history.length > 0) {
+              const matched = item.history.find(h => h.date.startsWith(m));
+              if (matched) targetAmt = matched.amount;
+            }
+            monthTotalAsset += targetAmt;
+            monthTotalInv += (item.cumulativeInvestment || 0);
           }
-          monthTotalAsset += targetAmt;
-          monthTotalInv += (item.cumulativeInvestment || 0);
+        } else {
+          const item = appData[selectedTrendFilter];
+          if (item) {
+            let targetAmt = item.current;
+            if (item.history && item.history.length > 0) {
+              const matched = item.history.find(h => h.date.startsWith(m));
+              if (matched) targetAmt = matched.amount;
+            }
+            monthTotalAsset += targetAmt;
+            monthTotalInv += (item.cumulativeInvestment || 0);
+          }
         }
 
         totalAssetsPerMonth.push(monthTotalAsset);
@@ -2619,7 +2632,7 @@
 
         const profitRate = monthTotalInv !== 0 ? ((monthTotalAsset - monthTotalInv) / monthTotalInv) * 100 : 0;
 
-        if (m >= '2026-08') {
+        if (m >= '2026-08' || selectedTrendFilter !== '全体') {
           profitRatePerMonth.push(parseFloat(profitRate.toFixed(1)));
           latestProfitRate = profitRate;
         } else {
@@ -2639,9 +2652,15 @@
         trendChart.options.scales.y.max = dynamicMaxY > 0 ? dynamicMaxY : 20000000;
 
         trendChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
+
+        let datasetLabel = '全資産';
+        if (selectedTrendFilter !== '全体' && appData[selectedTrendFilter]) {
+          datasetLabel = appData[selectedTrendFilter].name;
+        }
+
         trendChart.data.datasets = [
           {
-            label: '全資産',
+            label: datasetLabel,
             data: totalAssetsPerMonth.length > 0 ? totalAssetsPerMonth : [0,0,0],
             borderColor: '#16a34a',
             backgroundColor: 'rgba(22, 163, 74, 0.1)',
@@ -2663,7 +2682,7 @@
         trendChart.update();
       }
 
-      document.getElementById('metric-label-title').textContent = '全資産';
+      document.getElementById('metric-label-title').textContent = (selectedTrendFilter === '全体') ? '全資産' : (appData[selectedTrendFilter]?.name || '選択項目');
       const assetEl = document.getElementById('metric-total-asset');
       const rateEl = document.getElementById('metric-profit-rate');
       if (assetEl) assetEl.textContent = `¥${latestTotalAsset.toLocaleString()}`;
