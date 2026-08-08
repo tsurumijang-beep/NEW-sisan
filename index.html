@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>資産管理システム - 全資産文字拡大版</title>
+  <title>資産管理システム - Firebase連携版</title>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- FontAwesome Icons -->
@@ -831,8 +831,24 @@
 
   <div id="toast" class="toast"><i class="fa-solid fa-circle-check"></i><span id="toast-message">更新しました！</span></div>
 
-  <script>
-    const GAS_URL = ""; 
+  <!-- Firebase SDK (Modular v10) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADKizjKvIsKTMiSS6cYnZQNIc3mlL80OM",
+      authDomain: "new-sisan.firebaseapp.com",
+      projectId: "new-sisan",
+      storageBucket: "new-sisan.firebasestorage.app",
+      messagingSenderId: "893356223283",
+      appId: "1:893356223283:web:867218a2193a2772042c46",
+      measurementId: "G-FGJ15BKDQM"
+    };
+
+    // Firebase初期化
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     const defaultData = {
       nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, isPoint: false, history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, note: '8月'}] },
@@ -859,23 +875,24 @@
     let activeItemKey = null;
     let isBankPrivate = true;
 
-    // 選択された区分フィルターの状態保持
     let selectedTrendFilter = '全体';
     let selectedTsumitateFilter = '全体';
 
     let trendChart, sideJobBarChart;
 
     window.addEventListener('DOMContentLoaded', async () => {
-      if (GAS_URL) {
-        try {
-          const res = await fetch(GAS_URL);
-          appData = await res.json();
-        } catch (e) {
-          const saved = localStorage.getItem('asset_mgmt_data_v51');
-          appData = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+      try {
+        const docRef = doc(db, "assets", "mainData");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          appData = docSnap.data();
+        } else {
+          appData = JSON.parse(JSON.stringify(defaultData));
+          await setDoc(docRef, appData);
         }
-      } else {
-        const saved = localStorage.getItem('asset_mgmt_data_v51');
+      } catch (e) {
+        console.error("Firebase読み込みエラー、ローカルストレージを使用します: ", e);
+        const saved = localStorage.getItem('asset_mgmt_data_firebase');
         appData = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
       }
 
@@ -887,16 +904,12 @@
     });
 
     async function saveData() {
-      localStorage.setItem('asset_mgmt_data_v51', JSON.stringify(appData));
-      if (GAS_URL) {
-        try {
-          await fetch(GAS_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(appData)
-          });
-        } catch (e) {}
+      localStorage.setItem('asset_mgmt_data_firebase', JSON.stringify(appData));
+      try {
+        const docRef = doc(db, "assets", "mainData");
+        await setDoc(docRef, appData);
+      } catch (e) {
+        console.error("Firebase保存エラー: ", e);
       }
       updateDatalists();
     }
@@ -977,7 +990,7 @@
       return `<span class="diff-badge ${cls}">${sign}${diffVal.toLocaleString()}${unit} (${sign}${diffPct.toFixed(1)}%)</span>`;
     }
 
-    function switchNav(targetView) {
+    window.switchNav = function(targetView) {
       document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item, .sub-item').forEach(el => el.classList.remove('active'));
       activeItemKey = null;
@@ -1131,7 +1144,7 @@
       });
     }
 
-    function editHistory(index) {
+    window.editHistory = function(index) {
       const item = appData[activeItemKey];
       const target = item.history[index];
       if (!target) return;
@@ -1145,7 +1158,7 @@
       document.getElementById('btn-cancel-edit').style.display = 'inline-block';
     }
 
-    function resetHistoryForm() {
+    window.resetHistoryForm = function() {
       document.getElementById('edit-history-index').value = '-1';
       document.getElementById('input-amount').value = '';
       document.getElementById('input-investment').value = '0';
@@ -1154,7 +1167,7 @@
       document.getElementById('btn-cancel-edit').style.display = 'none';
     }
 
-    function deleteHistory(index) {
+    window.deleteHistory = function(index) {
       const item = appData[activeItemKey];
       if (item.history.length <= 1) {
         alert('最低1件の履歴が必要です。');
@@ -1176,7 +1189,7 @@
       showToast('履歴を削除しました。');
     }
 
-    function handleRenameSubmit(e) {
+    window.handleRenameSubmit = function(e) {
       e.preventDefault();
       if (!activeItemKey || !appData[activeItemKey]) return;
       const newDivision = document.getElementById('input-item-category').value.trim();
@@ -1195,7 +1208,7 @@
       showToast('設定を保存しました！');
     }
 
-    function openAddItemModal(category) {
+    window.openAddItemModal = function(category) {
       const name = prompt(`${category} に追加する項目名:`, '新項目');
       if (!name) return;
       const newKey = 'item_' + Date.now();
@@ -1214,7 +1227,7 @@
       showToast('項目を追加しました！');
     }
 
-    function deleteCurrentItem() {
+    window.deleteCurrentItem = function() {
       if (!activeItemKey) return;
       const itemName = appData[activeItemKey].name;
       if (!confirm(`「${itemName}」を削除しますか？`)) return;
@@ -1225,7 +1238,7 @@
       showToast('項目を削除しました。');
     }
 
-    function handleFormSubmit(e) {
+    window.handleFormSubmit = function(e) {
       e.preventDefault();
       if (!activeItemKey || !appData[activeItemKey]) return;
       const editIndex = parseInt(document.getElementById('edit-history-index').value);
@@ -1300,9 +1313,7 @@
       updateCharts();
     }
 
-    // フィルタボタンを生成する関数
     function renderFilterBars() {
-      // 3. 積立投資に属するすべての区分(assetDivision)を集める
       const tsumitateDivisions = new Set();
       for (let key in appData) {
         if (appData[key].category === '積立投資' && appData[key].assetDivision) {
@@ -1310,7 +1321,6 @@
         }
       }
 
-      // 1. 3. 積立投資 フィルターバー
       const tsumitateBar = document.getElementById('tsumitate-filter-bar');
       tsumitateBar.innerHTML = '';
       
@@ -1326,7 +1336,6 @@
         tsumitateBar.appendChild(btn);
       });
 
-      // 2. 2. 資産推移 フィルターバー (積立投資と同じ区分を利用)
       const trendBar = document.getElementById('trend-filter-bar');
       trendBar.innerHTML = '';
       
@@ -1388,7 +1397,6 @@
         assetListEl.appendChild(row);
       });
 
-      // 3. 積立投資 グリッド描画 (フィルター適用)
       const tsumitateGrid = document.getElementById('dashboard-tsumitate-grid');
       tsumitateGrid.innerHTML = '';
       
@@ -1408,9 +1416,8 @@
       for (let key in appData) {
         const item = appData[key];
         if (item.category === '積立投資') {
-          // 選択されたフィルターに合致するかチェック
           if (selectedTsumitateFilter !== '全体' && item.assetDivision !== selectedTsumitateFilter) {
-            continue; // 一致しない場合はスキップ
+            continue;
           }
 
           const { diffVal, diffPct } = calcDiff(item);
@@ -1473,7 +1480,7 @@
       }
     }
 
-    function toggleBankMask() {
+    window.toggleBankMask = function() {
       isBankPrivate = !isBankPrivate;
       renderBankGrid();
     }
@@ -1504,17 +1511,10 @@
       updateSideJobMonthlyChart();
     }
 
-    // 2. 資産推移チャート更新（選択された区分フィルターを反映）
     function updateAssetTrendChart() {
       const monthMap = {};
       for (let key in appData) {
         const item = appData[key];
-        // フィルター適用チェック (積立投資カテゴリの該当区分、または全体)
-        if (selectedTrendFilter !== '全体' && item.category === '積立投資' && item.assetDivision !== selectedTrendFilter) {
-          continue;
-        }
-        // 全体表示の場合は積立投資以外も含めるか、要望に合わせて積立投資の特定区分を選択したときに対象項目を絞り込む
-        // ※「暗号資産やFXを選択するとその区分された項目だけ表示」に対応
         if (selectedTrendFilter !== '全体' && item.assetDivision !== selectedTrendFilter) {
           continue;
         }
