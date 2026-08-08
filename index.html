@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -872,14 +871,15 @@
           <span><i class="fa-solid fa-chart-line"></i> 2. 楽天NISA 保有銘柄詳細</span>
           <div style="display: flex; gap: 6px;">
             <button class="btn-export" onclick="openImportModal()" style="font-size:0.7rem; padding:6px 12px; background:var(--accent-orange);"><i class="fa-solid fa-file-import"></i> データ取り込み</button>
+            <button class="btn-export" onclick="openNisaAddModal()" style="font-size:0.7rem; padding:6px 12px; background:#27ae60;"><i class="fa-solid fa-plus"></i> 銘柄追加</button>
             <button class="btn-export" onclick="switchNav('dashboard')" style="font-size:0.7rem; padding:6px 12px;"><i class="fa-solid fa-arrow-left"></i> ダッシュボードへ戻る</button>
           </div>
         </div>
-        <p style="font-size: 0.82rem; color: var(--text-sub);">楽天NISA口座で保有している日本市場、米国市場、中国市場の各銘柄ごとの詳細状況です。</p>
+        <p style="font-size: 0.82rem; color: var(--text-sub);">楽天NISA口座で保有している投資信託、国内株式、米国市場、中国市場の各銘柄ごとの詳細状況です。各行の「編集」「削除」ボタンから内容を修正できます。</p>
 
-        <!-- 日本市場 -->
+        <!-- 投資信託 -->
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-          <div style="font-size: 0.85rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px; border-left: 4px solid #3a7bd5; padding-left: 6px;">■ 日本市場 (国内株式・投資信託)</div>
+          <div style="font-size: 0.85rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px; border-left: 4px solid #3a7bd5; padding-left: 6px;">■ 投資信託</div>
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
               <thead>
@@ -889,38 +889,30 @@
                   <th style="padding: 10px; color: #64748b;">現在値</th>
                   <th style="padding: 10px; color: #64748b;">評価額</th>
                   <th style="padding: 10px; color: #64748b;">収益率</th>
+                  <th style="padding: 10px; color: #64748b; text-align: center;">操作</th>
                 </tr>
               </thead>
-              <tbody id="nisa-table-jp">
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">2621 ＩＳ米国債２０年ヘッジ</td>
-            <td style="padding: 10px;">100 株</td>
-            <td style="padding: 10px;">1,065.0 円</td>
-            <td style="padding: 10px;">106,500 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-2.4%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">3350 メタプラネット <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span></td>
-            <td style="padding: 10px;">500 株</td>
-            <td style="padding: 10px;">197.0 円</td>
-            <td style="padding: 10px;">98,500 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-36.5%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">eMAXIS Slim 新興国株式インデックス</td>
-            <td style="padding: 10px;">120,710 口</td>
-            <td style="padding: 10px;">28,615 円</td>
-            <td style="padding: 10px;">345,412 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+41.0%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">日経平均高配当利回り株ファンド</td>
-            <td style="padding: 10px;">19,983 口</td>
-            <td style="padding: 10px;">22,355 円</td>
-            <td style="padding: 10px;">44,672 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-1.9%</td>
-          </tr>
-              </tbody>
+              <tbody id="nisa-table-trust"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 国内株式 -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="font-size: 0.85rem; font-weight: bold; color: #2c3e50; margin-bottom: 8px; border-left: 4px solid #3a7bd5; padding-left: 6px;">■ 国内株式</div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left;">
+              <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+                  <th style="padding: 10px; color: #64748b;">銘柄</th>
+                  <th style="padding: 10px; color: #64748b;">数量</th>
+                  <th style="padding: 10px; color: #64748b;">現在値</th>
+                  <th style="padding: 10px; color: #64748b;">評価額</th>
+                  <th style="padding: 10px; color: #64748b;">収益率</th>
+                  <th style="padding: 10px; color: #64748b; text-align: center;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="nisa-table-jp"></tbody>
             </table>
           </div>
         </div>
@@ -937,150 +929,10 @@
                   <th style="padding: 10px; color: #64748b;">現在値</th>
                   <th style="padding: 10px; color: #64748b;">評価額</th>
                   <th style="padding: 10px; color: #64748b;">収益率</th>
+                  <th style="padding: 10px; color: #64748b; text-align: center;">操作</th>
                 </tr>
               </thead>
-              <tbody id="nisa-table-us">
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">BABA アリババ・グループ・ホールディング</td>
-            <td style="padding: 10px;">20 株</td>
-            <td style="padding: 10px;">94.8100 USD</td>
-            <td style="padding: 10px;">306,691 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+28.5%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">CXSE ウィズダムツリー中国株ニューエコノミーファンド</td>
-            <td style="padding: 10px;">49 株</td>
-            <td style="padding: 10px;">38.0600 USD</td>
-            <td style="padding: 10px;">301,635 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+10.1%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">MSTR ストラテジー</td>
-            <td style="padding: 10px;">6 株</td>
-            <td style="padding: 10px;">82.3100 USD</td>
-            <td style="padding: 10px;">79,876 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-52.7%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">RIOT ライオット・プラットフォームズ</td>
-            <td style="padding: 10px;">31 株</td>
-            <td style="padding: 10px;">28.5700 USD</td>
-            <td style="padding: 10px;">143,248 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+112.4%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">XPEV シャオペン</td>
-            <td style="padding: 10px;">20 株</td>
-            <td style="padding: 10px;">12.0900 USD</td>
-            <td style="padding: 10px;">39,108 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-39.4%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">CAN カナン</td>
-            <td style="padding: 10px;">1,000 株</td>
-            <td style="padding: 10px;">0.3003 USD</td>
-            <td style="padding: 10px;">48,570 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-61.9%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">MARA マラ・ホールディングス</td>
-            <td style="padding: 10px;">130 株</td>
-            <td style="padding: 10px;">14.5400 USD</td>
-            <td style="padding: 10px;">305,720 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+52.4%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">COIN コインベース <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span></td>
-            <td style="padding: 10px;">5 株</td>
-            <td style="padding: 10px;">149.0600 USD</td>
-            <td style="padding: 10px;">120,544 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-12.3%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">HOOD ロビンフッド・マーケッツ</td>
-            <td style="padding: 10px;">8 株</td>
-            <td style="padding: 10px;">98.6900 USD</td>
-            <td style="padding: 10px;">127,696 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+27.8%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">IONQ IonQ INC</td>
-            <td style="padding: 10px;">15 株</td>
-            <td style="padding: 10px;">49.3100 USD</td>
-            <td style="padding: 10px;">119,630 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+88.8%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">IREN IREN</td>
-            <td style="padding: 10px;">8 株</td>
-            <td style="padding: 10px;">47.2100 USD</td>
-            <td style="padding: 10px;">61,085 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+23.0%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">WULF テラウルフ</td>
-            <td style="padding: 10px;">35 株</td>
-            <td style="padding: 10px;">25.8300 USD</td>
-            <td style="padding: 10px;">146,221 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+56.5%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">TEM テンパスAI</td>
-            <td style="padding: 10px;">16 株</td>
-            <td style="padding: 10px;">56.1400 USD</td>
-            <td style="padding: 10px;">145,281 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-9.6%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">CRCL サークル・インターネット・グループ</td>
-            <td style="padding: 10px;">5 株</td>
-            <td style="padding: 10px;">73.5700 USD</td>
-            <td style="padding: 10px;">59,496 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-35.7%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">BMNR ビットマイン・イマージョン・テクノロジーズ</td>
-            <td style="padding: 10px;">130 株</td>
-            <td style="padding: 10px;">13.5600 USD</td>
-            <td style="padding: 10px;">285,115 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-34.5%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">GLXY ギャラクシー・デジタル</td>
-            <td style="padding: 10px;">101 株</td>
-            <td style="padding: 10px;">29.2600 USD</td>
-            <td style="padding: 10px;">477,983 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+13.0%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">FWDI フォワード・インダストリーズ</td>
-            <td style="padding: 10px;">85 株</td>
-            <td style="padding: 10px;">3.9600 USD</td>
-            <td style="padding: 10px;">54,441 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-10.4%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">BIDU バイドゥ</td>
-            <td style="padding: 10px;">5 株</td>
-            <td style="padding: 10px;">104.2200 USD</td>
-            <td style="padding: 10px;">84,282 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+2.3%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">FXI iシェアーズ 中国大型株 ETF</td>
-            <td style="padding: 10px;">49 株</td>
-            <td style="padding: 10px;">31.5900 USD</td>
-            <td style="padding: 10px;">250,358 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-10.5%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">BIIB バイオジェン</td>
-            <td style="padding: 10px;">4 株</td>
-            <td style="padding: 10px;">216.0300 USD</td>
-            <td style="padding: 10px;">139,762 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+53.7%</td>
-          </tr>
-              </tbody>
+              <tbody id="nisa-table-us"></tbody>
             </table>
           </div>
         </div>
@@ -1097,52 +949,10 @@
                   <th style="padding: 10px; color: #64748b;">現在値</th>
                   <th style="padding: 10px; color: #64748b;">評価額</th>
                   <th style="padding: 10px; color: #64748b;">収益率</th>
+                  <th style="padding: 10px; color: #64748b; text-align: center;">操作</th>
                 </tr>
               </thead>
-              <tbody id="nisa-table-cn">
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">00020 センスタイム・グループ</td>
-            <td style="padding: 10px;">3,000 株</td>
-            <td style="padding: 10px;">1.2800 HKD</td>
-            <td style="padding: 10px;">79,180 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-20.5%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">00390 チャイナ・レールウェイ</td>
-            <td style="padding: 10px;">2,000 株</td>
-            <td style="padding: 10px;">3.3500 HKD</td>
-            <td style="padding: 10px;">138,154 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-17.2%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">00700 テンセント</td>
-            <td style="padding: 10px;">100 株</td>
-            <td style="padding: 10px;">411.8000 HKD</td>
-            <td style="padding: 10px;">849,131 円</td>
-            <td style="padding: 10px; color: #16a34a; font-weight: bold;">+42.4%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">01186 チャイナ・レールウェイ・コンストラクション</td>
-            <td style="padding: 10px;">1,000 株</td>
-            <td style="padding: 10px;">4.5800 HKD</td>
-            <td style="padding: 10px;">94,439 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-17.1%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">01658 ポスタル・セービングス・バンク・オブ・チャイナ</td>
-            <td style="padding: 10px;">1,000 株</td>
-            <td style="padding: 10px;">4.7700 HKD</td>
-            <td style="padding: 10px;">98,357 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-9.1%</td>
-          </tr>
-<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">01800 チャイナ・コミュニケーションズ・コンストラクション</td>
-            <td style="padding: 10px;">1,000 株</td>
-            <td style="padding: 10px;">3.7000 HKD</td>
-            <td style="padding: 10px;">76,294 円</td>
-            <td style="padding: 10px; color: #dc2626; font-weight: bold;">-27.7%</td>
-          </tr>
-              </tbody>
+              <tbody id="nisa-table-cn"></tbody>
             </table>
           </div>
         </div>
@@ -1257,6 +1067,53 @@
     </div>
   </div>
 
+  <!-- 楽天NISA 個別銘柄 編集/追加モーダル -->
+  <div class="modal-overlay" id="nisa-item-modal">
+    <div class="modal-content">
+      <div class="card-title" style="color: var(--primary-color);">
+        <span id="nisa-modal-title"><i class="fa-solid fa-pen"></i> 銘柄の編集</span>
+        <button onclick="closeNisaModal()" style="border:none; background:none; cursor:pointer; font-size:1rem;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="nisa-item-form" onsubmit="handleNisaFormSubmit(event)">
+        <input type="hidden" id="nisa-edit-market" value="">
+        <input type="hidden" id="nisa-edit-index" value="-1">
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>区分 (市場)</label>
+          <select id="nisa-market-select" class="form-control">
+            <option value="trust">投資信託</option>
+            <option value="jp">国内株式</option>
+            <option value="us">米国市場</option>
+            <option value="cn">中国市場 (香港株)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>銘柄名 (コードや口座情報含む)</label>
+          <input type="text" id="nisa-input-name" class="form-control" placeholder="例: 3350 メタプラネット 【一般】" required>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>数量 (例: 100 株 / 120,710 口)</label>
+          <input type="text" id="nisa-input-qty" class="form-control" placeholder="100 株" required>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>現在値 (例: 1,065.0 円 / 94.8100 USD)</label>
+          <input type="text" id="nisa-input-price" class="form-control" placeholder="1,065.0 円" required>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>評価額 (例: 106,500 円)</label>
+          <input type="text" id="nisa-input-eval" class="form-control" placeholder="106,500 円" required>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>収益率 (例: -2.4% / +41.0%)</label>
+          <input type="text" id="nisa-input-rate" class="form-control" placeholder="-2.4%" required>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+          <button type="button" class="btn-submit" style="background:#95a5a6; padding:6px 14px;" onclick="closeNisaModal()">キャンセル</button>
+          <button type="submit" class="btn-submit" style="background:#27ae60; padding:6px 14px;">保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="toast" class="toast">
     <i class="fa-solid fa-circle-check"></i>
     <span id="toast-message">更新しました！</span>
@@ -1305,6 +1162,48 @@
     let selectedTrendFilter = '全体';
     let selectedTsumitateFilter = '全体';
     let trendChart, sideJobBarChart;
+
+    // --- 楽天NISA個別銘柄データ構造 (投資信託と国内株式を分離) ---
+    let nisaHoldings = {
+      trust: [
+        { name: 'eMAXIS Slim 新興国株式インデックス', qty: '120,710 口', price: '28,615 円', eval: '345,412 円', rate: '+41.0%' },
+        { name: '日経平均高配当利回り株ファンド', qty: '19,983 口', price: '22,355 円', eval: '44,672 円', rate: '-1.9%' }
+      ],
+      jp: [
+        { name: '2621 ＩＳ米国債２０年ヘッジ', qty: '100 株', price: '1,065.0 円', eval: '106,500 円', rate: '-2.4%' },
+        { name: '3350 メタプラネット <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>', qty: '500 株', price: '197.0 円', eval: '98,500 円', rate: '-36.5%' }
+      ],
+      us: [
+        { name: 'BABA アリババ・グループ・ホールディング', qty: '20 株', price: '94.8100 USD', eval: '306,691 円', rate: '+28.5%' },
+        { name: 'CXSE ウィズダムツリー中国株ニューエコノミーファンド', qty: '49 株', price: '38.0600 USD', eval: '301,635 円', rate: '+10.1%' },
+        { name: 'MSTR ストラテジー', qty: '6 株', price: '82.3100 USD', eval: '79,876 円', rate: '-52.7%' },
+        { name: 'RIOT ライオット・プラットフォームズ', qty: '31 株', price: '28.5700 USD', eval: '143,248 円', rate: '+112.4%' },
+        { name: 'XPEV シャオペン', qty: '20 株', price: '12.0900 USD', eval: '39,108 円', rate: '-39.4%' },
+        { name: 'CAN カナン', qty: '1,000 株', price: '0.3003 USD', eval: '48,570 円', rate: '-61.9%' },
+        { name: 'MARA マラ・ホールディングス', qty: '130 株', price: '14.5400 USD', eval: '305,720 円', rate: '+52.4%' },
+        { name: 'COIN コインベース <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>', qty: '5 株', price: '149.0600 USD', eval: '120,544 円', rate: '-12.3%' },
+        { name: 'HOOD ロビンフッド・マーケッツ', qty: '8 株', price: '98.6900 USD', eval: '127,696 円', rate: '+27.8%' },
+        { name: 'IONQ IonQ INC', qty: '15 株', price: '49.3100 USD', eval: '119,630 円', rate: '+88.8%' },
+        { name: 'IREN IREN', qty: '8 株', price: '47.2100 USD', eval: '61,085 円', rate: '+23.0%' },
+        { name: 'WULF テラウルフ', qty: '35 株', price: '25.8300 USD', eval: '146,221 円', rate: '+56.5%' },
+        { name: 'TEM テンパスAI', qty: '16 株', price: '56.1400 USD', eval: '145,281 円', rate: '-9.6%' },
+        { name: 'CRCL サークル・インターネット・グループ', qty: '5 株', price: '73.5700 USD', eval: '59,496 円', rate: '-35.7%' },
+        { name: 'BMNR ビットマイン・イマージョン・テクノロジーズ', qty: '130 株', price: '13.5600 USD', eval: '285,115 円', rate: '-34.5%' },
+        { name: 'GLXY ギャラクシー・デジタル', qty: '101 株', price: '29.2600 USD', eval: '477,983 円', rate: '+13.0%' },
+        { name: 'FWDI フォワード・インダストリーズ', qty: '85 株', price: '3.9600 USD', eval: '54,441 円', rate: '-10.4%' },
+        { name: 'BIDU バイドゥ', qty: '5 株', price: '104.2200 USD', eval: '84,282 円', rate: '+2.3%' },
+        { name: 'FXI iシェアーズ 中国大型株 ETF', qty: '49 株', price: '31.5900 USD', eval: '250,358 円', rate: '-10.5%' },
+        { name: 'BIIB バイオジェン', qty: '4 株', price: '216.0300 USD', eval: '139,762 円', rate: '+53.7%' }
+      ],
+      cn: [
+        { name: '00020 センスタイム・グループ', qty: '3,000 株', price: '1.2800 HKD', eval: '79,180 円', rate: '-20.5%' },
+        { name: '00390 チャイナ・レールウェイ', qty: '2,000 株', price: '3.3500 HKD', eval: '138,154 円', rate: '-17.2%' },
+        { name: '00700 テンセント', qty: '100 株', price: '411.8000 HKD', eval: '849,131 円', rate: '+42.4%' },
+        { name: '01186 チャイナ・レールウェイ・コンストラクション', qty: '1,000 株', price: '4.5800 HKD', eval: '94,439 円', rate: '-17.1%' },
+        { name: '01658 ポスタル・セービングス・バンク・オブ・チャイナ', qty: '1,000 株', price: '4.7700 HKD', eval: '98,357 円', rate: '-9.1%' },
+        { name: '01800 チャイナ・コミュニケーションズ・コンストラクション', qty: '1,000 株', price: '3.7000 HKD', eval: '76,294 円', rate: '-27.7%' }
+      ]
+    };
 
     const circleNums = {'①':1, '②':2, '③':3, '④':4, '⑤':5, '⑥':6, '⑦':7, '⑧':8, '⑨':9, '⑩':10};
     
@@ -1384,15 +1283,23 @@
           appData = JSON.parse(JSON.stringify(defaultData));
           await setDoc(docRef, appData);
         }
+
+        const savedNisa = localStorage.getItem('rakuten_nisa_holdings_data');
+        if (savedNisa) {
+          nisaHoldings = JSON.parse(savedNisa);
+        }
       } catch (e) {
         console.error("Firebase読み込みエラー、ローカルストレージを使用します: ", e);
         const saved = localStorage.getItem('asset_mgmt_data_firebase');
         appData = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+        const savedNisa = localStorage.getItem('rakuten_nisa_holdings_data');
+        if (savedNisa) nisaHoldings = JSON.parse(savedNisa);
       }
 
       initCharts();
       updateDashboard();
       renderSidebarMenu();
+      renderNisaTables();
       updateDatalists();
       initAmountInputs();
       document.getElementById('input-date').valueAsDate = new Date();
@@ -1400,6 +1307,7 @@
 
     async function saveData() {
       localStorage.setItem('asset_mgmt_data_firebase', JSON.stringify(appData));
+      localStorage.setItem('rakuten_nisa_holdings_data', JSON.stringify(nisaHoldings));
       try {
         const docRef = doc(db, "assets", "mainData");
         await setDoc(docRef, appData);
@@ -1462,6 +1370,108 @@
         });
       });
     }
+
+    function renderNisaTables() {
+      ['trust', 'jp', 'us', 'cn'].forEach(market => {
+        const tbody = document.getElementById(`nisa-table-${market}`);
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const items = nisaHoldings[market] || [];
+        items.forEach((item, idx) => {
+          const isPlus = !String(item.rate).includes('-');
+          const colorStyle = isPlus ? 'color: #16a34a; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
+
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid #f1f5f9';
+          tr.innerHTML = `
+            <td style="padding: 10px;">${item.name}</td>
+            <td style="padding: 10px;">${item.qty || '-'}</td>
+            <td style="padding: 10px;">${item.price || '-'}</td>
+            <td style="padding: 10px;">${item.eval || '-'}</td>
+            <td style="padding: 10px; ${colorStyle}">${item.rate || '-'}</td>
+            <td style="padding: 10px; text-align: center;">
+              <button class="btn-sm" style="background:#3498db; color:#fff;" onclick="editNisaItem('${market}', ${idx})">編集</button>
+              <button class="btn-sm" style="background:#e74c3c; color:#fff;" onclick="deleteNisaItem('${market}', ${idx})">削除</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    // --- 楽天NISA 個別銘柄の編集・追加機能 ---
+    window.openNisaAddModal = function() {
+      document.getElementById('nisa-modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> 新規銘柄の追加';
+      document.getElementById('nisa-edit-market').value = '';
+      document.getElementById('nisa-edit-index').value = '-1';
+      document.getElementById('nisa-market-select').value = 'trust';
+      document.getElementById('nisa-input-name').value = '';
+      document.getElementById('nisa-input-qty').value = '';
+      document.getElementById('nisa-input-price').value = '';
+      document.getElementById('nisa-input-eval').value = '';
+      document.getElementById('nisa-input-rate').value = '';
+      document.getElementById('nisa-item-modal').classList.add('active');
+    };
+
+    window.editNisaItem = function(market, index) {
+      const item = nisaHoldings[market]?.[index];
+      if (!item) return;
+      document.getElementById('nisa-modal-title').innerHTML = '<i class="fa-solid fa-pen"></i> 銘柄情報の修正';
+      document.getElementById('nisa-edit-market').value = market;
+      document.getElementById('nisa-edit-index').value = index;
+      document.getElementById('nisa-market-select').value = market;
+      document.getElementById('nisa-input-name').value = item.name.replace(/<[^>]*>?/gm, '');
+      document.getElementById('nisa-input-qty').value = item.qty;
+      document.getElementById('nisa-input-price').value = item.price;
+      document.getElementById('nisa-input-eval').value = item.eval;
+      document.getElementById('nisa-input-rate').value = item.rate;
+      document.getElementById('nisa-item-modal').classList.add('active');
+    };
+
+    window.closeNisaModal = function() {
+      document.getElementById('nisa-item-modal').classList.remove('active');
+    };
+
+    window.handleNisaFormSubmit = function(e) {
+      e.preventDefault();
+      const targetMarket = document.getElementById('nisa-market-select').value;
+      const editIndex = parseInt(document.getElementById('nisa-edit-index').value);
+      const name = document.getElementById('nisa-input-name').value.trim();
+      const qty = document.getElementById('nisa-input-qty').value.trim();
+      const price = document.getElementById('nisa-input-price').value.trim();
+      const evalAmt = document.getElementById('nisa-input-eval').value.trim();
+      const rate = document.getElementById('nisa-input-rate').value.trim();
+
+      const newItem = { name, qty, price, eval: evalAmt, rate };
+      const oldMarket = document.getElementById('nisa-edit-market').value;
+
+      if (editIndex >= 0 && oldMarket === targetMarket) {
+        nisaHoldings[targetMarket][editIndex] = newItem;
+      } else {
+        if (editIndex >= 0 && oldMarket !== targetMarket) {
+          nisaHoldings[oldMarket].splice(editIndex, 1);
+        }
+        if (!nisaHoldings[targetMarket]) nisaHoldings[targetMarket] = [];
+        nisaHoldings[targetMarket].push(newItem);
+      }
+
+      saveData();
+      renderNisaTables();
+      closeNisaModal();
+      showToast('楽天NISAの保有銘柄情報を更新しました！');
+    };
+
+    window.deleteNisaItem = function(market, index) {
+      const item = nisaHoldings[market]?.[index];
+      if (!item) return;
+      if (!confirm(`本当に「${item.name.replace(/<[^>]*>?/gm, '')}」を削除しますか？`)) return;
+
+      nisaHoldings[market].splice(index, 1);
+      saveData();
+      renderNisaTables();
+      showToast('銘柄を削除しました。');
+    };
 
     function calcDiff(item) {
       if (!item.history || item.history.length < 2) return { diffVal: 0, diffPct: 0, prev: item.current };
@@ -1835,7 +1845,7 @@
       setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
-    // --- 楽天証券のコピーテキスト対応 堅牢型パーサー ---
+    // --- 楽天証券のコピーテキスト対応 堅牢型パーサー (投資信託と国内株式を自動仕分け) ---
     window.openImportModal = function() {
       document.getElementById('import-modal').classList.add('active');
     };
@@ -1855,10 +1865,9 @@
         return;
       }
 
-      // タブ区切りで複数項目が1行にまとまっているケース（証券サイトからのコピー）にも対応するため、
-      // タブも改行として扱ってから1行1項目に分解する
       const lines = rawText.replace(/\t/g, '\n').split('\n').map(l => l.trim()).filter(l => l !== '');
 
+      let trustRows = [];
       let jpRows = [];
       let usRows = [];
       let cnRows = [];
@@ -1867,19 +1876,17 @@
       while (i < lines.length) {
         let line = lines[i];
 
-        // 各行が種別（国内株式、米国株式、中国株式、投資信託）かどうかを判定
         if (NISA_ASSET_TYPES.includes(line)) {
           let assetType = line;
           i++;
           if (i >= lines.length) break;
 
-          let codeOrName = lines[i]; // 銘柄コード or 投資信託名
+          let codeOrName = lines[i];
           i++;
 
           let name = '';
           let account = '';
 
-          // 銘柄名・口座情報の取得
           if (assetType === '投資信託') {
             name = codeOrName;
             if (i < lines.length && isAccountLine(lines[i])) {
@@ -1887,10 +1894,9 @@
               i++;
             }
           } else {
-            // 株式の場合：数量・金額・口座行が出るまでを銘柄名として回収（銘柄名に「株」等の文字を含む場合にも対応）
             let nameParts = [];
             while (i < lines.length && !isQtyLine(lines[i]) && !isAmtLine(lines[i]) && !isAccountLine(lines[i]) && !NISA_ASSET_TYPES.includes(lines[i])) {
-              if (lines[i].startsWith('銘柄情報')) { i++; continue; } // 「銘柄情報（コーポレートアクション）」等は読み飛ばす
+              if (lines[i].startsWith('銘柄情報')) { i++; continue; }
               nameParts.push(lines[i]);
               i++;
             }
@@ -1901,14 +1907,12 @@
             }
           }
 
-          // 数値フィールド（保有数量、平均取得価額、現在値、前日比、時価評価額、評価損益など）を次の種別が出るまですべて回収
           let blockLines = [];
           while (i < lines.length && !NISA_ASSET_TYPES.includes(lines[i])) {
             blockLines.push(lines[i]);
             i++;
           }
 
-          // blockLinesから「数量」と金額系の行をすべて拾う
           let qty = '';
           let amtLines = [];
           for (const v of blockLines) {
@@ -1916,13 +1920,10 @@
             if (isAmtLine(v)) amtLines.push(v);
           }
 
-          // 金額の並び順は「平均取得価額・現在値・(前日比)・時価評価額・評価損益」。
-          // 前日比の有無に関わらず、平均取得価額/現在値は先頭から、時価評価額/評価損益は末尾から取得する
           let avgPrice = amtLines[0] || '';
           let curPrice = amtLines[1] || '';
           let marketVal = amtLines.length >= 2 ? amtLines[amtLines.length - 2] : '';
 
-          // 収益率の算出 (平均取得価額 と 現在値 から計算)
           let rawAvg = parseFloat(String(avgPrice).replace(/[^0-9.]/g, ''));
           let rawCur = parseFloat(String(curPrice).replace(/[^0-9.]/g, ''));
           let rateStr = "+0.0%";
@@ -1931,41 +1932,40 @@
             rateStr = (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%";
           }
 
-          let isPlus = !rateStr.includes('-');
-          let colorStyle = isPlus ? 'color: #16a34a; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
-
           let displayName = (assetType === '投資信託') ? name : `${codeOrName} ${name}`;
           if (account.includes('一般')) {
             displayName += ` <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>`;
           }
 
-          let rowHtml = `<tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 10px;">${displayName}</td>
-            <td style="padding: 10px;">${qty || '-'}</td>
-            <td style="padding: 10px;">${curPrice || '-'}</td>
-            <td style="padding: 10px;">${marketVal || '-'}</td>
-            <td style="padding: 10px; ${colorStyle}">${rateStr}</td>
-          </tr>`;
+          const parsedItem = { name: displayName, qty: qty || '-', price: curPrice || '-', eval: marketVal || '-', rate: rateStr };
 
-          if (assetType === '国内株式' || assetType === '投資信託') {
-            jpRows.push(rowHtml);
+          if (assetType === '投資信託') {
+            trustRows.push(parsedItem);
+          } else if (assetType === '国内株式') {
+            jpRows.push(parsedItem);
           } else if (assetType === '米国株式') {
-            usRows.push(rowHtml);
+            usRows.push(parsedItem);
           } else if (assetType === '中国株式') {
-            cnRows.push(rowHtml);
+            cnRows.push(parsedItem);
           }
         } else {
           i++;
         }
       }
 
-      // テーブルへの反映
-      if (jpRows.length > 0) document.getElementById('nisa-table-jp').innerHTML = jpRows.join('');
-      if (usRows.length > 0) document.getElementById('nisa-table-us').innerHTML = usRows.join('');
-      if (cnRows.length > 0) document.getElementById('nisa-table-cn').innerHTML = cnRows.join('');
+      if (trustRows.length > 0 || jpRows.length > 0 || usRows.length > 0 || cnRows.length > 0) {
+        if (trustRows.length > 0) nisaHoldings.trust = trustRows;
+        if (jpRows.length > 0) nisaHoldings.jp = jpRows;
+        if (usRows.length > 0) nisaHoldings.us = usRows;
+        if (cnRows.length > 0) nisaHoldings.cn = cnRows;
 
-      closeImportModal();
-      showToast('すべての保有商品データを正常に取り込んで表を更新しました！');
+        saveData();
+        renderNisaTables();
+        closeImportModal();
+        showToast('すべての保有商品データを正常に取り込んで表を更新しました！');
+      } else {
+        alert('有効なデータを検出できませんでした。テキストの形式を確認してください。');
+      }
     };
 
     function updateDashboard() {
