@@ -206,10 +206,17 @@
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1.3fr 1.3fr 1fr;
-      grid-template-rows: auto auto;
       gap: 8px;
       height: 100%;
       padding-bottom: 4px;
+      align-items: stretch; /* 하단 라인을 동일하게 맞추기 위해 stretch 적용 */
+    }
+
+    .dashboard-column {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      height: 100%;
     }
 
     .card {
@@ -739,7 +746,8 @@
     <section id="view-dashboard" class="view-section active">
       <div class="dashboard-grid">
         
-        <div style="display: flex; flex-direction: column; gap: 6px;">
+        <!-- 열 1 -->
+        <div class="dashboard-column">
           <div class="card" style="height: 310px;">
             <div class="card-title">1. 全資産 (サマリー)</div>
             <div class="asset-list-mini" id="dashboard-asset-list"></div>
@@ -765,15 +773,19 @@
           </div>
         </div>
 
-        <div class="card" style="grid-row: span 2;">
-          <div class="card-title">
-            <span>3. 積立投資</span>
+        <!-- 열 2 -->
+        <div class="dashboard-column" style="grid-row: span 1; height: 100%;">
+          <div class="card" style="height: 100%;">
+            <div class="card-title">
+              <span>3. 積立投資</span>
+            </div>
+            <div class="filter-bar" id="tsumitate-filter-bar"></div>
+            <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
           </div>
-          <div class="filter-bar" id="tsumitate-filter-bar"></div>
-          <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 6px; grid-row: span 2;">
+        <!-- 열 3 -->
+        <div class="dashboard-column">
           <div class="card" style="flex-grow: 1;">
             <div class="card-title">4. 副業状況 (月別集計)</div>
             <div class="grid-2col" id="dashboard-sidejob-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2px;"></div>
@@ -995,7 +1007,27 @@
       return circleNums[char] !== undefined ? circleNums[char] : 999;
     }
 
-    // --- 金額フォーマット用 유틸리티 함수 ---
+    function sortKeysByMenuOrder(keys) {
+      const categoryOrder = ['積立投資', '副業状況', '銀行預金'];
+      return keys.sort((a, b) => {
+        const itemA = appData[a];
+        const itemB = appData[b];
+        
+        const catIdxA = categoryOrder.indexOf(itemA.category);
+        const catIdxB = categoryOrder.indexOf(itemB.category);
+        
+        if (catIdxA !== catIdxB) {
+          return (catIdxA === -1 ? 99 : catIdxA) - (catIdxB === -1 ? 99 : catIdxB);
+        }
+
+        const numA = getSortNum(itemA.name);
+        const numB = getSortNum(itemB.name);
+        if (numA !== numB) return numA - numB;
+        
+        return (itemA.name || '').localeCompare(itemB.name || '');
+      });
+    }
+
     function formatNumberWithCommas(value) {
       if (value === null || value === undefined || value === '') return '';
       const stringVal = String(value).replace(/,/g, '');
@@ -1011,7 +1043,6 @@
       return isNaN(num) ? 0 : num;
     }
 
-    // 입력 필드 자동 콤마 바인딩 이벤트 리스너 설정
     function initAmountInputs() {
       document.querySelectorAll('.amount-input').forEach(input => {
         if (input.value) {
@@ -1195,7 +1226,9 @@
 
       let sumCurrent = 0, sumPrev = 0, sumDiff = 0;
 
-      for (let key in appData) {
+      const sortedKeys = sortKeysByMenuOrder(Object.keys(appData));
+
+      sortedKeys.forEach(key => {
         const item = appData[key];
         const { diffVal, diffPct, prev } = calcDiff(item);
         sumCurrent += item.current;
@@ -1216,7 +1249,7 @@
           <td>${diffVal !== 0 ? (diffVal > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`) : '0.0%'}</td>
         `;
         tbody.appendChild(tr);
-      }
+      });
 
       const sumPct = sumPrev !== 0 ? (sumDiff / sumPrev) * 100 : 0;
       const totalTr = document.createElement('tr');
@@ -1237,7 +1270,9 @@
 
       let sumCurrent = 0, sumCumulative = 0, sumProfit = 0;
 
-      for (let key in appData) {
+      const sortedKeys = sortKeysByMenuOrder(Object.keys(appData));
+
+      sortedKeys.forEach(key => {
         const item = appData[key];
         const curAmt = item.current;
         const cumulativeInv = item.cumulativeInvestment || 0;
@@ -1262,7 +1297,7 @@
           <td>${diffVal !== 0 ? (diffVal > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`) : '0.0%'}</td>
         `;
         tbody.appendChild(tr);
-      }
+      });
 
       const sumProfitPct = sumCumulative !== 0 ? (sumProfit / sumCumulative) * 100 : 0;
       const totalTr = document.createElement('tr');
@@ -1541,8 +1576,10 @@
         const curAmt = item.current;
         const prevAmt = (item.history && item.history.length > 1) ? item.history[1].amount : curAmt;
 
-        totalAssets += curAmt;
-        prevTotalAssets += prevAmt;
+        if (item.category !== '副業状況' && item.category !== '銀行預金') {
+          totalAssets += curAmt;
+          prevTotalAssets += prevAmt;
+        }
 
         if (item.category === '副業状況') {
           sideJobTotal += curAmt;
@@ -1600,24 +1637,15 @@
       if (selectedTrendFilter === '全体') optAll.selected = true;
       select.appendChild(optAll);
 
-      // 수정: 왼쪽 메뉴와 동일한 순서 (積立投資 ➔ 副業状況 ➔ 銀行預金 순서 및 번호 오름차순)로 풀다운 항목 정렬
-      const categoryOrder = ['積立投資', '副業状況', '銀行預金'];
-      
-      const sortedKeys = Object.keys(appData).sort((a, b) => {
+      const sortedKeys = Object.keys(appData).filter(key => {
+        const item = appData[key];
+        return item.category === '積立投資';
+      }).sort((a, b) => {
         const itemA = appData[a];
         const itemB = appData[b];
-        
-        const catIdxA = categoryOrder.indexOf(itemA.category);
-        const catIdxB = categoryOrder.indexOf(itemB.category);
-        
-        if (catIdxA !== catIdxB) {
-          return (catIdxA === -1 ? 99 : catIdxA) - (catIdxB === -1 ? 99 : catIdxB);
-        }
-
         const numA = getSortNum(itemA.name);
         const numB = getSortNum(itemB.name);
         if (numA !== numB) return numA - numB;
-        
         return (itemA.name || '').localeCompare(itemB.name || '');
       });
 
@@ -1650,6 +1678,8 @@
       let divisionMap = {};
       for (let key in appData) {
         const item = appData[key];
+        if (item.current === 0) continue;
+
         const div = item.assetDivision || '未設定';
         if (!divisionMap[div]) {
           divisionMap[div] = { current: 0, cumulative: 0 };
@@ -1846,16 +1876,25 @@
               position: 'right', 
               grid: { display: false },
               min: 0,
-              max: 20000000,
               ticks: {
-                stepSize: 1000000,
                 callback: function(value) {
                   return (value / 10000) + '万';
                 }
               }
             },
             y1: { 
-              display: false
+              type: 'linear',
+              display: true,
+              position: 'left',
+              grid: { display: false },
+              min: -50,
+              max: 150,
+              ticks: {
+                stepSize: 25,
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
             }
           }
         }
@@ -1879,6 +1918,7 @@
       if (selectedTrendFilter === '全体') {
         for (let key in appData) {
           const item = appData[key];
+          if (item.category === '副業状況' || item.category === '銀行預金') continue;
           item.history?.forEach(h => {
             if (h.date) monthMap[h.date.substring(0, 7)] = true;
           });
@@ -1899,6 +1939,7 @@
 
       let latestTotalAsset = 0;
       let latestProfitRate = 0;
+      let maxAssetInHistory = 0;
 
       sortedMonths.forEach(m => {
         let monthTotalAsset = 0;
@@ -1907,6 +1948,8 @@
         if (selectedTrendFilter === '全体') {
           for (let key in appData) {
             const item = appData[key];
+            if (item.category === '副業状況' || item.category === '銀行預金') continue;
+
             let targetAmt = item.current;
             if (item.history && item.history.length > 0) {
               const matched = item.history.find(h => h.date.startsWith(m));
@@ -1929,6 +1972,10 @@
         }
 
         totalAssetsPerMonth.push(monthTotalAsset);
+        if (monthTotalAsset > maxAssetInHistory) {
+          maxAssetInHistory = monthTotalAsset;
+        }
+
         const profitRate = monthTotalInv !== 0 ? ((monthTotalAsset - monthTotalInv) / monthTotalInv) * 100 : 0;
         profitRatePerMonth.push(parseFloat(profitRate.toFixed(1)));
 
@@ -1942,6 +1989,14 @@
       }
 
       if (trendChart) {
+        let dynamicMaxY = latestTotalAsset > 0 ? latestTotalAsset / 0.7 : 20000000;
+        if (maxAssetInHistory > dynamicMaxY) {
+          dynamicMaxY = maxAssetInHistory / 0.7;
+        }
+        dynamicMaxY = Math.ceil(dynamicMaxY / 1000000) * 1000000;
+
+        trendChart.options.scales.y.max = dynamicMaxY > 0 ? dynamicMaxY : 20000000;
+
         trendChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
         trendChart.data.datasets = [
           {
