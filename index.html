@@ -916,6 +916,12 @@
 
     let trendChart, sideJobBarChart;
 
+    const circleNums = {'①':1, '②':2, '③':3, '④':4, '⑤':5, '⑥':6, '⑦':7, '⑧':8, '⑨':9, '⑩':10};
+    function getSortNum(name) {
+      const char = (name || '').charAt(0);
+      return circleNums[char] !== undefined ? circleNums[char] : 999;
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         const docRef = doc(db, "assets", "mainData");
@@ -977,8 +983,6 @@
     }
 
     function renderSidebarMenu() {
-      const circleNums = {'①':1, '②':2, '③':3, '④':4, '⑤':5, '⑥':6, '⑦':7, '⑧':8, '⑨':9, '⑩':10};
-
       ['積立投資', '副業状況', '銀行預金'].forEach(cat => {
         const menuEl = document.getElementById(`menu-group-${cat}`);
         if (!menuEl) return;
@@ -988,10 +992,8 @@
         keys.sort((a, b) => {
           const nameA = appData[a].name || '';
           const nameB = appData[b].name || '';
-          const charA = nameA.charAt(0);
-          const charB = nameB.charAt(0);
-          const numA = circleNums[charA] !== undefined ? circleNums[charA] : 999;
-          const numB = circleNums[charB] !== undefined ? circleNums[charB] : 999;
+          const numA = getSortNum(nameA);
+          const numB = getSortNum(nameB);
           if (numA !== numB) return numA - numB;
           return nameA.localeCompare(nameB);
         });
@@ -1514,6 +1516,22 @@
         assetListEl.appendChild(row);
       });
 
+      // 積立投資カードの並び替え（番号順）
+      const tsumitateKeys = Object.keys(appData).filter(key => {
+        const item = appData[key];
+        if (item.category !== '積立投資') return false;
+        if (selectedTsumitateFilter !== '全体' && item.assetDivision !== selectedTsumitateFilter) return false;
+        return true;
+      });
+      tsumitateKeys.sort((a, b) => {
+        const nameA = appData[a].name || '';
+        const nameB = appData[b].name || '';
+        const numA = getSortNum(nameA);
+        const numB = getSortNum(nameB);
+        if (numA !== numB) return numA - numB;
+        return nameA.localeCompare(nameB);
+      });
+
       const tsumitateGrid = document.getElementById('dashboard-tsumitate-grid');
       tsumitateGrid.innerHTML = '';
       
@@ -1530,71 +1548,83 @@
       ];
 
       let colorIndex = 0;
-      for (let key in appData) {
+      tsumitateKeys.forEach(key => {
         const item = appData[key];
-        if (item.category === '積立投資') {
-          if (selectedTsumitateFilter !== '全体' && item.assetDivision !== selectedTsumitateFilter) {
-            continue;
-          }
+        const { diffVal, diffPct } = calcDiff(item);
+        const elapsedDays = calcElapsedDays(item);
+        const tile = document.createElement('div');
+        tile.className = 'info-tile-large';
+        tile.style.background = betterPastelColors[colorIndex % betterPastelColors.length];
+        colorIndex++;
+        
+        tile.onclick = () => openItemEdit(key);
 
-          const { diffVal, diffPct } = calcDiff(item);
-          const elapsedDays = calcElapsedDays(item);
-          const tile = document.createElement('div');
-          tile.className = 'info-tile-large';
-          tile.style.background = betterPastelColors[colorIndex % betterPastelColors.length];
-          colorIndex++;
-          
-          tile.onclick = () => openItemEdit(key);
+        const amtStr = `¥${item.current.toLocaleString()}`;
+        tile.innerHTML = `
+          <div class="tile-top">
+            <div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.7rem; color:#3a7bd5; margin-right:3px;"></i>${item.name}</div>
+            <div class="tile-sub"><i class="fa-solid fa-clock"></i> ${elapsedDays}日経過</div>
+          </div>
+          <div class="tile-bottom">
+            <div class="tile-value">${amtStr}</div>
+            <div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>
+          </div>
+        `;
+        tsumitateGrid.appendChild(tile);
+      });
 
-          const amtStr = `¥${item.current.toLocaleString()}`;
-          tile.innerHTML = `
-            <div class="tile-top">
-              <div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.7rem; color:#3a7bd5; margin-right:3px;"></i>${item.name}</div>
-              <div class="tile-sub"><i class="fa-solid fa-clock"></i> ${elapsedDays}日経過</div>
-            </div>
-            <div class="tile-bottom">
-              <div class="tile-value">${amtStr}</div>
-              <div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>
-            </div>
-          `;
-          tsumitateGrid.appendChild(tile);
-        }
-      }
+      // 副業状況カードの並び替え（番号順）
+      const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
+      sidejobKeys.sort((a, b) => {
+        const nameA = appData[a].name || '';
+        const nameB = appData[b].name || '';
+        const numA = getSortNum(nameA);
+        const numB = getSortNum(nameB);
+        if (numA !== numB) return numA - numB;
+        return nameA.localeCompare(nameB);
+      });
 
       const sidejobGrid = document.getElementById('dashboard-sidejob-grid');
       sidejobGrid.innerHTML = '';
-      for (let key in appData) {
+      sidejobKeys.forEach(key => {
         const item = appData[key];
-        if (item.category === '副業状況') {
-          const { diffVal, diffPct } = calcDiff(item);
-          const tile = document.createElement('div');
-          tile.className = 'info-tile';
-          tile.onclick = () => openItemEdit(key);
-          tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}</div><div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div><div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>`;
-          sidejobGrid.appendChild(tile);
-        }
-      }
+        const { diffVal, diffPct } = calcDiff(item);
+        const tile = document.createElement('div');
+        tile.className = 'info-tile';
+        tile.onclick = () => openItemEdit(key);
+        tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}</div><div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div><div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>`;
+        sidejobGrid.appendChild(tile);
+      });
 
       renderBankGrid();
     }
 
     function renderBankGrid() {
+      // 銀行預金カードの並び替え（番号順）
+      const bankKeys = Object.keys(appData).filter(key => appData[key].category === '銀行預金');
+      bankKeys.sort((a, b) => {
+        const nameA = appData[a].name || '';
+        const nameB = appData[b].name || '';
+        const numA = getSortNum(nameA);
+        const numB = getSortNum(nameB);
+        if (numA !== numB) return numA - numB;
+        return nameA.localeCompare(nameB);
+      });
+
       const bankGrid = document.getElementById('dashboard-bank-grid');
       bankGrid.innerHTML = '';
-      for (let key in appData) {
+      bankKeys.forEach(key => {
         const item = appData[key];
-        if (item.category === '銀行預金') {
-          const { diffVal, diffPct } = calcDiff(item);
-          const tile = document.createElement('div');
-          tile.className = 'info-tile';
-          tile.onclick = () => openItemEdit(key);
-          const amtStr = isBankPrivate ? '¥*,***,***' : `¥${item.current.toLocaleString()}`;
-          const maskClass = isBankPrivate ? 'private-mask' : '';
-          const diffHtml = isBankPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(diffVal, diffPct);
-          tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#2c3e50; margin-right:2px;"></i>${item.name}</div><div class="tile-value ${maskClass}" style="color:var(--text-main);">${amtStr}</div><div class="tile-diff">${diffHtml}</div>`;
-          bankGrid.appendChild(tile);
-        }
-      }
+        const { diffVal, diffPct } = calcDiff(item);
+        const tile = document.createElement('div');
+        tile.className = 'info-tile';
+        tile.onclick = () => openItemEdit(key);
+        const amtStr = isBankPrivate ? '¥*,***,***' : `¥${item.current.toLocaleString()}`;
+        const maskClass = isBankPrivate ? 'private-mask' : '';
+        const diffHtml = isBankPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(diffVal, diffPct);
+        tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#2c3e50; margin-right:2px;"></i>${item.name}</div><div class="tile-value ${maskClass}" style="color:var(--text-main);">${amtStr}</div><div class="tile-diff">${diffHtml}</div>`;
+        bankGrid.appendChild(tile);
+      });
     }
 
     window.toggleBankMask = function() {
