@@ -181,10 +181,11 @@
     }
 
     .diff-badge {
-      font-size: 0.75rem;
-      padding: 1px 5px;
+      font-size: 0.7rem;
+      padding: 1px 4px;
       border-radius: 4px;
       font-weight: bold;
+      white-space: nowrap;
     }
 
     .diff-badge.plus { background: #e8f8f0; color: var(--accent-green); }
@@ -294,23 +295,26 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
-      overflow-y: visible;
+      overflow: hidden;
       flex-grow: 1;
+      justify-content: space-between;
     }
 
     .asset-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 2px 6px;
+      padding: 2px 4px;
       border-radius: 4px;
-      font-size: 0.76rem;
+      font-size: 0.68rem;
       font-weight: 600;
+      white-space: nowrap;
     }
 
     .asset-row:nth-child(odd) { background: #ffffff; }
     .asset-row:nth-child(even) { background: #f0f7ff; }
-    .asset-row-right { display: flex; gap: 6px; align-items: center; }
+    .asset-row-left { display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; }
+    .asset-row-right { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
     .grid-large-tsumitate {
       display: grid;
@@ -1678,10 +1682,11 @@
 
         const div = item.assetDivision || '未設定';
         if (!divisionMap[div]) {
-          divisionMap[div] = { current: 0, cumulative: 0 };
+          divisionMap[div] = { current: 0, cumulative: 0, items: [] };
         }
         divisionMap[div].current += item.current;
         divisionMap[div].cumulative += (item.cumulativeInvestment || 0);
+        divisionMap[div].items.push(item.name);
       }
 
       let sortedDivisions = Object.keys(divisionMap).sort((a, b) => {
@@ -1697,11 +1702,16 @@
         const row = document.createElement('div');
         row.className = 'asset-row';
         const amtStr = `¥${data.current.toLocaleString()}`;
+        const itemsStr = data.items.join(' ');
+
         row.innerHTML = `
-          <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:0.68rem; font-weight:bold;">${div}</span></span>
+          <div class="asset-row-left">
+            <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:0.62rem; font-weight:bold;">${div}</span></span>
+            <span style="font-size:0.56rem; color:var(--text-sub);">${itemsStr}</span>
+          </div>
           <div class="asset-row-right">
             <strong>${amtStr}</strong>
-            <span style="font-size:0.6rem; color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
+            <span style="font-size:0.58rem; color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
             ${renderDiffHtml(diffVal, diffPct)}
           </div>
         `;
