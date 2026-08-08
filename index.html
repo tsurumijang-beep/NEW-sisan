@@ -838,7 +838,7 @@
           <form id="item-update-form" onsubmit="handleFormSubmit(event)">
             <input type="hidden" id="edit-history-index" value="-1">
             <div class="form-group">
-              <label for="input-amount">金額 / pt</label>
+              <label for="input-amount">金額</label>
               <input type="number" id="input-amount" class="form-control" required>
             </div>
             <div class="form-group">
@@ -887,24 +887,24 @@
     const db = getFirestore(app);
 
     const defaultData = {
-      nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, isPoint: false, history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, note: '8月'}] },
-      ideco: { name: '② 楽天iDeCo', category: '積立投資', assetDivision: '年金/iDeCo', current: 1026743, cumulativeInvestment: 1000000, isPoint: false, history: [{date: '2026-05-01', amount: 1000000, investment: 1000000, note: '初回'}, {date: '2026-08-01', amount: 1026743, investment: 23000, note: '8月'}] },
-      moomoo: { name: '③ MOOMOO証券', category: '積立投資', assetDivision: '米国株', current: 1244330, cumulativeInvestment: 1100000, isPoint: false, history: [{date: '2026-05-01', amount: 1100000, investment: 1100000, note: '初回'}, {date: '2026-08-01', amount: 1244330, investment: 80000, note: '8月'}] },
-      jfx: { name: '④ JFX高金利積立', category: '積立投資', assetDivision: 'FX/高金利', current: 1200377, cumulativeInvestment: 1150000, isPoint: false, history: [{date: '2026-05-01', amount: 1150000, investment: 1150000, note: '初回'}, {date: '2026-08-01', amount: 1200377, investment: 430000, note: '8月'}] },
-      gmo: { name: '⑤ GMOコイン', category: '積立投資', assetDivision: '暗号資産', current: 790990, cumulativeInvestment: 750000, isPoint: false, history: [{date: '2026-05-01', amount: 750000, investment: 750000, note: '初回'}, {date: '2026-08-01', amount: 790990, investment: 50000, note: '8月'}] },
-      melcoin: { name: '⑥ メルコイン', category: '積立投資', assetDivision: '暗号資産', current: 26293, cumulativeInvestment: 25000, isPoint: false, history: [{date: '2026-06-01', amount: 25000, investment: 25000, note: '初回'}, {date: '2026-08-01', amount: 26293, investment: 5000, note: '8月'}] },
-      gold: { name: '⑦ GOLD投資', category: '積立投資', assetDivision: 'コモディティ', current: 500000, cumulativeInvestment: 500000, isPoint: false, history: [{date: '2026-05-01', amount: 500000, investment: 500000, note: '初回'}, {date: '2026-08-01', amount: 500000, investment: 500000, note: '8月'}] },
-      paypay_pt: { name: 'PAYPAYポイント', category: '積立投資', assetDivision: 'ポイント', current: 18400, cumulativeInvestment: 0, isPoint: true, history: [{date: '2026-07-01', amount: 16200, investment: 0, note: '初回'}] },
-      rakuten_pt: { name: '楽天ポイント', category: '積立投資', assetDivision: 'ポイント', current: 24500, cumulativeInvestment: 0, isPoint: true, history: [{date: '2026-07-01', amount: 28000, investment: 0, note: '初回'}] },
+      nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, note: '8月'}] },
+      ideco: { name: '② 楽天iDeCo', category: '積立投資', assetDivision: '年金/iDeCo', current: 1026743, cumulativeInvestment: 1000000, history: [{date: '2026-05-01', amount: 1000000, investment: 1000000, note: '初回'}, {date: '2026-08-01', amount: 1026743, investment: 23000, note: '8月'}] },
+      moomoo: { name: '③ MOOMOO証券', category: '積立投資', assetDivision: '米国株', current: 1244330, cumulativeInvestment: 1100000, history: [{date: '2026-05-01', amount: 1100000, investment: 1100000, note: '初回'}, {date: '2026-08-01', amount: 1244330, investment: 80000, note: '8月'}] },
+      jfx: { name: '④ JFX高金利積立', category: '積立投資', assetDivision: 'FX/高金利', current: 1200377, cumulativeInvestment: 1150000, history: [{date: '2026-05-01', amount: 1150000, investment: 1150000, note: '初回'}, {date: '2026-08-01', amount: 1200377, investment: 430000, note: '8月'}] },
+      gmo: { name: '⑤ GMOコイン', category: '積立投資', assetDivision: '暗号資産', current: 790990, cumulativeInvestment: 750000, history: [{date: '2026-05-01', amount: 750000, investment: 750000, note: '初回'}, {date: '2026-08-01', amount: 790990, investment: 50000, note: '8月'}] },
+      melcoin: { name: '⑥ メルコイン', category: '積立投資', assetDivision: '暗号資産', current: 26293, cumulativeInvestment: 25000, history: [{date: '2026-06-01', amount: 25000, investment: 25000, note: '初回'}, {date: '2026-08-01', amount: 26293, investment: 5000, note: '8月'}] },
+      gold: { name: '⑦ GOLD投資', category: '積立投資', assetDivision: 'コモディティ', current: 500000, cumulativeInvestment: 500000, history: [{date: '2026-05-01', amount: 500000, investment: 500000, note: '初回'}, {date: '2026-08-01', amount: 500000, investment: 500000, note: '8月'}] },
+      paypay_pt: { name: '⑧ PAYPAYポイント', category: '積立投資', assetDivision: 'ポイント', current: 18400, cumulativeInvestment: 0, history: [{date: '2026-07-01', amount: 16200, investment: 0, note: '初回'}] },
+      rakuten_pt: { name: '⑨ 楽天ポイント', category: '積立投資', assetDivision: 'ポイント', current: 24500, cumulativeInvestment: 0, history: [{date: '2026-07-01', amount: 28000, investment: 0, note: '初回'}] },
 
-      mercari: { name: '① メルカリ売上', category: '副業状況', assetDivision: '物販', current: 85000, cumulativeInvestment: 0, isPoint: false, history: [{date: '2026-05-01', amount: 80000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 85000, investment: 0, note: '8月'}] },
-      fx: { name: '② FX売買', category: '副業状況', assetDivision: 'FX', current: 42000, cumulativeInvestment: 0, isPoint: false, history: [{date: '2026-05-01', amount: 45000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 42000, investment: 0, note: '8月'}] },
-      content: { name: '③ 各種コンテンツ', category: '副業状況', assetDivision: 'コンテンツ', current: 30000, cumulativeInvestment: 0, isPoint: false, history: [{date: '2026-05-01', amount: 28000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 30000, investment: 0, note: '8月'}] },
-      other: { name: '④ その他', category: '副業状況', assetDivision: 'その他', current: 12000, cumulativeInvestment: 0, isPoint: false, history: [{date: '2026-05-01', amount: 15000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 12000, investment: 0, note: '8月'}] },
+      mercari: { name: '① メルカリ売上', category: '副業状況', assetDivision: '物販', current: 85000, cumulativeInvestment: 0, history: [{date: '2026-05-01', amount: 80000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 85000, investment: 0, note: '8月'}] },
+      fx: { name: '② FX売買', category: '副業状況', assetDivision: 'FX', current: 42000, cumulativeInvestment: 0, history: [{date: '2026-05-01', amount: 45000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 42000, investment: 0, note: '8月'}] },
+      content: { name: '③ 各種コンテンツ', category: '副業状況', assetDivision: 'コンテンツ', current: 30000, cumulativeInvestment: 0, history: [{date: '2026-05-01', amount: 28000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 30000, investment: 0, note: '8月'}] },
+      other: { name: '④ その他', category: '副業状況', assetDivision: 'その他', current: 12000, cumulativeInvestment: 0, history: [{date: '2026-05-01', amount: 15000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 12000, investment: 0, note: '8月'}] },
 
-      bank_rakuten: { name: '① 楽天銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 2500000, cumulativeInvestment: 2400000, isPoint: false, history: [{date: '2026-06-01', amount: 2300000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 2500000, investment: 0, note: '8月'}] },
-      bank_paypay: { name: '② PAYPAY銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 1200000, cumulativeInvestment: 1200000, isPoint: false, history: [{date: '2026-06-01', amount: 1100000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 1200000, investment: 0, note: '8月'}] },
-      bank_resona: { name: '③ その他銀行 ※非公開※', category: '銀行預金', assetDivision: 'メガバンク', current: 486139, cumulativeInvestment: 500000, isPoint: false, history: [{date: '2026-06-01', amount: 500000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 486139, investment: 0, note: '8月'}] }
+      bank_rakuten: { name: '① 楽天銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 2500000, cumulativeInvestment: 2400000, history: [{date: '2026-06-01', amount: 2300000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 2500000, investment: 0, note: '8月'}] },
+      bank_paypay: { name: '② PAYPAY銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 1200000, cumulativeInvestment: 1200000, history: [{date: '2026-06-01', amount: 1100000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 1200000, investment: 0, note: '8月'}] },
+      bank_resona: { name: '③ その他銀行 ※非公開※', category: '銀行預金', assetDivision: 'メガバンク', current: 486139, cumulativeInvestment: 500000, history: [{date: '2026-06-01', amount: 500000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 486139, investment: 0, note: '8月'}] }
     };
 
     let appData = {};
@@ -977,20 +977,34 @@
     }
 
     function renderSidebarMenu() {
+      const circleNums = {'①':1, '②':2, '③':3, '④':4, '⑤':5, '⑥':6, '⑦':7, '⑧':8, '⑨':9, '⑩':10};
+
       ['積立投資', '副業状況', '銀行預金'].forEach(cat => {
         const menuEl = document.getElementById(`menu-group-${cat}`);
         if (!menuEl) return;
         menuEl.innerHTML = '';
-        for (let key in appData) {
-          if (appData[key].category === cat) {
-            const li = document.createElement('li');
-            li.className = 'sub-item';
-            if (activeItemKey === key) li.classList.add('active');
-            li.innerHTML = `<span><i class="fa-solid fa-angles-right"></i> ${appData[key].name}</span>`;
-            li.onclick = () => openItemEdit(key);
-            menuEl.appendChild(li);
-          }
-        }
+
+        const keys = Object.keys(appData).filter(key => appData[key].category === cat);
+        keys.sort((a, b) => {
+          const nameA = appData[a].name || '';
+          const nameB = appData[b].name || '';
+          const charA = nameA.charAt(0);
+          const charB = nameB.charAt(0);
+          const numA = circleNums[charA] !== undefined ? circleNums[charA] : 999;
+          const numB = circleNums[charB] !== undefined ? circleNums[charB] : 999;
+          if (numA !== numB) return numA - numB;
+          return nameA.localeCompare(nameB);
+        });
+
+        keys.forEach(key => {
+          const item = appData[key];
+          const li = document.createElement('li');
+          li.className = 'sub-item';
+          if (activeItemKey === key) li.classList.add('active');
+          li.innerHTML = `<span><i class="fa-solid fa-angles-right"></i> ${item.name}</span>`;
+          li.onclick = () => openItemEdit(key);
+          menuEl.appendChild(li);
+        });
       });
     }
 
@@ -1017,13 +1031,12 @@
       return Math.max(0, diffDays);
     }
 
-    function renderDiffHtml(diffVal, diffPct, isPoint = false) {
+    function renderDiffHtml(diffVal, diffPct) {
       if (diffVal === 0) return `<span class="diff-badge zero">±0 (0%)</span>`;
       const isPlus = diffVal > 0;
       const sign = isPlus ? '+' : '';
       const cls = isPlus ? 'plus' : 'minus';
-      const unit = isPoint ? 'pt' : '円';
-      return `<span class="diff-badge ${cls}">${sign}${diffVal.toLocaleString()}${unit} (${sign}${diffPct.toFixed(1)}%)</span>`;
+      return `<span class="diff-badge ${cls}">${sign}${diffVal.toLocaleString()}円 (${sign}${diffPct.toFixed(1)}%)</span>`;
     }
 
     window.switchNav = function(targetView) {
@@ -1064,15 +1077,15 @@
 
         const division = item.assetDivision || '未設定';
         const tr = document.createElement('tr');
-        const curStr = item.isPoint ? `${item.current.toLocaleString()} pt` : `¥${item.current.toLocaleString()}`;
-        const prevStr = item.isPoint ? `${prev.toLocaleString()} pt` : `¥${prev.toLocaleString()}`;
+        const curStr = `¥${item.current.toLocaleString()}`;
+        const prevStr = `¥${prev.toLocaleString()}`;
 
         tr.innerHTML = `
           <td><span style="font-size:0.75rem; background:#e0e8f5; padding:3px 8px; border-radius:10px; font-weight:bold;">${division}</span></td>
           <td style="font-weight:600;">${item.name}</td>
           <td>${curStr}</td>
           <td>${prevStr}</td>
-          <td>${renderDiffHtml(diffVal, diffPct, item.isPoint)}</td>
+          <td>${renderDiffHtml(diffVal, diffPct)}</td>
           <td>${diffVal !== 0 ? (diffVal > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`) : '0.0%'}</td>
         `;
         tbody.appendChild(tr);
@@ -1110,15 +1123,15 @@
 
         const division = item.assetDivision || '未設定';
         const tr = document.createElement('tr');
-        const curStr = item.isPoint ? `${curAmt.toLocaleString()} pt` : `¥${curAmt.toLocaleString()}`;
-        const invStr = item.isPoint ? `${cumulativeInv.toLocaleString()} pt` : `¥${cumulativeInv.toLocaleString()}`;
+        const curStr = `¥${curAmt.toLocaleString()}`;
+        const invStr = `¥${cumulativeInv.toLocaleString()}`;
 
         tr.innerHTML = `
           <td><span style="font-size:0.75rem; background:#e0e8f5; padding:3px 8px; border-radius:10px; font-weight:bold;">${division}</span></td>
           <td style="font-weight:600;">${item.name}</td>
           <td>${curStr}</td>
           <td>${invStr}</td>
-          <td>${renderDiffHtml(diffVal, diffPct, item.isPoint)}</td>
+          <td>${renderDiffHtml(diffVal, diffPct)}</td>
           <td>${diffVal !== 0 ? (diffVal > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`) : '0.0%'}</td>
         `;
         tbody.appendChild(tr);
@@ -1137,7 +1150,7 @@
       tbody.insertBefore(totalTr, tbody.firstChild);
     }
 
-    // --- 데이터 추출(CSV / 복사) 관련 함수 ---
+    // --- データ 추출(CSV / 복사) 관련 함수 ---
     window.exportTableToCSV = function(tbodyId, filename) {
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
@@ -1148,7 +1161,6 @@
         let cols = row.querySelectorAll('th, td');
         let data = [];
         cols.forEach(col => {
-          // HTML 태그 제거 및 콤마 처리
           let text = col.innerText.replace(/[\n\r]+/g, ' ').replace(/"/g, '""');
           data.push(`"${text}"`);
         });
@@ -1224,7 +1236,7 @@
       document.getElementById('input-item-name').value = item.name;
       document.getElementById('input-cumulative-inv').value = item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0;
       document.getElementById('edit-item-display-name').textContent = item.name;
-      document.getElementById('edit-item-current-amount').textContent = item.isPoint ? `${item.current.toLocaleString()} pt` : `¥${item.current.toLocaleString()}`;
+      document.getElementById('edit-item-current-amount').textContent = `¥${item.current.toLocaleString()}`;
       document.getElementById('edit-item-last-update').textContent = `最終更新: ${item.history?.[0]?.date || '未登録'}`;
 
       renderHistoryTable();
@@ -1239,7 +1251,7 @@
         const invText = h.investment !== undefined ? `(投資: ¥${h.investment.toLocaleString()})` : '';
         tr.innerHTML = `
           <td>${h.date}</td>
-          <td style="font-weight:bold;">${h.amount.toLocaleString()} <span style="font-size:0.7rem; color:var(--text-sub);">${invText}</span></td>
+          <td style="font-weight:bold;">¥${h.amount.toLocaleString()} <span style="font-size:0.7rem; color:var(--text-sub);">${invText}</span></td>
           <td>
             <button type="button" class="btn-sm" style="background:#3498db; color:#fff;" onclick="editHistory(${idx})">編集</button>
             <button type="button" class="btn-sm" style="background:#e74c3c; color:#fff;" onclick="deleteHistory(${idx})">削除</button>
@@ -1278,7 +1290,8 @@
         alert('最低1件の履歴が必要です。');
         return;
       }
-      if (!confirm('削除しますか？')) return;
+      const targetHistory = item.history[index];
+      if (!confirm(`本当にこの履歴（日付: ${targetHistory.date}, 金額: ¥${targetHistory.amount.toLocaleString()}）を削除しますか？`)) return;
 
       const deletedHistory = item.history.splice(index, 1)[0];
       if (deletedHistory && deletedHistory.investment) {
@@ -1323,7 +1336,6 @@
         assetDivision: '未設定',
         current: 0,
         cumulativeInvestment: 0,
-        isPoint: category === 'ポイント投資',
         history: [{ date: new Date().toISOString().split('T')[0], amount: 0, investment: 0, note: '初回' }]
       };
       saveData();
@@ -1335,7 +1347,7 @@
     window.deleteCurrentItem = function() {
       if (!activeItemKey) return;
       const itemName = appData[activeItemKey].name;
-      if (!confirm(`「${itemName}」を削除しますか？`)) return;
+      if (!confirm(`本当に「${itemName}」の項目およびすべての履歴データを削除しますか？`)) return;
       delete appData[activeItemKey];
       saveData();
       renderSidebarMenu();
@@ -1471,7 +1483,7 @@
         const item = appData[key];
         const div = item.assetDivision || '未設定';
         if (!divisionMap[div]) {
-          divisionMap[div] = { current: 0, prev: 0, isPoint: item.isPoint };
+          divisionMap[div] = { current: 0, prev: 0 };
         }
         divisionMap[div].current += item.current;
         const prevAmt = (item.history && item.history.length > 1) ? item.history[1].amount : item.current;
@@ -1490,13 +1502,13 @@
 
         const row = document.createElement('div');
         row.className = 'asset-row';
-        const amtStr = data.isPoint ? `${data.current.toLocaleString()} pt` : `¥${data.current.toLocaleString()}`;
+        const amtStr = `¥${data.current.toLocaleString()}`;
         row.innerHTML = `
           <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:0.68rem; font-weight:bold;">${div}</span></span>
           <div class="asset-row-right">
             <strong>${amtStr}</strong>
             <span style="font-size:0.6rem; color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
-            ${renderDiffHtml(diffVal, diffPct, data.isPoint)}
+            ${renderDiffHtml(diffVal, diffPct)}
           </div>
         `;
         assetListEl.appendChild(row);
@@ -1534,7 +1546,7 @@
           
           tile.onclick = () => openItemEdit(key);
 
-          const amtStr = item.isPoint ? `${item.current.toLocaleString()} pt` : `¥${item.current.toLocaleString()}`;
+          const amtStr = `¥${item.current.toLocaleString()}`;
           tile.innerHTML = `
             <div class="tile-top">
               <div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.7rem; color:#3a7bd5; margin-right:3px;"></i>${item.name}</div>
@@ -1542,7 +1554,7 @@
             </div>
             <div class="tile-bottom">
               <div class="tile-value">${amtStr}</div>
-              <div class="tile-diff">${renderDiffHtml(diffVal, diffPct, item.isPoint)}</div>
+              <div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>
             </div>
           `;
           tsumitateGrid.appendChild(tile);
