@@ -413,6 +413,31 @@
       height: 100%;
     }
 
+    .export-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .btn-export {
+      padding: 5px 12px;
+      border: none;
+      border-radius: 6px;
+      background: var(--primary-color);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: background 0.2s;
+    }
+    .btn-export:hover {
+      background: var(--primary-dark);
+    }
+
     table.data-table {
       width: 100%;
       border-collapse: collapse;
@@ -707,7 +732,11 @@
         <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
           <span><i class="fa-solid fa-chart-pie"></i> 1.全資産 (前回比較一覧)</span>
         </div>
-        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;">設定された「区分」と項目名ごとに前回比較を一覧表示しています。</p>
+        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">設定された「区分」と項目名ごとに前回比較を一覧表示しています。</p>
+        <div class="export-buttons">
+          <button class="btn-export" onclick="exportTableToCSV('all-assets-table-body', '全資産_前回比較一覧.csv')"><i class="fa-solid fa-download"></i> CSVダウンロード</button>
+          <button class="btn-export" style="background:#27ae60;" onclick="copyTableToClipboard('all-assets-table-body')"><i class="fa-solid fa-copy"></i> クリップボードにコピー</button>
+        </div>
         <div>
           <table class="data-table">
             <thead>
@@ -732,7 +761,11 @@
         <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
           <span><i class="fa-solid fa-chart-line"></i> 2.資産損益一覧</span>
         </div>
-        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;">設定された「区分」と累積投資額を基準に損益一覧を表示します。</p>
+        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">設定された「区分」と累積投資額を基準に損益一覧を表示します。</p>
+        <div class="export-buttons">
+          <button class="btn-export" onclick="exportTableToCSV('profit-loss-table-body', '資産損益一覧.csv')"><i class="fa-solid fa-download"></i> CSVダウンロード</button>
+          <button class="btn-export" style="background:#27ae60;" onclick="copyTableToClipboard('profit-loss-table-body')"><i class="fa-solid fa-copy"></i> クリップボードにコピー</button>
+        </div>
         <div>
           <table class="data-table">
             <thead>
@@ -777,9 +810,12 @@
             <button type="submit" class="btn-submit" style="background:#27ae60; padding:6px; font-size:0.8rem;">設定を保存する</button>
           </form>
 
-          <div class="card-title" style="margin-top: 6px;">登録履歴ログ</div>
+          <div class="card-title" style="margin-top: 6px;">
+            <span>登録履歴ログ</span>
+            <button class="btn-export" style="padding:2px 6px; font-size:0.65rem;" onclick="exportHistoryCSV()"><i class="fa-solid fa-download"></i> CSV</button>
+          </div>
           <div class="history-table-container">
-            <table class="data-table" style="margin-top:0;">
+            <table class="data-table" id="edit-history-table" style="margin-top:0;">
               <thead><tr><th>日付</th><th>金額 (投資)</th><th>操作</th></tr></thead>
               <tbody id="edit-item-history-body"></tbody>
             </table>
@@ -1100,6 +1136,75 @@
       `;
       tbody.insertBefore(totalTr, tbody.firstChild);
     }
+
+    // --- 데이터 추출(CSV / 복사) 관련 함수 ---
+    window.exportTableToCSV = function(tbodyId, filename) {
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      let csv = [];
+      const rows = tbody.querySelectorAll('tr');
+      
+      rows.forEach(row => {
+        let cols = row.querySelectorAll('th, td');
+        let data = [];
+        cols.forEach(col => {
+          // HTML 태그 제거 및 콤마 처리
+          let text = col.innerText.replace(/[\n\r]+/g, ' ').replace(/"/g, '""');
+          data.push(`"${text}"`);
+        });
+        csv.push(data.join(','));
+      });
+
+      const blob = new Blob(["\uFEFF" + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('CSVファイルをダウンロードしました。');
+    };
+
+    window.copyTableToClipboard = function(tbodyId) {
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      let textData = [];
+      const rows = tbody.querySelectorAll('tr');
+      
+      rows.forEach(row => {
+        let cols = row.querySelectorAll('th, td');
+        let data = [];
+        cols.forEach(col => {
+          data.push(col.innerText.replace(/[\n\r]+/g, ' '));
+        });
+        textData.push(data.join('\t'));
+      });
+
+      navigator.clipboard.writeText(textData.join('\n')).then(() => {
+        showToast('テーブルデータをクリップボードにコピーしました！');
+      }).catch(err => {
+        alert('コピーに失敗しました: ' + err);
+      });
+    };
+
+    window.exportHistoryCSV = function() {
+      if (!activeItemKey || !appData[activeItemKey]) return;
+      const item = appData[activeItemKey];
+      let csv = ['"日付","金額 (投資)","メモ"'];
+      item.history?.forEach(h => {
+        csv.push(`"${h.date}","${h.amount} (投資: ${h.investment || 0})","${h.note || ''}"`);
+      });
+      const blob = new Blob(["\uFEFF" + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${item.name}_履歴ログ.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('履歴CSVをダウンロードしました。');
+    };
 
     function openItemEdit(itemKey) {
       activeItemKey = itemKey;
