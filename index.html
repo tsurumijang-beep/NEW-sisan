@@ -1,112 +1,1650 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ASSET MANAGEMENT SYSTEM</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script><style>:root{  --bg:#f4f6f9;  --sidebar:#111826;  --sidebar-hover:#1c2536;  --green:#17b26a;  --green-dark:#0e9f5c;  --green-soft:#e7f8ef;  --red:#ef4444;  --red-soft:#fdecec;  --purple:#8b5cf6;  --purple-soft:#f1ebfe;  --blue:#2563eb;  --blue-soft:#e9f0fe;  --text:#111827;  --text-sub:#6b7280;  --text-faint:#9ca3af;  --border:#e8eaee;  --card:#ffffff;  --radius:16px;  --radius-sm:10px;  --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.04);}*{box-sizing:border-box;}html,body{margin:0;padding:0;}body{  font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;  background:var(--bg);  color:var(--text);  -webkit-font-smoothing:antialiased;}button{font-family:inherit;cursor:pointer;}input,select,textarea{font-family:inherit;}a{text-decoration:none;color:inherit;}
-/* ===== Layout ===== */#app{display:none;}.layout{display:flex;min-height:100vh;}
-/* ===== Sidebar ===== */.sidebar{  width:230px;flex-shrink:0;background:var(--sidebar);  display:flex;flex-direction:column;  position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:50;transition:transform .2s ease;}.brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;}.brand-icon{  width:32px;height:32px;border-radius:8px;  background:linear-gradient(135deg,var(--green),#0a7a45);  display:flex;align-items:center;justify-content:center;flex-shrink:0;}.brand-icon svg{width:16px;height:16px;}.brand-text{color:#fff;font-size:12px;font-weight:800;line-height:1.3;letter-spacing:.02em;}.brand-text small{display:block;font-size:9px;color:#7c879c;font-weight:600;letter-spacing:.08em;}
-.nav{padding:6px 10px;display:flex;flex-direction:column;gap:2px;flex:1;}.nav-item{  display:flex;align-items:center;gap:10px;  padding:9px 12px;border-radius:9px;color:#aab2c5;  font-size:13px;font-weight:600;border:none;background:transparent;  width:100%;text-align:left;transition:background .15s,color .15s;}.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}.nav-item:hover{background:var(--sidebar-hover);color:#fff;}.nav-item.active{background:var(--green);color:#fff;}.nav-item.active svg{opacity:1;}
-.sidebar-footer{padding:12px;border-top:1px solid #1f2734;}.profile-card{  display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;  background:var(--sidebar-hover);}.avatar{  width:32px;height:32px;border-radius:50%;  background:linear-gradient(135deg,var(--green),#0a7a45);  color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}.profile-meta{flex:1;min-width:0;}.profile-meta .hello{font-size:10px;color:#8992a6;}.profile-meta .name{font-size:12px;color:#fff;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.logout-btn{background:none;border:none;color:#8992a6;padding:4px;flex-shrink:0;}.logout-btn svg{width:15px;height:15px;}.logout-btn:hover{color:#fff;}
-/* ===== Main ===== */.main{margin-left:230px;flex:1;min-width:0;padding:20px 24px 40px;transition:margin-left .2s ease;}.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;}.page-title{font-size:20px;font-weight:800;margin:0;}.page-sub{font-size:12px;color:var(--text-sub);margin:2px 0 0;}.topbar-right{display:flex;align-items:center;gap:10px;}.icon-btn{  position:relative;width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid var(--border);  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}.icon-btn svg{width:16px;height:16px;color:var(--text-sub);}.dot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--red);border:1.5px solid #fff;}.date-pill{  display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);  border-radius:9px;padding:7px 12px;font-size:12px;font-weight:600;box-shadow:var(--shadow);color:var(--text);}.date-pill svg{width:14px;height:14px;color:var(--text-sub);}
-/* Responsive Grid Strategy for 6" Phone to 28"+ Displays */.grid{display:grid;gap:16px;}.grid-2{grid-template-columns:1.15fr 1.85fr;}.grid-3{grid-template-columns:repeat(3,1fr);}.grid-1-2{grid-template-columns:1fr 1fr;}
-/* 28-inch Ultra-wide optimization */@media(min-width:1800px){  .main{max-width:1700px;margin-right:auto;}  .grid-3{grid-template-columns:repeat(3,1fr);}}/* Tablet and small laptops */@media(max-width:1024px){  .grid-2,.grid-1-2{grid-template-columns:1fr;}  .grid-3{grid-template-columns:repeat(2,1fr);}}/* 6-inch Mobile Devices Optimization */@media(max-width:768px){  .sidebar{transform:translateX(-100%);}  .sidebar.open{transform:translateX(0);}  .main{margin-left:0;padding:14px 14px 30px;}  .topbar{flex-direction:row;align-items:center;}  .page-title{font-size:18px;}  .page-sub{font-size:11px;}  .date-pill span{display:none;}  .grid-2,.grid-3,.grid-1-2{grid-template-columns:1fr;}  .card{padding:16px;}  .total-amount{font-size:24px;}  .trend-chart-wrap{height:200px !important;}  .mobile-menu-btn{display:flex !important;}}
-.mobile-menu-btn{  display:none;width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid var(--border);  align-items:center;justify-content:center;box-shadow:var(--shadow);margin-right:8px;}
-.card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--border);}.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;}.card-title{font-size:14px;font-weight:800;margin:0;}.link-more{font-size:12px;color:var(--text-sub);font-weight:600;display:flex;align-items:center;gap:3px;background:none;border:none;padding:0;}.link-more:hover{color:var(--green-dark);}.link-more svg{width:12px;height:12px;}
-/* total asset card */.total-amount{font-size:28px;font-weight:800;letter-spacing:-.5px;margin:2px 0 4px;}.change-badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:20px;}.change-up{color:var(--green-dark);background:var(--green-soft);}.change-down{color:var(--red);background:var(--red-soft);}.mini-chart-wrap{margin-top:10px;height:65px;}.portfolio-mini{  margin-top:12px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;  display:flex;align-items:center;justify-content:space-between;background:#fafbfc;}.portfolio-mini .p-left{display:flex;align-items:center;gap:10px;}.portfolio-mini .p-icon{  width:30px;height:30px;border-radius:8px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;}.portfolio-mini .p-icon svg{width:15px;height:15px;color:var(--green-dark);}.portfolio-mini .p-title{font-size:12.5px;font-weight:700;}.portfolio-mini .p-link{font-size:11.5px;color:var(--text-sub);font-weight:600;display:flex;align-items:center;gap:3px;background:none;border:none;padding:0;}
-/* trend chart card */.period-toggle{display:flex;gap:2px;background:#f2f3f6;padding:3px;border-radius:8px;}.period-toggle button{  border:none;background:transparent;font-size:11px;font-weight:700;color:var(--text-sub);  padding:4px 8px;border-radius:6px;}.period-toggle button.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(16,24,40,.08);}.trend-chart-wrap{height:240px;position:relative;}
-/* table */.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}table{width:100%;border-collapse:collapse;font-size:12.5px;}th{  text-align:left;color:var(--text-faint);font-weight:700;font-size:11px;text-transform:none;  padding:0 8px 8px;border-bottom:1px solid var(--border);white-space:nowrap;}td{padding:10px 8px;border-bottom:1px solid #f1f2f5;white-space:nowrap;}tr:last-child td{border-bottom:none;}.svc-cell{display:flex;align-items:center;gap:8px;font-weight:700;}.svc-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800;flex-shrink:0;}.up{color:var(--green-dark);font-weight:700;}.down{color:var(--red);font-weight:700;}.badge{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;}.badge-green{background:var(--green-soft);color:var(--green-dark);}.badge-gray{background:#eef0f3;color:var(--text-sub);}.row-actions{display:flex;gap:4px;}.row-actions button{border:none;background:#f2f3f6;width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;}.row-actions button svg{width:12px;height:12px;color:var(--text-sub);}.row-actions button:hover{background:#e6e8ec;}
-/* side card */.side-card{border-radius:14px;padding:14px;color:#fff;position:relative;overflow:hidden;}.side-card .sc-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;}.side-card .sc-icon{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:13px;}.side-card .sc-name{font-weight:800;font-size:12.5px;}.side-card .sc-label{font-size:10.5px;opacity:.85;margin-bottom:2px;}.side-card .sc-amount{font-size:18px;font-weight:800;margin-bottom:6px;}.side-card .sc-change{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.2);display:inline-block;padding:2px 7px;border-radius:20px;}.sc-red{background:linear-gradient(135deg,#ff8a8a,#ef4444);}.sc-purple{background:linear-gradient(135deg,#a78bfa,#7c3aed);}.sc-blue{background:linear-gradient(135deg,#60a5fa,#2563eb);}.sc-green{background:linear-gradient(135deg,#4ade80,#16a34a);}.sc-amber{background:linear-gradient(135deg,#fbbf24,#d97706);}
-.bank-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #f1f2f5;}.bank-row:last-of-type{border-bottom:none;}.bank-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11px;flex-shrink:0;}.bank-name{font-weight:700;font-size:12.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.bank-balance{font-family:monospace;letter-spacing:0.5px;color:var(--text-sub);font-size:12px;}.eye-btn{  display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text-sub);  background:#f2f3f6;border:none;padding:5px 9px;border-radius:16px;}.eye-btn svg{width:12px;height:12px;}.eye-btn:hover{background:#e6e8ec;}
-.add-btn{  display:flex;align-items:center;gap:5px;background:var(--green);color:#fff;border:none;  padding:7px 12px;border-radius:9px;font-size:12px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.06);}.add-btn:hover{background:var(--green-dark);}.add-btn svg{width:13px;height:13px;}.empty-state{text-align:center;padding:30px 14px;color:var(--text-faint);font-size:12px;}.empty-state svg{width:28px;height:28px;margin-bottom:8px;color:#d3d7de;}
-/* Auth / gate screens */.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:16px;}.gate-box{width:100%;max-width:380px;background:#fff;border-radius:18px;padding:28px 24px;box-shadow:var(--shadow);border:1px solid var(--border);}.gate-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px;}.gate-title{font-size:17px;font-weight:800;margin:0 0 4px;}.gate-sub{font-size:12px;color:var(--text-sub);margin:0 0 18px;line-height:1.5;}.field{margin-bottom:12px;}.field label{display:block;font-size:11.5px;font-weight:700;color:var(--text-sub);margin-bottom:4px;}.field input,.field textarea,.field select{  width:100%;padding:9px 11px;border-radius:9px;border:1px solid var(--border);font-size:12.5px;background:#fbfbfc;}.field textarea{font-family:monospace;font-size:11px;min-height:90px;resize:vertical;}.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--green);background:#fff;}.gate-btn{  width:100%;background:var(--green);color:#fff;border:none;padding:10px;border-radius:9px;  font-weight:700;font-size:13px;margin-top:4px;}.gate-btn:hover{background:var(--green-dark);}.gate-btn.secondary{background:#f2f3f6;color:var(--text);margin-top:6px;}.gate-btn.secondary:hover{background:#e6e8ec;}.auth-divider{display:flex;align-items:center;gap:8px;margin:12px 0;color:var(--text-faint);font-size:11px;}.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--border);}.google-btn{  width:100%;display:flex;align-items:center;justify-content:center;gap:8px;  background:#fff;border:1px solid var(--border);color:var(--text);padding:9px;border-radius:9px;  font-weight:700;font-size:12.5px;}.google-btn:hover{background:#f7f8fa;}.gate-switch{text-align:center;margin-top:14px;font-size:11.5px;color:var(--text-sub);}.gate-switch button{background:none;border:none;color:var(--green-dark);font-weight:700;}.gate-error{background:var(--red-soft);color:var(--red);font-size:11.5px;padding:8px 10px;border-radius:8px;margin-bottom:12px;font-weight:600;}.gate-note{font-size:10.5px;color:var(--text-faint);margin-top:14px;line-height:1.6;background:#fafbfc;border:1px dashed var(--border);padding:8px 10px;border-radius:8px;}
-/* modal */.overlay{position:fixed;inset:0;background:rgba(15,20,30,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}.overlay.open{display:flex;}.modal{background:#fff;border-radius:16px;width:100%;max-width:400px;padding:22px;max-height:90vh;overflow-y:auto;}.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}.modal-title{font-size:15px;font-weight:800;margin:0;}.modal-close{border:none;background:#f2f3f6;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;}.modal-close svg{width:13px;height:13px;}.modal-actions{display:flex;gap:8px;margin-top:16px;}.modal-actions .gate-btn{margin-top:0;}.modal-actions .danger{background:var(--red-soft);color:var(--red);}
-.section-title{font-size:14px;font-weight:800;margin:20px 0 10px;}.section-title:first-child{margin-top:0;}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}@media(max-width:800px){.settings-grid{grid-template-columns:1fr;}}.toast{position:fixed;bottom:20px;right:20px;background:#111826;color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.2);z-index:200;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;}.toast.show{opacity:1;transform:translateY(0);}.loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;color:var(--text-sub);font-size:13px;}</style></head><body>
-<div id="loading" class="loading-screen">読み込み中...</div>
-<!-- ============ SETUP GATE (Firebase 設定) ============ --><div id="setupGate" class="gate" style="display:none;">  <div class="gate-box">    <div class="gate-logo">      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M6 21V9l6-4 6 4v12M9 21v-6h6v6"/></svg></div>      <div style="font-weight:800;font-size:13px;">ASSET MANAGEMENT<br><span style="font-size:9px;color:var(--text-faint);font-weight:700;">SYSTEM</span></div>    </div>    <p class="gate-title">Firebase連携設定</p>    <p class="gate-sub">データをデバイス間で同期するには、ご自身のFirebaseプロジェクト設定(firebaseConfig)を貼り付けてください。FirestoreとAuthentication(メール/パスワード)を有効にする必要があります。</p>    <div id="setupError"></div>    <div class="field">      <label>Firebase Config (JSON)</label>      <textarea id="setupConfigInput" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>    </div>    <button class="gate-btn" onclick="saveFirebaseConfig()">接続して開始</button>    <div class="gate-note">Firebaseコンソール(console.firebase.google.com) → プロジェクト設定 → 一般 → 「マイアプリ」からSDK設定(configオブジェクト)をそのままコピーして貼り付けてください。値はこのブラウザにのみ保存されます。</div>  </div></div>
-<!-- ============ AUTH GATE (ログイン/新規登録) ============ --><div id="authGate" class="gate" style="display:none;">  <div class="gate-box">    <div class="gate-logo">      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M6 21V9l6-4 6 4v12M9 21v-6h6v6"/></svg></div>      <div style="font-weight:800;font-size:13px;">ASSET MANAGEMENT<br><span style="font-size:9px;color:var(--text-faint);font-weight:700;">SYSTEM</span></div>    </div>    <p class="gate-title" id="authTitle">ログイン</p>    <p class="gate-sub" id="authSub">アカウントにログインして資産状況を確認します。</p>    <div id="authError"></div>    <div class="field"><label>メールアドレス</label><input type="email" id="authEmail" placeholder="you@example.com"></div>    <div class="field"><label>パスワード</label><input type="password" id="authPassword" placeholder="6文字以上"></div>    <button class="gate-btn" id="authSubmitBtn" onclick="submitAuth()">로그인</button>    <div class="auth-divider"><span>または</span></div>    <button class="google-btn" onclick="loginWithGoogle()">      <svg viewBox="0 0 48 48" width="16" height="16"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.3 0 10.1-2 13.7-5.4l-6.3-5.3C29.4 35.1 26.8 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C39.9 36.9 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>      Googleアカウントで継続    </button>    <div class="gate-switch">      <span id="authSwitchText">アカウントをお持ちでないですか？</span>      <button onclick="toggleAuthMode()" id="authSwitchBtn">新規登録</button>    </div>    <div class="gate-note">Firebase設定をリセットする場合は <button style="background:none;border:none;color:var(--green-dark);font-weight:700;padding:0;" onclick="resetFirebaseConfig()">こちら</button>をクリックしてください。</div>  </div></div>
-<!-- ============ MAIN APP ============ --><div id="app"><div class="layout">  <aside class="sidebar" id="sidebar">    <div class="brand">      <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M6 21V9l6-4 6 4v12M9 21v-6h6v6"/></svg></div>      <div class="brand-text">ASSET<br>MANAGEMENT<small>SYSTEM</small></div>    </div>    <nav class="nav" id="navList"></nav>    <div class="sidebar-footer">      <div class="profile-card">        <div class="avatar" id="avatarInitial">U</div>        <div class="profile-meta">          <div class="hello">Welcome back!</div>          <div class="name" id="userEmailLabel">-</div>        </div>        <button class="logout-btn" onclick="doLogout()" title="ログアウト">          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>        </button>      </div>    </div>  </aside>
-  <main class="main">    <div class="topbar">      <div style="display:flex; align-items:center;">        <button class="mobile-menu-btn" onclick="toggleSidebar()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>        <div>          <h1 class="page-title" id="pageTitle">ダッシュボード</h1>          <p class="page-sub" id="pageSub">資産状況を一目で把握できます</p>        </div>      </div>      <div class="topbar-right">        <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="dot"></span></button>        <div class="date-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="todayLabel"></span></div>      </div>    </div>
-    <div id="pageContent"></div>  </main></div></div>
-<!-- ============ MODAL ============ --><div class="overlay" id="overlay">  <div class="modal">    <div class="modal-head">      <h3 class="modal-title" id="modalTitle">項目追加</h3>      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>    </div>    <div id="modalBody"></div>    <div class="modal-actions">      <button class="gate-btn danger" id="modalDeleteBtn" style="display:none;" onclick="modalDelete()">削除</button>      <button class="gate-btn" onclick="modalSubmit()" style="flex:1;">保存</button>    </div>  </div></div>
-<div class="toast" id="toast"></div>
-<script>/* =========================================================   ASSET MANAGEMENT SYSTEM   (Japanese & JPY Yen Version)   ========================================================= */
-/* ---------- Common Utilities ---------- */const fmt = n => (Math.round(n||0)).toLocaleString('ja-JP');const yen = n => '¥' + fmt(n);const todayStr = () => {  const d = new Date();  const days = ['日','月','火','水','木','金','土'];  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 (${days[d.getDay()]})`;};document.getElementById('todayLabel').textContent = todayStr();
-function toggleSidebar(){  document.getElementById('sidebar').classList.toggle('open');}
-function showToast(msg){  const t = document.getElementById('toast');  t.textContent = msg;  t.classList.add('show');  clearTimeout(showToast._h);  showToast._h = setTimeout(()=>t.classList.remove('show'), 2200);}
-const ICONS = {  dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',  assets:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',  trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',  dca:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>',  side:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>',  bank:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M4 21V10l8-6 8 6v11M9 21v-6h6v6"/></svg>',  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>',  arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>',  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>',  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>',  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>',  eyeoff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C5 20 1 12 1 12a21.6 21.6 0 015.06-6.06M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24"/><path d="M1 1l22 22"/></svg>',  wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/></svg>',  empty:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>'};
-const PAGES = [  {key:'dashboard', label:'ダッシュボード', icon:'dashboard', sub:'資産の現状を一目で把握できます'},  {key:'assets',    label:'総資産', icon:'assets', sub:'保有するすべての資産項目を管理します'},  {key:'trend',     label:'資産推移 (グラフ)', icon:'trend', sub:'期間別の資産変化を確認します'},  {key:'dca',       label:'積立投資', icon:'dca', sub:'定期的な積立投資状況を管理します'},  {key:'side',      label:'副業状況', icon:'side', sub:'副収入の状況を管理します'},  {key:'bank',      label:'銀行預金', icon:'bank', sub:'銀行口座ごとの預金状況を管理します'},  {key:'settings',  label:'設定', icon:'settings', sub:'アカウントおよび連携設定を管理します'},];
-const COLOR_OPTIONS = [  {key:'green', label:'グリーン', hex:'#17b26a'},  {key:'red', label:'レッド', hex:'#ef4444'},  {key:'purple', label:'パープル', hex:'#8b5cf6'},  {key:'blue', label:'ブルー', hex:'#2563eb'},  {key:'amber', label:'アンバー', hex:'#d97706'},];const colorHex = k => (COLOR_OPTIONS.find(c=>c.key===k)||COLOR_OPTIONS[0]).hex;
-/* ---------- State ---------- */let firebaseApp=null, auth=null, db=null, currentUser=null;let authMode='login';let currentPage='dashboard';let unsub = [];let bankVisible = {};let data = { assets:[], dca:[], side:[], bank:[], trend:[] };let charts = {};
-/* ---------- Firebase config Storage ---------- */function loadStoredConfig(){  try{ return JSON.parse(localStorage.getItem('ams_firebase_config')||'null'); }catch(e){ return null; }}function saveFirebaseConfig(){  const raw = document.getElementById('setupConfigInput').value.trim();  const errBox = document.getElementById('setupError');  errBox.innerHTML='';  let cfg;  try{ cfg = JSON.parse(raw); }  catch(e){ errBox.innerHTML = '<div class="gate-error">JSON形式が正しくありません。Firebaseコンソールのconfigオブジェクトをそのまま貼り付けてください。</div>'; return; }  if(!cfg.apiKey || !cfg.projectId){ errBox.innerHTML = '<div class="gate-error">apiKey、projectIdなどの必須値がありません。</div>'; return; }  localStorage.setItem('ams_firebase_config', JSON.stringify(cfg));  initFirebase(cfg);}function resetFirebaseConfig(){  if(!confirm('Firebase連携設定をリセットして再入力しますか？')) return;  localStorage.removeItem('ams_firebase_config');  location.reload();}
-function initFirebase(cfg){  try{    firebaseApp = firebase.initializeApp(cfg);    auth = firebase.auth();    db = firebase.firestore();    document.getElementById('setupGate').style.display='none';    document.getElementById('loading').style.display='none';    auth.onAuthStateChanged(handleAuthChange);  }catch(e){    console.error(e);    document.getElementById('setupError').innerHTML = '<div class="gate-error">Firebaseの初期化に失敗しました: '+e.message+'</div>';    document.getElementById('setupGate').style.display='flex';  }}
-function handleAuthChange(user){  if(user){    currentUser = user;    document.getElementById('authGate').style.display='none';    document.getElementById('app').style.display='block';    document.getElementById('userEmailLabel').textContent = user.email || 'ユーザー';    document.getElementById('avatarInitial').textContent = (user.email||'U').charAt(0).toUpperCase();    attachListeners();    buildNav();    renderPage();  } else {    currentUser = null;    unsub.forEach(f=>f()); unsub=[];    document.getElementById('app').style.display='none';    document.getElementById('authGate').style.display='flex';  }}
-/* ---------- Auth ---------- */function toggleAuthMode(){  authMode = authMode==='login' ? 'signup' : 'login';  document.getElementById('authTitle').textContent = authMode==='login' ? 'ログイン' : '新規登録';  document.getElementById('authSub').textContent = authMode==='login' ? 'アカウントでログインして資産状況を確認してください。' : 'メールアドレスとパスワードで新しいアカウントを作成します。';  document.getElementById('authSubmitBtn').textContent = authMode==='login' ? 'ログイン' : '新規登録';  document.getElementById('authSwitchText').textContent = authMode==='login' ? 'アカウントをお持ちでないですか？' : 'すでにアカウントをお持ちですか？';  document.getElementById('authSwitchBtn').textContent = authMode==='login' ? '新規登録' : 'ログイン';  document.getElementById('authError').innerHTML='';}function submitAuth(){  const email = document.getElementById('authEmail').value.trim();  const pw = document.getElementById('authPassword').value;  const errBox = document.getElementById('authError');  errBox.innerHTML='';  if(!email || !pw){ errBox.innerHTML='<div class="gate-error">メールアドレスとパスワードを入力してください。</div>'; return; }  const action = authMode==='login'    ? auth.signInWithEmailAndPassword(email, pw)    : auth.createUserWithEmailAndPassword(email, pw);  action.catch(e=>{ errBox.innerHTML = '<div class="gate-error">'+authErrorMsg(e)+'</div>'; });}function authErrorMsg(e){  const map = {    'auth/invalid-email':'メールアドレスの形式が正しくありません。',    'auth/user-not-found':'登録されていないメールアドレスです。',    'auth/wrong-password':'パスワードが一致しません。',    'auth/email-already-in-use':'既に使用されているメールアドレスです。',    'auth/weak-password':'パスワードは6文字以上で指定してください。',    'auth/invalid-credential':'メールアドレスまたはパスワードが正しくありません。',    'auth/popup-closed-by-user':'ログインウィンドウが閉じられました。再度お試しください。',    'auth/unauthorized-domain':'このドメインは承認されていません。Firebaseコンソールで承認済みドメインに追加してください。',    'auth/operation-not-allowed':'Googleログインがまだ有効化されていません。'  };  return map[e.code] || e.message;}function doLogout(){ auth.signOut(); }function loginWithGoogle(){  const errBox = document.getElementById('authError');  errBox.innerHTML='';  const provider = new firebase.auth.GoogleAuthProvider();  auth.signInWithPopup(provider).catch(e=>{    console.error(e);    errBox.innerHTML = '<div class="gate-error">'+authErrorMsg(e)+'</div>';  });}
-/* ---------- Firestore Realtime Listener ---------- */function userCol(name){ return db.collection('users').doc(currentUser.uid).collection(name); }
-function attachListeners(){  unsub.forEach(f=>f()); unsub=[];  const cols = ['assets','dca','side','bank','trend'];  cols.forEach(name=>{    const orderField = name==='trend' ? 'date' : null;    let ref = userCol(name);    const off = ref.onSnapshot(snap=>{      data[name] = snap.docs.map(d=>({id:d.id, ...d.data()}));      if(orderField){ data[name].sort((a,b)=> (a.date||'').localeCompare(b.date||'')); }      renderPage();    }, err=>console.error(name, err));    unsub.push(off);  });}
-/* ---------- Navigation ---------- */function buildNav(){  const nav = document.getElementById('navList');  nav.innerHTML = PAGES.map(p=>`    <button class="nav-item ${p.key===currentPage?'active':''}" data-page="${p.key}" onclick="goPage('${p.key}')">      ${ICONS[p.icon]}<span>${p.label}</span>    </button>`).join('');}function goPage(key){  currentPage = key;  document.getElementById('sidebar').classList.remove('open');  buildNav();  const p = PAGES.find(x=>x.key===key);  document.getElementById('pageTitle').textContent = p.label.replace(' (グラフ)','');  document.getElementById('pageSub').textContent = p.sub;  renderPage();}
-function renderPage(){  if(!currentUser) return;  const map = {dashboard:renderDashboard, assets:renderAssets, trend:renderTrend, dca:renderDCA, side:renderSide, bank:renderBank, settings:renderSettings};  (map[currentPage]||renderDashboard)();}
-/* =========================================================   Dashboard   ========================================================= */function renderDashboard(){  const totalAssets = data.assets.reduce((s,a)=>s+Number(a.amount||0),0);  const trend = data.trend;  const last = trend[trend.length-1], prev = trend[trend.length-2];  const changePct = (last && prev && prev.amount) ? ((last.amount-prev.amount)/prev.amount*100) : 0;  const up = changePct >= 0;
-  const el = document.getElementById('pageContent');  el.innerHTML = `    <div class="grid grid-2">      <div class="card">        <div class="card-head">          <h3 class="card-title">総資産</h3>          <button class="link-more" onclick="goPage('assets')">詳細を見る ${ICONS.arrow}</button>        </div>        <div class="total-amount">${yen(totalAssets)}</div>        <span class="change-badge ${up?'change-up':'change-down'}">${up?'▲':'▼'} ${Math.abs(changePct).toFixed(2)}% (前日比)</span>        <div class="mini-chart-wrap"><canvas id="miniTrendChart"></canvas></div>        <div class="portfolio-mini">          <div class="p-left">            <div class="p-icon">${ICONS.wallet}</div>            <div class="p-title">ポートフォリオ</div>          </div>          <button class="p-link" onclick="goPage('assets')">資産配分を確認 ${ICONS.arrow}</button>        </div>      </div>
-      <div class="card">        <div class="card-head">          <p class="card-title">資産推移</p>          <div class="period-toggle">            <button class="active" onclick="updateDashboardTrend('1M', this)">1M</button>            <button onclick="updateDashboardTrend('3M', this)">3M</button>            <button onclick="updateDashboardTrend('6M', this)">6M</button>            <button onclick="updateDashboardTrend('1Y', this)">1Y</button>            <button onclick="updateDashboardTrend('ALL', this)">ALL</button>          </div>        </div>        <div class="trend-chart-wrap"><canvas id="dashTrendChart"></canvas></div>      </div>    </div>
-    <div class="grid grid-3" style="margin-top:16px;">      <div class="card">        <div class="card-head">          <h3 class="card-title">積立投資 (DCA)</h3>          <button class="link-more" onclick="goPage('dca')">もっと見る ${ICONS.arrow}</button>        </div>        ${renderDcaSummaryList()}      </div>
-      <div class="card">        <div class="card-head">          <h3 class="card-title">副業状況</h3>          <button class="link-more" onclick="goPage('side')">もっと見る ${ICONS.arrow}</button>        </div>        ${renderSideSummaryCards()}      </div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>資産管理システム - 全資産文字拡大版</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #eef2f7 0%, #dbe3ee 100%);
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --panel-shadow: 4px 4px 12px #b8c4d9, -4px -4px 12px #ffffff;
+      --panel-border: 1px solid rgba(255, 255, 255, 0.9);
+      --primary-color: #3a7bd5;
+      --primary-dark: #295bb1;
+      --accent-green: #2ecc71;
+      --accent-red: #e74c3c;
+      --accent-orange: #e67e22;
+      --text-main: #2c3e50;
+      --text-sub: #6c7a89;
+    }
 
-      <div class="card">        <div class="card-head">          <h3 class="card-title">銀行預金</h3>          <button class="link-more" onclick="goPage('bank')">もっと見る ${ICONS.arrow}</button>        </div>        ${renderBankSummaryList()}      </div>    </div>  `;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+    }
 
-  initMiniTrendChart();  initDashTrendChart('1M');}
-function renderDcaSummaryList() {  if (!data.dca || data.dca.length === 0) {    return `<div class="empty-state">${ICONS.empty}<p>登録された積立項目がありません。</p></div>`;  }  return `    <div class="table-wrap">      <table>        <thead>          <tr>            <th>銘柄/サービス</th>            <th>毎月積立額</th>            <th>状態</th>          </tr>        </thead>        <tbody>          ${data.dca.slice(0, 4).map(item => `            <tr>              <td>                <div class="svc-cell">                  <div class="svc-icon" style="background:${colorHex(item.color)};">${(item.name || 'D')[0]}</div>                  <span>${item.name || '-'}</span>                </div>              </td>              <td class="up">${yen(item.monthlyAmount || 0)}</td>              <td><span class="badge ${item.status === 'active' ? 'badge-green' : 'badge-gray'}">${item.status === 'active' ? '積立中' : '停止中'}</span></td>            </tr>          `).join('')}        </tbody>      </table>    </div>  `;}
-function renderSideSummaryCards() {  if (!data.side || data.side.length === 0) {    return `<div class="empty-state">${ICONS.empty}<p>登録された副業項目がありません。</p></div>`;  }  return `    <div style="display:flex; flex-direction:column; gap:10px;">      ${data.side.slice(0, 2).map(item => `        <div class="side-card sc-${item.color || 'purple'}">          <div class="sc-top">            <div class="sc-icon">💰</div>            <div class="sc-name">${item.title || '-'}</div>          </div>          <div class="sc-label">月平均収益</div>          <div class="sc-amount">${yen(item.monthlyRevenue || 0)}</div>          <span class="sc-change">${item.category || 'その他'}</span>        </div>      `).join('')}    </div>  `;}
-function renderBankSummaryList() {  if (!data.bank || data.bank.length === 0) {    return `<div class="empty-state">${ICONS.empty}<p>登録された銀行口座がありません。</p></div>`;  }  return data.bank.slice(0, 4).map(item => {    const isVisible = bankVisible[item.id] !== false;    return `      <div class="bank-row">        <div class="bank-icon" style="background:${colorHex(item.color)};">${(item.bankName || 'B')[0]}</div>        <div class="bank-name">${item.bankName || '-'} <small style="color:var(--text-sub); font-weight:400;">(${item.accountName || ''})</small></div>        <div class="bank-balance">${isVisible ? yen(item.balance || 0) : '••••••••'}</div>        <button class="eye-btn" onclick="toggleBankVisibility('${item.id}')">${isVisible ? ICONS.eye : ICONS.eyeoff}</button>      </div>    `;  }).join('');}
-function toggleBankVisibility(id) {  bankVisible[id] = bankVisible[id] === false ? true : false;  renderPage();}
-function initMiniTrendChart() {  const ctx = document.getElementById('miniTrendChart');  if (!ctx) return;  if (charts.mini) charts.mini.destroy();
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-  const trend = data.trend || [];  const labels = trend.map(t => t.date || '');  const values = trend.map(t => t.amount || 0);
+    /* --- サイドバー (左メニュー) --- */
+    .sidebar {
+      width: 220px;
+      background: rgba(235, 241, 250, 0.95);
+      backdrop-filter: blur(12px);
+      border-right: var(--panel-border);
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+      overflow-y: auto;
+      user-select: none;
+      flex-shrink: 0;
+    }
 
-  charts.mini = new Chart(ctx, {    type: 'line',    data: {      labels: labels.length ? labels : ['-'],      datasets: [{        data: values.length ? values : [0],        borderColor: '#17b26a',        borderWidth: 2,        fill: false,        pointRadius: 0,        tension: 0.3      }]    },    options: {      responsive: true,      maintainAspectRatio: false,      plugins: { legend: { display: false }, tooltip: { enabled: false } },      scales: { x: { display: false }, y: { display: false } }    }  });}
-function initDashTrendChart(period) {  const ctx = document.getElementById('dashTrendChart');  if (!ctx) return;  if (charts.dash) charts.dash.destroy();
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 12px;
+      padding-left: 6px;
+    }
 
-  let filtered = [...(data.trend || [])];  if (period !== 'ALL' && filtered.length > 0) {    const limitMap = { '1M': 30, '3M': 90, '6M': 180, '1Y': 365 };    const limit = limitMap[period] || 30;    filtered = filtered.slice(-limit);  }
+    .nav-group {
+      margin-bottom: 8px;
+    }
 
-  charts.dash = new Chart(ctx, {    type: 'line',    data: {      labels: filtered.map(t => t.date || ''),      datasets: [{        label: '総資産',        data: filtered.map(t => t.amount || 0),        borderColor: '#17b26a',        backgroundColor: 'rgba(23, 178, 106, 0.08)',        fill: true,        borderWidth: 2,        pointRadius: filtered.length > 30 ? 0 : 3,        tension: 0.25      }]    },    options: {      responsive: true,      maintainAspectRatio: false,      plugins: {        legend: { display: false },        tooltip: {          callbacks: {            label: ctx => yen(ctx.raw)          }        }      },      scales: {        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9ca3af' } },        y: { grid: { color: '#f1f2f5' }, ticks: { font: { size: 10 }, color: '#9ca3af', callback: v => fmt(v) } }      }    }  });}
-function updateDashboardTrend(period, btn) {  const parent = btn.parentElement;  parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));  btn.classList.add('active');  initDashTrendChart(period);}
-/* =========================================================   総資産 ページ   ========================================================= */function renderAssets() {  const total = data.assets.reduce((s, a) => s + Number(a.amount || 0), 0);  const el = document.getElementById('pageContent');  el.innerHTML = `    <div class="card" style="margin-bottom:16px;">      <div class="card-head">        <div>          <h3 class="card-title">総資産一覧</h3>          <p class="page-sub">合計資産: <strong>${yen(total)}</strong></p>        </div>        <button class="add-btn" onclick="openAssetModal()">${ICONS.plus} 資産追加</button>      </div>      <div class="table-wrap">        <table>          <thead>            <tr>              <th>資産名</th>              <th>カテゴリ</th>              <th>金額</th>              <th>メモ</th>              <th>管理</th>            </tr>          </thead>          <tbody>            ${data.assets.length === 0 ? `              <tr><td colspan="5" class="empty-state">${ICONS.empty}<p>登録された資産項目がありません。</p></td></tr>            ` : data.assets.map(item => `              <tr>                <td>                  <div class="svc-cell">                    <div class="svc-icon" style="background:${colorHex(item.color)};">${(item.name || 'A')[0]}</div>                    <span>${item.name || '-'}</span>                  </div>                </td>                <td><span class="badge badge-gray">${item.category || 'その他'}</span></td>                <td style="font-weight:700; font-family:monospace;">${yen(item.amount || 0)}</td>                <td style="color:var(--text-sub);">${item.memo || '-'}</td>                <td>                  <div class="row-actions">                    <button onclick="openAssetModal('${item.id}')" title="編集">${ICONS.edit}</button>                    <button onclick="deleteDoc('assets','${item.id}')" title="削除">${ICONS.trash}</button>                  </div>                </td>              </tr>            `).join('')}          </tbody>        </table>      </div>    </div>  `;}
-function openAssetModal(id = null) {  const item = id ? data.assets.find(x => x.id === id) : null;  document.getElementById('modalTitle').textContent = item ? '資産編集' : '資産追加';  document.getElementById('modalBody').innerHTML = `    <div class="field"><label>資産名</label><input type="text" id="m_name" value="${item ? item.name || '' : ''}" placeholder="例: トヨタ自動車 株式, 現金預金"></div>    <div class="field"><label>カテゴリ</label>      <select id="m_category">        <option value="株式/債券" ${item && item.category === '株式/債券' ? 'selected' : ''}>株式/債券</option>        <option value="預貯金" ${item && item.category === '預貯金' ? 'selected' : ''}>預貯金</option>        <option value="不動産" ${item && item.category === '不動産' ? 'selected' : ''}>不動産</option>        <option value="暗号資産" ${item && item.category === '暗号資産' ? 'selected' : ''}>暗号資産</option>        <option value="その他" ${!item || item.category === 'その他' ? 'selected' : ''}>その他</option>      </select>    </div>    <div class="field"><label>金額 (円)</label><input type="number" id="m_amount" value="${item ? item.amount || 0 : ''}" placeholder="0"></div>    <div class="field"><label>カラー</label>      <select id="m_color">        ${COLOR_OPTIONS.map(c => `<option value="${c.key}" ${item && item.color === c.key ? 'selected' : ''}>${c.label}</option>`).join('')}      </select>    </div>    <div class="field"><label>メモ</label><input type="text" id="m_memo" value="${item ? item.memo || '' : ''}" placeholder="任意"></div>  `;
+    .nav-title {
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      padding-left: 6px;
+    }
 
-  setupModalActions(id, 'assets', () => ({    name: document.getElementById('m_name').value.trim(),    category: document.getElementById('m_category').value,    amount: Number(document.getElementById('m_amount').value || 0),    color: document.getElementById('m_color').value,    memo: document.getElementById('m_memo').value.trim(),    updatedAt: firebase.firestore.FieldValue.serverTimestamp()  }));}
-/* =========================================================   資産推移グラフ ページ   ========================================================= */function renderTrend() {  const el = document.getElementById('pageContent');  el.innerHTML = `    <div class="card" style="margin-bottom:16px;">      <div class="card-head">        <h3 class="card-title">期間別資産推移</h3>        <button class="add-btn" onclick="openTrendModal()">${ICONS.plus} 記録追加</button>      </div>      <div class="trend-chart-wrap" style="height:280px;"><canvas id="fullTrendChart"></canvas></div>    </div>
+    .nav-item {
+      padding: 7px 10px;
+      margin-bottom: 3px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.82rem;
+      transition: all 0.22s ease;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 2px 2px 4px #c5d0e0, -2px -2px 4px #ffffff;
+      background: #e6ebf5;
+    }
 
-    <div class="card">      <div class="card-head">        <h3 class="card-title">資産記録履歴</h3>      </div>      <div class="table-wrap">        <table>          <thead>            <tr>              <th>日付</th>              <th>総資産</th>              <th>メモ</th>              <th>管理</th>            </tr>          </thead>          <tbody>            ${data.trend.length === 0 ? `              <tr><td colspan="4" class="empty-state">${ICONS.empty}<p>記録された推移データがありません。</p></td></tr>            ` : [...data.trend].reverse().map(item => `              <tr>                <td style="font-weight:700;">${item.date || '-'}</td>                <td style="font-family:monospace; font-weight:700;">${yen(item.amount || 0)}</td>                <td style="color:var(--text-sub);">${item.memo || '-'}</td>                <td>                  <div class="row-actions">                    <button onclick="openTrendModal('${item.id}')" title="編集">${ICONS.edit}</button>                    <button onclick="deleteDoc('trend','${item.id}')" title="削除">${ICONS.trash}</button>                  </div>                </td>              </tr>            `).join('')}          </tbody>        </table>      </div>    </div>  `;
+    .nav-item:hover {
+      background: #dce5f5;
+    }
 
-  initFullTrendChart();}
-function initFullTrendChart() {  const ctx = document.getElementById('fullTrendChart');  if (!ctx) return;  if (charts.fullTrend) charts.fullTrend.destroy();
+    .nav-item.active {
+      background: linear-gradient(145deg, var(--primary-color), #00d2ff);
+      color: #fff;
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.25);
+    }
 
-  charts.fullTrend = new Chart(ctx, {    type: 'line',    data: {      labels: data.trend.map(t => t.date || ''),      datasets: [{        label: '総資産',        data: data.trend.map(t => t.amount || 0),        borderColor: '#2563eb',        backgroundColor: 'rgba(37, 99, 235, 0.08)',        fill: true,        borderWidth: 2,        tension: 0.2      }]    },    options: {      responsive: true,      maintainAspectRatio: false,      plugins: {        legend: { display: false },        tooltip: { callbacks: { label: ctx => yen(ctx.raw) } }      },      scales: {        x: { grid: { display: false } },        y: { grid: { color: '#f1f2f5' }, ticks: { callback: v => fmt(v) } }      }    }  });}
-function openTrendModal(id = null) {  const item = id ? data.trend.find(x => x.id === id) : null;  const todayVal = new Date().toISOString().split('T')[0];  document.getElementById('modalTitle').textContent = item ? '推移記録編集' : '推移記録追加';  document.getElementById('modalBody').innerHTML = `    <div class="field"><label>日付</label><input type="date" id="m_date" value="${item ? item.date || todayVal : todayVal}"></div>    <div class="field"><label>総資産 (円)</label><input type="number" id="m_amount" value="${item ? item.amount || 0 : ''}" placeholder="0"></div>    <div class="field"><label>メモ</label><input type="text" id="m_memo" value="${item ? item.memo || '' : ''}" placeholder="例: 給与振込後、四半期決算"></div>  `;
+    .sub-menu {
+      list-style: none;
+      padding-left: 8px;
+      margin-top: 1px;
+    }
 
-  setupModalActions(id, 'trend', () => ({    date: document.getElementById('m_date').value,    amount: Number(document.getElementById('m_amount').value || 0),    memo: document.getElementById('m_memo').value.trim(),    updatedAt: firebase.firestore.FieldValue.serverTimestamp()  }));}
-/* =========================================================   積立投資 (DCA) ページ   ========================================================= */function renderDCA() {  const totalMonthly = data.dca.reduce((s, d) => s + (d.status === 'active' ? Number(d.monthlyAmount || 0) : 0), 0);  const el = document.getElementById('pageContent');  el.innerHTML = `    <div class="card" style="margin-bottom:16px;">      <div class="card-head">        <div>          <h3 class="card-title">積立投資 (DCA) 管理</h3>          <p class="page-sub">毎月の積立予定額: <strong style="color:var(--green-dark);">${yen(totalMonthly)}</strong></p>        </div>        <button class="add-btn" onclick="openDcaModal()">${ICONS.plus} 積立項目追加</button>      </div>      <div class="table-wrap">        <table>          <thead>            <tr>              <th>銘柄/サービス</th>              <th>毎月積立額</th>              <th>積立日</th>              <th>状態</th>              <th>メモ</th>              <th>管理</th>            </tr>          </thead>          <tbody>            ${data.dca.length === 0 ? `              <tr><td colspan="6" class="empty-state">${ICONS.empty}<p>登録された積立項目がありません。</p></td></tr>            ` : data.dca.map(item => `              <tr>                <td>                  <div class="svc-cell">                    <div class="svc-icon" style="background:${colorHex(item.color)};">${(item.name || 'D')[0]}</div>                    <span>${item.name || '-'}</span>                  </div>                </td>                <td class="up">${yen(item.monthlyAmount || 0)}</td>                <td>毎月 ${item.payDay || '1'}日</td>                <td><span class="badge ${item.status === 'active' ? 'badge-green' : 'badge-gray'}">${item.status === 'active' ? '積立中' : '停止中'}</span></td>                <td style="color:var(--text-sub);">${item.memo || '-'}</td>                <td>                  <div class="row-actions">                    <button onclick="openDcaModal('${item.id}')" title="編集">${ICONS.edit}</button>                    <button onclick="deleteDoc('dca','${item.id}')" title="削除">${ICONS.trash}</button>                  </div>                </td>              </tr>            `).join('')}          </tbody>        </table>      </div>    </div>  `;}
-function openDcaModal(id = null) {  const item = id ? data.dca.find(x => x.id === id) : null;  document.getElementById('modalTitle').textContent = item ? '積立項目編集' : '積立項目追加';  document.getElementById('modalBody').innerHTML = `    <div class="field"><label>銘柄/サービス名</label><input type="text" id="m_name" value="${item ? item.name || '' : ''}" placeholder="例: eMAXIS Slim 全世界株式, ビットコイン積立"></div>    <div class="field"><label>毎月積立額 (円)</label><input type="number" id="m_amount" value="${item ? item.monthlyAmount || 0 : ''}" placeholder="0"></div>    <div class="field"><label>毎月の積立日</label><input type="number" id="m_day" value="${item ? item.payDay || 1 : 1}" min="1" max="31"></div>    <div class="field"><label>状態</label>      <select id="m_status">        <option value="active" ${!item || item.status === 'active' ? 'selected' : ''}>積立中</option>        <option value="paused" ${item && item.status === 'paused' ? 'selected' : ''}>停止中</option>      </select>    </div>    <div class="field"><label>カラー</label>      <select id="m_color">        ${COLOR_OPTIONS.map(c => `<option value="${c.key}" ${item && item.color === c.key ? 'selected' : ''}>${c.label}</option>`).join('')}      </select>    </div>    <div class="field"><label>メモ</label><input type="text" id="m_memo" value="${item ? item.memo || '' : ''}" placeholder="任意"></div>  `;
+    .sub-item {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      cursor: pointer;
+      border-radius: 6px;
+      margin-bottom: 1px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  setupModalActions(id, 'dca', () => ({    name: document.getElementById('m_name').value.trim(),    monthlyAmount: Number(document.getElementById('m_amount').value || 0),    payDay: Number(document.getElementById('m_day').value || 1),    status: document.getElementById('m_status').value,    color: document.getElementById('m_color').value,    memo: document.getElementById('m_memo').value.trim(),    updatedAt: firebase.firestore.FieldValue.serverTimestamp()  }));}
-/* =========================================================   副業状況 ページ   ========================================================= */function renderSide() {  const totalRev = data.side.reduce((s, x) => s + Number(x.monthlyRevenue || 0), 0);  const el = document.getElementById('pageContent');  el.innerHTML = `    <div class="card" style="margin-bottom:16px;">      <div class="card-head">        <div>          <h3 class="card-title">副業・副収入状況</h3>          <p class="page-sub">月間予想副収入: <strong style="color:var(--purple);">${yen(totalRev)}</strong></p>        </div>        <button class="add-btn" onclick="openSideModal()">${ICONS.plus} 副業追加</button>      </div>      <div class="grid grid-2" style="margin-top:10px;">        ${data.side.length === 0 ? `          <div style="grid-column:1/-1;" class="empty-state">${ICONS.empty}<p>登録された副業項目がありません。</p></div>        ` : data.side.map(item => `          <div class="side-card sc-${item.color || 'purple'}">            <div class="sc-top">              <div class="sc-icon">💼</div>              <div class="sc-name" style="flex:1;">${item.title || '-'}</div>              <div class="row-actions" style="background:rgba(255,255,255,0.2); border-radius:6px; padding:2px;">                <button onclick="openSideModal('${item.id}')" style="background:transparent; color:#fff;">${ICONS.edit}</button>                <button onclick="deleteDoc('side','${item.id}')" style="background:transparent; color:#fff;">${ICONS.trash}</button>              </div>            </div>            <div class="sc-label">月平均予想収益</div>            <div class="sc-amount">${yen(item.monthlyRevenue || 0)}</div>            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">              <span class="sc-change">${item.category || 'その他'}</span>              <small style="opacity:0.85;">${item.memo || ''}</small>            </div>          </div>        `).join('')}      </div>    </div>  `;}
-function openSideModal(id = null) {  const item = id ? data.side.find(x => x.id === id) : null;  document.getElementById('modalTitle').textContent = item ? '副業編集' : '副業追加';  document.getElementById('modalBody').innerHTML = `    <div class="field"><label>副業/収入源名</label><input type="text" id="m_title" value="${item ? item.title || '' : ''}" placeholder="例: ブログ運営, メルカリ販売, フリーランス"></div>    <div class="field"><label>カテゴリ</label><input type="text" id="m_category" value="${item ? item.category || '' : ''}" placeholder="例: コンテンツ, Eコマース, Web制作"></div>    <div class="field"><label>月予想収益 (円)</label><input type="number" id="m_amount" value="${item ? item.monthlyRevenue || 0 : ''}" placeholder="0"></div>    <div class="field"><label>カードテーマ</label>      <select id="m_color">        <option value="purple" ${!item || item.color === 'purple' ? 'selected' : ''}>パープル</option>        <option value="blue" ${item && item.color === 'blue' ? 'selected' : ''}>ブルー</option>        <option value="green" ${item && item.color === 'green' ? 'selected' : ''}>グリーン</option>        <option value="amber" ${item && item.color === 'amber' ? 'selected' : ''}>アンバー</option>        <option value="red" ${item && item.color === 'red' ? 'selected' : ''}>レッド</option>      </select>    </div>    <div class="field"><label>メモ</label><input type="text" id="m_memo" value="${item ? item.memo || '' : ''}" placeholder="任意"></div>  `;
+    .sub-item:hover {
+      color: var(--primary-color);
+      background: rgba(255,255,255,0.7);
+    }
 
-  setupModalActions(id, 'side', () => ({    title: document.getElementById('m_title').value.trim(),    category: document.getElementById('m_category').value.trim(),    monthlyRevenue: Number(document.getElementById('m_amount').value || 0),    color: document.getElementById('m_color').value,    memo: document.getElementById('m_memo').value.trim(),    updatedAt: firebase.firestore.FieldValue.serverTimestamp()  }));}
-/* =========================================================   銀行預金 ページ   ========================================================= */function renderBank() {  const totalBalance = data.bank.reduce((s, b) => s + Number(b.balance || 0), 0);  const el = document.getElementById('pageContent');  el.innerHTML = `    <div class="card" style="margin-bottom:16px;">      <div class="card-head">        <div>          <h3 class="card-title">銀行口座状況</h3>          <p class="page-sub">預金残高合計: <strong>${yen(totalBalance)}</strong></p>        </div>        <button class="add-btn" onclick="openBankModal()">${ICONS.plus} 口座追加</button>      </div>      <div class="table-wrap">        <table>          <thead>            <tr>              <th>銀行名</th>              <th>口座名義/種別</th>              <th>残高</th>              <th>メモ</th>              <th>管理</th>            </tr>          </thead>          <tbody>            ${data.bank.length === 0 ? `              <tr><td colspan="5" class="empty-state">${ICONS.empty}<p>登録された口座がありません。</p></td></tr>            ` : data.bank.map(item => `              <tr>                <td>                  <div class="svc-cell">                    <div class="svc-icon" style="background:${colorHex(item.color)};">${(item.bankName || 'B')[0]}</div>                    <span>${item.bankName || '-'}</span>                  </div>                </td>                <td>${item.accountName || '-'}</td>                <td style="font-family:monospace; font-weight:700;">${yen(item.balance || 0)}</td>                <td style="color:var(--text-sub);">${item.memo || '-'}</td>                <td>                  <div class="row-actions">                    <button onclick="openBankModal('${item.id}')" title="編集">${ICONS.edit}</button>                    <button onclick="deleteDoc('bank','${item.id}')" title="削除">${ICONS.trash}</button>                  </div>                </td>              </tr>            `).join('')}          </tbody>        </table>      </div>    </div>  `;}
-function openBankModal(id = null) {  const item = id ? data.bank.find(x => x.id === id) : null;  document.getElementById('modalTitle').textContent = item ? '口座編集' : '口座追加';  document.getElementById('modalBody').innerHTML = `    <div class="field"><label>銀行名</label><input type="text" id="m_bank" value="${item ? item.bankName || '' : ''}" placeholder="例: 三菱UFJ銀行, 楽天銀行"></div>    <div class="field"><label>口座名義/種別</label><input type="text" id="m_account" value="${item ? item.accountName || '' : ''}" placeholder="例: メイン口座, 非常用資金口座"></div>    <div class="field"><label>残高 (円)</label><input type="number" id="m_balance" value="${item ? item.balance || 0 : ''}" placeholder="0"></div>    <div class="field"><label>カラー</label>      <select id="m_color">        ${COLOR_OPTIONS.map(c => `<option value="${c.key}" ${item && item.color === c.key ? 'selected' : ''}>${c.label}</option>`).join('')}      </select>    </div>    <div class="field"><label>メモ</label><input type="text" id="m_memo" value="${item ? item.memo || '' : ''}" placeholder="任意"></div>  `;
+    .sub-item.active {
+      color: var(--primary-dark);
+      background: #ffffff;
+      font-weight: bold;
+    }
 
-  setupModalActions(id, 'bank', () => ({    bankName: document.getElementById('m_bank').value.trim(),    accountName: document.getElementById('m_account').value.trim(),    balance: Number(document.getElementById('m_balance').value || 0),    color: document.getElementById('m_color').value,    memo: document.getElementById('m_memo').value.trim(),    updatedAt: firebase.firestore.FieldValue.serverTimestamp()  }));}
-/* =========================================================   設定 ページ   ========================================================= */function renderSettings() {  const el = document.getElementById('pageContent');  const cfg = loadStoredConfig() || {};  el.innerHTML = `    <div class="settings-grid">      <div class="card">        <h3 class="section-title">アカウント情報</h3>        <div class="field">          <label>ログインメールアドレス</label>          <input type="text" value="${currentUser ? currentUser.email : ''}" readonly style="background:#f4f5f7;">        </div>        <div class="field">          <label>ユーザー UID</label>          <input type="text" value="${currentUser ? currentUser.uid : ''}" readonly style="background:#f4f5f7; font-family:monospace; font-size:11px;">        </div>        <button class="gate-btn secondary" onclick="doLogout()">ログアウト</button>      </div>
+    /* --- メインコンテンツ --- */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 8px 12px;
+    }
 
-      <div class="card">        <h3 class="section-title">Firebase 連携情報</h3>        <div class="field">          <label>Project ID</label>          <input type="text" value="${cfg.projectId || '-'}" readonly style="background:#f4f5f7;">        </div>        <div class="field">          <label>Auth Domain</label>          <input type="text" value="${cfg.authDomain || '-'}" readonly style="background:#f4f5f7;">        </div>        <button class="gate-btn danger" onclick="resetFirebaseConfig()">連携設定をリセット</button>      </div>    </div>  `;}
-/* =========================================================   Modal & Common Firestore CRUD   ========================================================= */let currentModalSubmitHandler = null;let currentModalDeleteHandler = null;
-function setupModalActions(id, collectionName, getPayloadFn) {  const overlay = document.getElementById('overlay');  const deleteBtn = document.getElementById('modalDeleteBtn');
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--panel-bg);
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: var(--panel-shadow);
+      border: var(--panel-border);
+      margin-bottom: 8px;
+    }
 
-  if (id) {    deleteBtn.style.display = 'block';    currentModalDeleteHandler = () => deleteDoc(collectionName, id, true);  } else {    deleteBtn.style.display = 'none';    currentModalDeleteHandler = null;  }
+    .header-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-  currentModalSubmitHandler = () => {    const payload = getPayloadFn();    const ref = userCol(collectionName);    const promise = id ? ref.doc(id).update(payload) : ref.add(payload);
+    .header-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 1.05rem;
+      font-weight: bold;
+    }
 
-    promise.then(() => {      showToast(id ? '更新されました。' : '追加されました。');      closeModal();    }).catch(err => {      console.error(err);      alert('保存中にエラーが発生しました: ' + err.message);    });  };
+    .stat-badge {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 10px 18px;
+      border-radius: 20px;
+      box-shadow: inset 2px 2px 5px #b8c4d9, inset -2px -2px 5px #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-  overlay.classList.add('open');}
-function modalSubmit() {  if (currentModalSubmitHandler) currentModalSubmitHandler();}
-function modalDelete() {  if (currentModalDeleteHandler) currentModalDeleteHandler();}
-function closeModal() {  document.getElementById('overlay').classList.remove('open');}
-function deleteDoc(colName, id, fromModal = false) {  if (!confirm('本当に削除しますか？')) return;  userCol(colName).doc(id).delete().then(() => {    showToast('削除されました。');    if (fromModal) closeModal();  }).catch(err => {    console.error(err);    alert('削除中にエラーが発生しました: ' + err.message);  });}
-/* =========================================================   Initialization   ========================================================= */window.addEventListener('DOMContentLoaded', () => {  const cfg = loadStoredConfig();  if (cfg) {    initFirebase(cfg);  } else {    document.getElementById('loading').style.display = 'none';    document.getElementById('setupGate').style.display = 'flex';  }});</script></body></html>
+    .diff-badge {
+      font-size: 0.75rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .diff-badge.plus { background: #e8f8f0; color: var(--accent-green); }
+    .diff-badge.minus { background: #fdeaea; color: var(--accent-red); }
+    .diff-badge.zero { background: #f0f3f8; color: var(--text-sub); }
+
+    .view-section {
+      display: none;
+      width: 100%;
+      height: calc(100vh - 76px);
+      overflow: hidden;
+    }
+
+    .view-section.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- ダッシュボードグリッド --- */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1.3fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 8px;
+      height: 100%;
+      padding-bottom: 4px;
+    }
+
+    .card {
+      background: var(--panel-bg);
+      border-radius: 10px;
+      padding: 8px 10px;
+      box-shadow: var(--panel-shadow);
+      border: var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .card-title {
+      font-size: 0.82rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: var(--text-main);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      padding-bottom: 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      margin-bottom: 4px;
+    }
+
+    .filter-btn {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: bold;
+      white-space: nowrap;
+      color: var(--text-sub);
+    }
+
+    .filter-btn.active {
+      background: var(--primary-color);
+      color: #fff;
+      border-color: var(--primary-color);
+    }
+
+    .chart-box {
+      position: relative;
+      width: 100%;
+      flex-grow: 1;
+    }
+
+    .asset-list-mini {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: visible;
+      flex-grow: 1;
+    }
+
+    .asset-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.76rem; 
+      font-weight: 600;
+    }
+    .asset-row:nth-child(odd) { background: #ffffff; }
+    .asset-row:nth-child(even) { background: #f0f7ff; }
+
+    .asset-row-right { display: flex; gap: 6px; align-items: center; }
+
+    /* 3. 積立投資 カードスタイル */
+    .grid-large-tsumitate {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      overflow-y: auto;
+      flex-grow: 1;
+      align-content: start;
+      padding: 2px;
+    }
+
+    .info-tile-large {
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: 3px 3px 8px rgba(0,0,0,0.06), -3px -3px 8px #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      min-height: 110px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .info-tile-large:hover {
+      transform: translateY(-2px);
+      box-shadow: 4px 4px 12px rgba(58, 123, 213, 0.2), -4px -4px 12px #ffffff;
+      border-color: var(--primary-color);
+    }
+
+    .info-tile-large .tile-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+    .info-tile-large .tile-label { color: var(--text-main); font-weight: bold; font-size: 0.9rem; }
+    
+    .info-tile-large .tile-sub { 
+      color: #ffffff; 
+      font-size: 1.05rem; 
+      font-weight: 900;
+      background: #000000; 
+      padding: 2px 8px; 
+      border-radius: 6px; 
+      box-shadow: inset 1px 1px 2px rgba(255,255,255,0.2); 
+    }
+
+    .info-tile-large .tile-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+    .info-tile-large .tile-value { font-size: 1.1rem; font-weight: 900; color: var(--primary-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+
+    .private-mask {
+      filter: blur(5px);
+      user-select: none;
+      transition: filter 0.3s;
+    }
+
+    .trend-metrics-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .metric-3d-box {
+      background: linear-gradient(145deg, #ffffff, #e0e8f5);
+      padding: 6px;
+      border-radius: 8px;
+      box-shadow: 2px 2px 6px #b8c4d9, -2px -2px 6px #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .metric-3d-label {
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: var(--text-sub);
+      text-transform: uppercase;
+    }
+
+    .metric-3d-value {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: var(--primary-color);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+
+    .info-tile {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 6px 8px;
+      border-radius: 6px;
+      box-shadow: 1px 1px 3px #c5d0e0;
+      font-size: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    .info-tile:hover {
+      transform: translateY(-1px);
+      background: #ffffff;
+      border-color: var(--accent-orange);
+      box-shadow: 2px 2px 6px rgba(230, 126, 34, 0.2);
+    }
+    .info-tile .tile-label { color: var(--text-main); font-weight: bold; font-size: 0.73rem; }
+    .info-tile .tile-value { font-size: 0.82rem; font-weight: bold; color: var(--primary-color); text-align: right; }
+    .info-tile .tile-diff { text-align: right; }
+
+    .detail-container {
+      background: var(--panel-bg);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--panel-shadow);
+      border: var(--panel-border);
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 0.82rem;
+    }
+
+    table.data-table th, table.data-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    table.data-table th {
+      background: #f4f7fc;
+      color: var(--text-sub);
+      font-weight: bold;
+    }
+
+    table.data-table tr.total-row {
+      background: #eef5ff;
+      font-weight: bold;
+      border-top: 2px solid #b8c4d9;
+      border-bottom: 2px solid #b8c4d9;
+    }
+
+    .edit-split-container {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+      height: 100%;
+    }
+
+    .panel-box {
+      background: var(--panel-bg);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: var(--panel-shadow);
+      border: var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+
+    .current-val-card {
+      background: linear-gradient(135deg, #2c3e50, #3498db);
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.25);
+    }
+
+    .current-val-card .label { font-size: 0.75rem; opacity: 0.85; margin-bottom: 2px; }
+    .current-val-card .amount { font-size: 1.4rem; font-weight: bold; }
+    .current-val-card .date { font-size: 0.65rem; opacity: 0.75; margin-top: 2px; text-align: right; }
+
+    .history-table-container {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 150px;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group label {
+      font-size: 0.78rem;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccd6e0;
+      background: #ffffff;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .btn-submit {
+      padding: 8px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(145deg, var(--primary-color), var(--primary-dark));
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(58, 123, 213, 0.35);
+    }
+
+    .btn-danger {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+    }
+
+    .btn-sm {
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-weight: bold;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(15px);
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media screen and (max-width: 900px) {
+      body {
+        flex-direction: column;
+        height: auto;
+        overflow-y: auto;
+      }
+      .sidebar {
+        width: 100%;
+        max-height: 120px;
+        flex-shrink: 0;
+      }
+      .main-content {
+        height: auto;
+        overflow-y: visible;
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .grid-large-tsumitate {
+        grid-template-columns: 1fr;
+      }
+      .view-section.active {
+        height: auto;
+        overflow-y: visible;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 左メニュー -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <i class="fa-solid fa-wallet"></i>
+      <span>資産管理システム</span>
+    </div>
+
+    <div class="nav-item active" id="menu-dashboard" onclick="switchNav('dashboard')">
+      <span><i class="fa-solid fa-gauge-high"></i> ダッシュボード</span>
+    </div>
+
+    <div class="nav-item" id="menu-all-assets" onclick="switchNav('all-assets')">
+      <span><i class="fa-solid fa-chart-pie"></i> 1.全資産</span>
+    </div>
+
+    <div class="nav-item" id="menu-trend" onclick="switchNav('trend')">
+      <span><i class="fa-solid fa-chart-line"></i> 2.資産損益</span>
+    </div>
+
+    <!-- 3. 積立投資 -->
+    <div class="nav-group" style="margin-top: 10px;">
+      <div class="nav-title">3. 積立投資 <i class="fa-solid fa-plus" style="cursor:pointer; float:right;" onclick="openAddItemModal('積立投資')"></i></div>
+      <ul class="sub-menu" id="menu-group-積立投資"></ul>
+    </div>
+
+    <!-- 4. 副業状況 -->
+    <div class="nav-group">
+      <div class="nav-title">4. 副業状況 <i class="fa-solid fa-plus" style="cursor:pointer; float:right;" onclick="openAddItemModal('副業状況')"></i></div>
+      <ul class="sub-menu" id="menu-group-副業状況"></ul>
+    </div>
+
+    <!-- 5. 銀行預金 -->
+    <div class="nav-group">
+      <div class="nav-title">5. 銀行預金 <i class="fa-solid fa-plus" style="cursor:pointer; float:right;" onclick="openAddItemModal('銀行預金')"></i></div>
+      <ul class="sub-menu" id="menu-group-銀行預金"></ul>
+    </div>
+  </aside>
+
+  <!-- メインエリア -->
+  <main class="main-content">
+    <header class="header">
+      <div class="header-title">
+        <i class="fa-solid fa-chart-simple" style="color: var(--primary-color);"></i>
+        <span id="header-view-title">資産管理 Dashboard</span>
+      </div>
+      <div class="header-stats">
+        <div class="stat-badge">
+          <span style="color:var(--text-sub);">総資産:</span>
+          <strong id="header-total-assets">¥0</strong>
+          <span id="header-total-diff" class="diff-badge zero">--</span>
+        </div>
+        <div class="stat-badge">
+          <span style="color:var(--text-sub);">今月の副業収入:</span>
+          <strong id="header-side-income" style="color:var(--accent-green);">+¥0</strong>
+          <span id="header-side-diff" class="diff-badge zero">--</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 1. ダッシュボードビュー -->
+    <section id="view-dashboard" class="view-section active">
+      <div class="dashboard-grid">
+        
+        <!-- 1列: 1.全資産 (サマリー) & 2.資産推移 (区分フィルター付き) -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div class="card" style="height: 310px;">
+            <div class="card-title">1. 全資産 (サマリー)</div>
+            <div class="asset-list-mini" id="dashboard-asset-list"></div>
+          </div>
+
+          <div class="card" style="flex-grow: 1;">
+            <div class="card-title">
+              <span>2. 資産推移</span>
+            </div>
+            <!-- 2.資産推移の区分選択フィルター -->
+            <div class="filter-bar" id="trend-filter-bar"></div>
+            <div class="chart-box" style="height: 70px;"><canvas id="trendChart"></canvas></div>
+            
+            <div class="trend-metrics-container">
+              <div class="metric-3d-box">
+                <div class="metric-3d-label" id="metric-label-title">全資産</div>
+                <div class="metric-3d-value" id="metric-total-asset">¥0</div>
+              </div>
+              <div class="metric-3d-box">
+                <div class="metric-3d-label">損益率</div>
+                <div class="metric-3d-value" id="metric-profit-rate" style="color: var(--primary-color);">0.0%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2列: 3. 積立投資 (区分フィルター付き) -->
+        <div class="card" style="grid-row: span 2;">
+          <div class="card-title">
+            <span>3. 積立投資</span>
+          </div>
+          <!-- 3.積立投資の区分選択フィルター -->
+          <div class="filter-bar" id="tsumitate-filter-bar"></div>
+          <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
+        </div>
+
+        <!-- 3列: 4. 副業状況 & 5. 銀行預金 -->
+        <div style="display: flex; flex-direction: column; gap: 6px; grid-row: span 2;">
+          <div class="card" style="flex-grow: 1;">
+            <div class="card-title">4. 副業状況 (月別集計)</div>
+            <div class="grid-2col" id="dashboard-sidejob-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2px;"></div>
+            <div class="chart-box" style="height: 70px;"><canvas id="sideJobBarChart"></canvas></div>
+          </div>
+
+          <div class="card" style="flex-grow: 1;">
+            <div class="card-title">
+              5. 銀行預金
+              <button onclick="toggleBankMask()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer;">非公開切替</button>
+            </div>
+            <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 2. 「1. 全資産」詳細比較ビュー -->
+    <section id="view-all-assets" class="view-section">
+      <div class="detail-container">
+        <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
+          <span><i class="fa-solid fa-chart-pie"></i> 1.全資産 (前回比較一覧)</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;">設定された「区分」と項目名ごとに前回比較を一覧表示しています。</p>
+        <div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>区分</th>
+                <th>項目名</th>
+                <th>今回金額</th>
+                <th>前回金額</th>
+                <th>前回比 増減額</th>
+                <th>前回比 騰落率 (%)</th>
+              </tr>
+            </thead>
+            <tbody id="all-assets-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 「2. 資産損益」詳細ビュー -->
+    <section id="view-trend" class="view-section">
+      <div class="detail-container">
+        <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
+          <span><i class="fa-solid fa-chart-line"></i> 2.資産損益一覧</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 10px;">設定された「区分」と累積投資額を基準に損益一覧を表示します。</p>
+        <div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>区分</th>
+                <th>項目名</th>
+                <th>今回金額</th>
+                <th>累積投資額</th>
+                <th>増減額 (損益)</th>
+                <th>騰落率 (%)</th>
+              </tr>
+            </thead>
+            <tbody id="profit-loss-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 項目編集ビュー -->
+    <section id="view-edit-item" class="view-section">
+      <div class="edit-split-container">
+        
+        <div class="panel-box">
+          <div class="card-title" style="color: var(--primary-color);">
+            <span><i class="fa-solid fa-pen"></i> 設定 & 履歴</span>
+          </div>
+          <form id="item-rename-form" onsubmit="handleRenameSubmit(event)">
+            <div class="form-group">
+              <label for="input-item-category">区分 (選択または自由入力)</label>
+              <input type="text" id="input-item-category" class="form-control" list="category-list" required>
+              <datalist id="category-list"></datalist>
+            </div>
+            <div class="form-group">
+              <label for="input-item-name">項目名 (選択または自由入力)</label>
+              <input type="text" id="input-item-name" class="form-control" list="name-list" required>
+              <datalist id="name-list"></datalist>
+            </div>
+            <div class="form-group">
+              <label for="input-cumulative-inv">累積投資額</label>
+              <input type="number" id="input-cumulative-inv" class="form-control" required>
+            </div>
+            <button type="submit" class="btn-submit" style="background:#27ae60; padding:6px; font-size:0.8rem;">設定を保存する</button>
+          </form>
+
+          <div class="card-title" style="margin-top: 6px;">登録履歴ログ</div>
+          <div class="history-table-container">
+            <table class="data-table" style="margin-top:0;">
+              <thead><tr><th>日付</th><th>金額 (投資)</th><th>操作</th></tr></thead>
+              <tbody id="edit-item-history-body"></tbody>
+            </table>
+          </div>
+
+          <button type="button" class="btn-submit btn-danger" style="padding:6px; font-size:0.8rem;" onclick="deleteCurrentItem()">この項目を削除</button>
+        </div>
+
+        <div class="panel-box">
+          <div class="current-val-card">
+            <div class="label" id="edit-item-display-name">項目名</div>
+            <div class="amount" id="edit-item-current-amount">¥0</div>
+            <div class="date" id="edit-item-last-update">最終更新: ----/--/--</div>
+          </div>
+
+          <div class="card-title" style="color: var(--primary-color);">
+            <span>新規データ追加・更新</span>
+          </div>
+
+          <form id="item-update-form" onsubmit="handleFormSubmit(event)">
+            <input type="hidden" id="edit-history-index" value="-1">
+            <div class="form-group">
+              <label for="input-amount">金額 / pt</label>
+              <input type="number" id="input-amount" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="input-investment">今回の投資額</label>
+              <input type="number" id="input-investment" class="form-control" value="0" required>
+            </div>
+            <div class="form-group">
+              <label for="input-date">登録日</label>
+              <input type="date" id="input-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="input-note">メモ</label>
+              <input type="text" id="input-note" class="form-control" placeholder="メモ">
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="submit" class="btn-submit" style="flex:1; padding:8px;">登録・更新</button>
+              <button type="button" id="btn-cancel-edit" class="btn-submit" style="background:#95a5a6; display:none; padding:8px;" onclick="resetHistoryForm()">キャンセル</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="toast"><i class="fa-solid fa-circle-check"></i><span id="toast-message">更新しました！</span></div>
+
+  <script>
+    const GAS_URL = ""; 
+
+    const defaultData = {
+      nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, isPoint: false, history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, note: '8月'}] },
+      ideco: { name: '② 楽天iDeCo', category: '積立投資', assetDivision: '年金/iDeCo', current: 1026743, cumulativeInvestment: 1000000, isPoint: false, history: [{date: '2026-05-01', amount: 1000000, investment: 1000000, note: '初回'}, {date: '2026-08-01', amount: 1026743, investment: 23000, note: '8月'}] },
+      moomoo: { name: '③ MOOMOO証券', category: '積立投資', assetDivision: '米国株', current: 1244330, cumulativeInvestment: 1100000, isPoint: false, history: [{date: '2026-05-01', amount: 1100000, investment: 1100000, note: '初回'}, {date: '2026-08-01', amount: 1244330, investment: 80000, note: '8月'}] },
+      jfx: { name: '④ JFX高金利積立', category: '積立投資', assetDivision: 'FX/高金利', current: 1200377, cumulativeInvestment: 1150000, isPoint: false, history: [{date: '2026-05-01', amount: 1150000, investment: 1150000, note: '初回'}, {date: '2026-08-01', amount: 1200377, investment: 430000, note: '8月'}] },
+      gmo: { name: '⑤ GMOコイン', category: '積立投資', assetDivision: '暗号資産', current: 790990, cumulativeInvestment: 750000, isPoint: false, history: [{date: '2026-05-01', amount: 750000, investment: 750000, note: '初回'}, {date: '2026-08-01', amount: 790990, investment: 50000, note: '8月'}] },
+      melcoin: { name: '⑥ メルコイン', category: '積立投資', assetDivision: '暗号資産', current: 26293, cumulativeInvestment: 25000, isPoint: false, history: [{date: '2026-06-01', amount: 25000, investment: 25000, note: '初回'}, {date: '2026-08-01', amount: 26293, investment: 5000, note: '8月'}] },
+      gold: { name: '⑦ GOLD投資', category: '積立投資', assetDivision: 'コモディティ', current: 500000, cumulativeInvestment: 500000, isPoint: false, history: [{date: '2026-05-01', amount: 500000, investment: 500000, note: '初回'}, {date: '2026-08-01', amount: 500000, investment: 500000, note: '8月'}] },
+      paypay_pt: { name: 'PAYPAYポイント', category: '積立投資', assetDivision: 'ポイント', current: 18400, cumulativeInvestment: 0, isPoint: true, history: [{date: '2026-07-01', amount: 16200, investment: 0, note: '初回'}] },
+      rakuten_pt: { name: '楽天ポイント', category: '積立投資', assetDivision: 'ポイント', current: 24500, cumulativeInvestment: 0, isPoint: true, history: [{date: '2026-07-01', amount: 28000, investment: 0, note: '初回'}] },
+
+      mercari: { name: '① メルカリ売上', category: '副業状況', assetDivision: '物販', current: 85000, cumulativeInvestment: 0, isPoint: false, history: [{date: '2026-05-01', amount: 80000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 85000, investment: 0, note: '8月'}] },
+      fx: { name: '② FX売買', category: '副業状況', assetDivision: 'FX', current: 42000, cumulativeInvestment: 0, isPoint: false, history: [{date: '2026-05-01', amount: 45000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 42000, investment: 0, note: '8月'}] },
+      content: { name: '③ 各種コンテンツ', category: '副業状況', assetDivision: 'コンテンツ', current: 30000, cumulativeInvestment: 0, isPoint: false, history: [{date: '2026-05-01', amount: 28000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 30000, investment: 0, note: '8月'}] },
+      other: { name: '④ その他', category: '副業状況', assetDivision: 'その他', current: 12000, cumulativeInvestment: 0, isPoint: false, history: [{date: '2026-05-01', amount: 15000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 12000, investment: 0, note: '8月'}] },
+
+      bank_rakuten: { name: '① 楽天銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 2500000, cumulativeInvestment: 2400000, isPoint: false, history: [{date: '2026-06-01', amount: 2300000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 2500000, investment: 0, note: '8月'}] },
+      bank_paypay: { name: '② PAYPAY銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 1200000, cumulativeInvestment: 1200000, isPoint: false, history: [{date: '2026-06-01', amount: 1100000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 1200000, investment: 0, note: '8月'}] },
+      bank_resona: { name: '③ その他銀行 ※非公開※', category: '銀行預金', assetDivision: 'メガバンク', current: 486139, cumulativeInvestment: 500000, isPoint: false, history: [{date: '2026-06-01', amount: 500000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 486139, investment: 0, note: '8月'}] }
+    };
+
+    let appData = {};
+    let activeItemKey = null;
+    let isBankPrivate = true;
+
+    // 選択された区分フィルターの状態保持
+    let selectedTrendFilter = '全体';
+    let selectedTsumitateFilter = '全体';
+
+    let trendChart, sideJobBarChart;
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (GAS_URL) {
+        try {
+          const res = await fetch(GAS_URL);
+          appData = await res.json();
+        } catch (e) {
+          const saved = localStorage.getItem('asset_mgmt_data_v51');
+          appData = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+        }
+      } else {
+        const saved = localStorage.getItem('asset_mgmt_data_v51');
+        appData = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+      }
+
+      initCharts();
+      updateDashboard();
+      renderSidebarMenu();
+      updateDatalists();
+      document.getElementById('input-date').valueAsDate = new Date();
+    });
+
+    async function saveData() {
+      localStorage.setItem('asset_mgmt_data_v51', JSON.stringify(appData));
+      if (GAS_URL) {
+        try {
+          await fetch(GAS_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(appData)
+          });
+        } catch (e) {}
+      }
+      updateDatalists();
+    }
+
+    function updateDatalists() {
+      const categories = new Set();
+      const names = new Set();
+
+      for (let key in appData) {
+        if (appData[key].assetDivision) categories.add(appData[key].assetDivision);
+        if (appData[key].name) names.add(appData[key].name);
+      }
+
+      const catListEl = document.getElementById('category-list');
+      catListEl.innerHTML = '';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        catListEl.appendChild(opt);
+      });
+
+      const nameListEl = document.getElementById('name-list');
+      nameListEl.innerHTML = '';
+      names.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n;
+        nameListEl.appendChild(opt);
+      });
+    }
+
+    function renderSidebarMenu() {
+      ['積立投資', '副業状況', '銀行預金'].forEach(cat => {
+        const menuEl = document.getElementById(`menu-group-${cat}`);
+        if (!menuEl) return;
+        menuEl.innerHTML = '';
+        for (let key in appData) {
+          if (appData[key].category === cat) {
+            const li = document.createElement('li');
+            li.className = 'sub-item';
+            if (activeItemKey === key) li.classList.add('active');
+            li.innerHTML = `<span><i class="fa-solid fa-angles-right"></i> ${appData[key].name}</span>`;
+            li.onclick = () => openItemEdit(key);
+            menuEl.appendChild(li);
+          }
+        }
+      });
+    }
+
+    function calcDiff(item) {
+      if (!item.history || item.history.length < 2) return { diffVal: 0, diffPct: 0, prev: item.current };
+      const current = item.history[0].amount;
+      const prev = item.history[1].amount;
+      const diffVal = current - prev;
+      const diffPct = prev !== 0 ? ((diffVal / prev) * 100) : 0;
+      return { diffVal, diffPct, prev };
+    }
+
+    function calcElapsedDays(item) {
+      if (!item.history || item.history.length === 0) return 0;
+      const oldestHistory = item.history[item.history.length - 1];
+      if (!oldestHistory || !oldestHistory.date) return 0;
+
+      const startDate = new Date(oldestHistory.date);
+      const today = new Date();
+      startDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      const diffTime = today - startDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(0, diffDays);
+    }
+
+    function renderDiffHtml(diffVal, diffPct, isPoint = false) {
+      if (diffVal === 0) return `<span class="diff-badge zero">±0 (0%)</span>`;
+      const isPlus = diffVal > 0;
+      const sign = isPlus ? '+' : '';
+      const cls = isPlus ? 'plus' : 'minus';
+      const unit = isPoint ? 'pt' : '円';
+      return `<span class="diff-badge ${cls}">${sign}${diffVal.toLocaleString()}${unit} (${sign}${diffPct.toFixed(1)}%)</span>`;
+    }
+
+    function switchNav(targetView) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item, .sub-item').forEach(el => el.classList.remove('active'));
+      activeItemKey = null;
+
+      if (targetView === 'dashboard') {
+        document.getElementById('view-dashboard').classList.add('active');
+        document.getElementById('menu-dashboard').classList.add('active');
+        document.getElementById('header-view-title').textContent = '資産管理 Dashboard';
+        updateDashboard();
+      } else if (targetView === 'all-assets') {
+        document.getElementById('view-all-assets').classList.add('active');
+        document.getElementById('menu-all-assets').classList.add('active');
+        document.getElementById('header-view-title').textContent = '1.全資産 (前回比較一覧)';
+        renderAllAssetsTable();
+      } else if (targetView === 'trend') {
+        document.getElementById('view-trend').classList.add('active');
+        document.getElementById('menu-trend').classList.add('active');
+        document.getElementById('header-view-title').textContent = '2.資産損益一覧';
+        renderProfitLossTable();
+      }
+    }
+
+    function renderAllAssetsTable() {
+      const tbody = document.getElementById('all-assets-table-body');
+      tbody.innerHTML = '';
+
+      let sumCurrent = 0, sumPrev = 0, sumDiff = 0;
+
+      for (let key in appData) {
+        const item = appData[key];
+        const { diffVal, diffPct, prev } = calcDiff(item);
+        sumCurrent += item.current;
+        sumPrev += prev;
+        sumDiff += diffVal;
+
+        const division = item.assetDivision || '未設定';
+        const tr = document.createElement('tr');
+        const curStr = item.isPoint ? `${item.current.toLocaleString()} pt` : `¥${item.current.toLocaleString()}`;
+        const prevStr = item.isPoint ? `${prev.toLocaleString()} pt` : `¥${prev.toLocaleString()}`;
+
+        tr.innerHTML = `
+          <td><span style="font-size:0.75rem; background:#e0e8f5; padding:3px 8px; border-radius:10px; font-weight:bold;">${division}</span></td>
+          <td style="font-weight:600;">${item.name}</td>
+          <td>${curStr}</td>
+          <td>${prevStr}</td>
+          <td>${renderDiffHtml(diffVal, diffPct, item.isPoint)}</td>
+          <td>${diffVal !== 0 ? (diffVal > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`) : '0.0%'}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      const sumPct = sumPrev !== 0 ? (sumDiff / sumPrev) * 100 : 0;
+      const totalTr = document.createElement('tr');
+      totalTr.className = 'total-row';
+      totalTr.innerHTML = `
+        <td colspan="2">合計</td>
+        <td>¥${sumCurrent.toLocaleString()}</td>
+        <td>¥${sumPrev.toLocaleString()}</td>
+        <td>${renderDiffHtml(sumDiff, sumPct)}</td>
+        <td>${sumDiff !== 0 ? (sumDiff > 0 ? `+${sumPct.toFixed(1)}%` : `${sumPct.toFixed(1)}%`) : '0.0%'}</td>
+      `;
+      tbody.insertBefore(totalTr, tbody.firstChild);
+    }
+
+    function renderProfitLossTable() {
+      const tbody = document.getElementById('profit-loss-table-body');
+      tbody.innerHTML = '';
+
+      let sumCurrent = 0, sumCumulative = 0, sumProfit = 0;
+
+      for (let key in appData) {
+        const item = appData[key];
+        const curAmt = item.current;
+        const cumulativeInv = item.cumulativeInvestment || 0;
+        const diffVal = curAmt - cumulativeInv;
+        const diffPct = cumulativeInv !== 0 ? (diffVal / cumulativeInv) * 100 : 0;
+
+        sumCurrent += curAmt;
+        sumCumulative += cumulativeInv;
+        sumProfit += diffVal;
+
+        const division = item.assetDivision || '未設定';
+        const tr = document.createElement('tr');
+        const curStr = item.isPoint ? `${curAmt.toLocaleString()} pt` : `¥${curAmt.toLocaleString()}`;
+        const invStr = item.isPoint ? `${cumulativeInv.toLocaleString()} pt` : `¥${cumulativeInv.toLocaleString()}`;
+
+        tr.innerHTML = `
+          <td><span style="font-size:0.75rem; background:#e0e8f5; padding:3px 8px; border-radius:10px; font-weight:bold;">${division}</span></td>
+          <td style="font-weight:600;">${item.name}</td>
+          <td>${curStr}</td>
+          <td>${invStr}</td>
+          <td>${renderDiffHtml(diffVal, diffPct, item.isPoint)}</td>
+          <td>${diffVal !== 0 ? (diffVal > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`) : '0.0%'}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      const sumProfitPct = sumCumulative !== 0 ? (sumProfit / sumCumulative) * 100 : 0;
+      const totalTr = document.createElement('tr');
+      totalTr.className = 'total-row';
+      totalTr.innerHTML = `
+        <td colspan="2">合計</td>
+        <td>¥${sumCurrent.toLocaleString()}</td>
+        <td>¥${sumCumulative.toLocaleString()}</td>
+        <td>${renderDiffHtml(sumProfit, sumProfitPct)}</td>
+        <td>${sumProfit !== 0 ? (sumProfit > 0 ? `+${sumProfitPct.toFixed(1)}%` : `${sumProfitPct.toFixed(1)}%`) : '0.0%'}</td>
+      `;
+      tbody.insertBefore(totalTr, tbody.firstChild);
+    }
+
+    function openItemEdit(itemKey) {
+      activeItemKey = itemKey;
+      const item = appData[itemKey];
+      if (!item) return;
+
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('view-edit-item').classList.add('active');
+      document.getElementById('header-view-title').textContent = `項目編集 : ${item.name}`;
+
+      renderSidebarMenu();
+      updateDatalists();
+      resetHistoryForm();
+
+      document.getElementById('input-item-category').value = item.assetDivision || '';
+      document.getElementById('input-item-name').value = item.name;
+      document.getElementById('input-cumulative-inv').value = item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0;
+      document.getElementById('edit-item-display-name').textContent = item.name;
+      document.getElementById('edit-item-current-amount').textContent = item.isPoint ? `${item.current.toLocaleString()} pt` : `¥${item.current.toLocaleString()}`;
+      document.getElementById('edit-item-last-update').textContent = `最終更新: ${item.history?.[0]?.date || '未登録'}`;
+
+      renderHistoryTable();
+    }
+
+    function renderHistoryTable() {
+      const item = appData[activeItemKey];
+      const tbody = document.getElementById('edit-item-history-body');
+      tbody.innerHTML = '';
+      item.history?.forEach((h, idx) => {
+        const tr = document.createElement('tr');
+        const invText = h.investment !== undefined ? `(投資: ¥${h.investment.toLocaleString()})` : '';
+        tr.innerHTML = `
+          <td>${h.date}</td>
+          <td style="font-weight:bold;">${h.amount.toLocaleString()} <span style="font-size:0.7rem; color:var(--text-sub);">${invText}</span></td>
+          <td>
+            <button type="button" class="btn-sm" style="background:#3498db; color:#fff;" onclick="editHistory(${idx})">編集</button>
+            <button type="button" class="btn-sm" style="background:#e74c3c; color:#fff;" onclick="deleteHistory(${idx})">削除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function editHistory(index) {
+      const item = appData[activeItemKey];
+      const target = item.history[index];
+      if (!target) return;
+
+      document.getElementById('edit-history-index').value = index;
+      document.getElementById('input-amount').value = target.amount;
+      document.getElementById('input-investment').value = target.investment !== undefined ? target.investment : 0;
+      document.getElementById('input-date').value = target.date;
+      document.getElementById('input-note').value = target.note || '';
+
+      document.getElementById('btn-cancel-edit').style.display = 'inline-block';
+    }
+
+    function resetHistoryForm() {
+      document.getElementById('edit-history-index').value = '-1';
+      document.getElementById('input-amount').value = '';
+      document.getElementById('input-investment').value = '0';
+      document.getElementById('input-date').valueAsDate = new Date();
+      document.getElementById('input-note').value = '';
+      document.getElementById('btn-cancel-edit').style.display = 'none';
+    }
+
+    function deleteHistory(index) {
+      const item = appData[activeItemKey];
+      if (item.history.length <= 1) {
+        alert('最低1件の履歴が必要です。');
+        return;
+      }
+      if (!confirm('削除しますか？')) return;
+
+      const deletedHistory = item.history.splice(index, 1)[0];
+      if (deletedHistory && deletedHistory.investment) {
+        item.cumulativeInvestment = Math.max(0, (item.cumulativeInvestment || 0) - deletedHistory.investment);
+      }
+
+      item.current = item.history[0].amount;
+
+      saveData();
+      renderHistoryTable();
+      updateDashboard();
+      openItemEdit(activeItemKey);
+      showToast('履歴を削除しました。');
+    }
+
+    function handleRenameSubmit(e) {
+      e.preventDefault();
+      if (!activeItemKey || !appData[activeItemKey]) return;
+      const newDivision = document.getElementById('input-item-category').value.trim();
+      const newName = document.getElementById('input-item-name').value.trim();
+      const newCumulative = parseFloat(document.getElementById('input-cumulative-inv').value);
+      if (!newName || isNaN(newCumulative)) return;
+
+      appData[activeItemKey].assetDivision = newDivision;
+      appData[activeItemKey].name = newName;
+      appData[activeItemKey].cumulativeInvestment = newCumulative;
+
+      saveData();
+      renderSidebarMenu();
+      openItemEdit(activeItemKey);
+      updateDashboard();
+      showToast('設定を保存しました！');
+    }
+
+    function openAddItemModal(category) {
+      const name = prompt(`${category} に追加する項目名:`, '新項目');
+      if (!name) return;
+      const newKey = 'item_' + Date.now();
+      appData[newKey] = {
+        name: name,
+        category: category,
+        assetDivision: '未設定',
+        current: 0,
+        cumulativeInvestment: 0,
+        isPoint: category === 'ポイント投資',
+        history: [{ date: new Date().toISOString().split('T')[0], amount: 0, investment: 0, note: '初回' }]
+      };
+      saveData();
+      renderSidebarMenu();
+      openItemEdit(newKey);
+      showToast('項目を追加しました！');
+    }
+
+    function deleteCurrentItem() {
+      if (!activeItemKey) return;
+      const itemName = appData[activeItemKey].name;
+      if (!confirm(`「${itemName}」を削除しますか？`)) return;
+      delete appData[activeItemKey];
+      saveData();
+      renderSidebarMenu();
+      switchNav('dashboard');
+      showToast('項目を削除しました。');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      if (!activeItemKey || !appData[activeItemKey]) return;
+      const editIndex = parseInt(document.getElementById('edit-history-index').value);
+      const newAmount = parseFloat(document.getElementById('input-amount').value);
+      const newInvestment = parseFloat(document.getElementById('input-investment').value) || 0;
+      const newDate = document.getElementById('input-date').value;
+      const newNote = document.getElementById('input-note').value;
+      if (isNaN(newAmount)) return;
+
+      const item = appData[activeItemKey];
+      if (!item.history) item.history = [];
+
+      if (editIndex >= 0) {
+        const oldInvestment = item.history[editIndex].investment || 0;
+        const diffInvestment = newInvestment - oldInvestment;
+        item.cumulativeInvestment = (item.cumulativeInvestment || 0) + diffInvestment;
+
+        item.history[editIndex] = { date: newDate, amount: newAmount, investment: newInvestment, note: newNote };
+        showToast('履歴を修正しました！');
+      } else {
+        item.cumulativeInvestment = (item.cumulativeInvestment || 0) + newInvestment;
+
+        item.history.unshift({ date: newDate, amount: newAmount, investment: newInvestment, note: newNote });
+        showToast('データを追加しました！');
+      }
+
+      item.history.sort((a, b) => new Date(b.date) - new Date(a.date));
+      item.current = item.history[0].amount;
+
+      saveData();
+      openItemEdit(activeItemKey);
+      updateDashboard();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function updateDashboard() {
+      let totalAssets = 0, prevTotalAssets = 0;
+      let sideJobTotal = 0, prevSideJobTotal = 0;
+
+      for (let key in appData) {
+        const item = appData[key];
+        const curAmt = item.current;
+        const prevAmt = (item.history && item.history.length > 1) ? item.history[1].amount : curAmt;
+
+        totalAssets += curAmt;
+        prevTotalAssets += prevAmt;
+
+        if (item.category === '副業状況') {
+          sideJobTotal += curAmt;
+          prevSideJobTotal += prevAmt;
+        }
+      }
+
+      document.getElementById('header-total-assets').textContent = `¥${totalAssets.toLocaleString()}`;
+      const tDiff = totalAssets - prevTotalAssets;
+      const tPct = prevTotalAssets !== 0 ? (tDiff / prevTotalAssets) * 100 : 0;
+      document.getElementById('header-total-diff').outerHTML = `<span id="header-total-diff">${renderDiffHtml(tDiff, tPct)}</span>`;
+
+      document.getElementById('header-side-income').textContent = `+¥${sideJobTotal.toLocaleString()}`;
+      const sDiff = sideJobTotal - prevSideJobTotal;
+      const sPct = prevSideJobTotal !== 0 ? (sDiff / prevSideJobTotal) * 100 : 0;
+      document.getElementById('header-side-diff').outerHTML = `<span id="header-side-diff">${renderDiffHtml(sDiff, sPct)}</span>`;
+
+      renderFilterBars();
+      renderDashboardGrids();
+      updateCharts();
+    }
+
+    // フィルタボタンを生成する関数
+    function renderFilterBars() {
+      // 3. 積立投資に属するすべての区分(assetDivision)を集める
+      const tsumitateDivisions = new Set();
+      for (let key in appData) {
+        if (appData[key].category === '積立投資' && appData[key].assetDivision) {
+          tsumitateDivisions.add(appData[key].assetDivision);
+        }
+      }
+
+      // 1. 3. 積立投資 フィルターバー
+      const tsumitateBar = document.getElementById('tsumitate-filter-bar');
+      tsumitateBar.innerHTML = '';
+      
+      const tsumitateOptions = ['全体', ...Array.from(tsumitateDivisions)];
+      tsumitateOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = `filter-btn ${selectedTsumitateFilter === opt ? 'active' : ''}`;
+        btn.textContent = opt;
+        btn.onclick = () => {
+          selectedTsumitateFilter = opt;
+          renderDashboardGrids();
+        };
+        tsumitateBar.appendChild(btn);
+      });
+
+      // 2. 2. 資産推移 フィルターバー (積立投資と同じ区分を利用)
+      const trendBar = document.getElementById('trend-filter-bar');
+      trendBar.innerHTML = '';
+      
+      const trendOptions = ['全体', ...Array.from(tsumitateDivisions)];
+      trendOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = `filter-btn ${selectedTrendFilter === opt ? 'active' : ''}`;
+        btn.textContent = opt;
+        btn.onclick = () => {
+          selectedTrendFilter = opt;
+          updateAssetTrendChart();
+        };
+        trendBar.appendChild(btn);
+      });
+    }
+
+    function renderDashboardGrids() {
+      const assetListEl = document.getElementById('dashboard-asset-list');
+      assetListEl.innerHTML = '';
+
+      let grandTotal = 0;
+      for (let key in appData) {
+        grandTotal += appData[key].current;
+      }
+
+      let divisionMap = {};
+      for (let key in appData) {
+        const item = appData[key];
+        const div = item.assetDivision || '未設定';
+        if (!divisionMap[div]) {
+          divisionMap[div] = { current: 0, prev: 0, isPoint: item.isPoint };
+        }
+        divisionMap[div].current += item.current;
+        const prevAmt = (item.history && item.history.length > 1) ? item.history[1].amount : item.current;
+        divisionMap[div].prev += prevAmt;
+      }
+
+      let sortedDivisions = Object.keys(divisionMap).sort((a, b) => {
+        return divisionMap[b].current - divisionMap[a].current;
+      });
+
+      sortedDivisions.forEach(div => {
+        const data = divisionMap[div];
+        const diffVal = data.current - data.prev;
+        const diffPct = data.prev !== 0 ? (diffVal / data.prev) * 100 : 0;
+        const ratio = grandTotal !== 0 ? (data.current / grandTotal) * 100 : 0;
+
+        const row = document.createElement('div');
+        row.className = 'asset-row';
+        const amtStr = data.isPoint ? `${data.current.toLocaleString()} pt` : `¥${data.current.toLocaleString()}`;
+        row.innerHTML = `
+          <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:0.68rem; font-weight:bold;">${div}</span></span>
+          <div class="asset-row-right">
+            <strong>${amtStr}</strong>
+            <span style="font-size:0.6rem; color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
+            ${renderDiffHtml(diffVal, diffPct, data.isPoint)}
+          </div>
+        `;
+        assetListEl.appendChild(row);
+      });
+
+      // 3. 積立投資 グリッド描画 (フィルター適用)
+      const tsumitateGrid = document.getElementById('dashboard-tsumitate-grid');
+      tsumitateGrid.innerHTML = '';
+      
+      const betterPastelColors = [
+        'linear-gradient(145deg, #ffffff, #ffc9c9)', 
+        'linear-gradient(145deg, #ffffff, #bbf7d0)', 
+        'linear-gradient(145deg, #ffffff, #bae6fd)', 
+        'linear-gradient(145deg, #ffffff, #e9d5ff)', 
+        'linear-gradient(145deg, #ffffff, #fef08a)', 
+        'linear-gradient(145deg, #ffffff, #99f6e4)', 
+        'linear-gradient(145deg, #ffffff, #ffedd5)', 
+        'linear-gradient(145deg, #ffffff, #f3e8ff)', 
+        'linear-gradient(145deg, #ffffff, #e4e4e7)'  
+      ];
+
+      let colorIndex = 0;
+      for (let key in appData) {
+        const item = appData[key];
+        if (item.category === '積立投資') {
+          // 選択されたフィルターに合致するかチェック
+          if (selectedTsumitateFilter !== '全体' && item.assetDivision !== selectedTsumitateFilter) {
+            continue; // 一致しない場合はスキップ
+          }
+
+          const { diffVal, diffPct } = calcDiff(item);
+          const elapsedDays = calcElapsedDays(item);
+          const tile = document.createElement('div');
+          tile.className = 'info-tile-large';
+          tile.style.background = betterPastelColors[colorIndex % betterPastelColors.length];
+          colorIndex++;
+          
+          tile.onclick = () => openItemEdit(key);
+
+          const amtStr = item.isPoint ? `${item.current.toLocaleString()} pt` : `¥${item.current.toLocaleString()}`;
+          tile.innerHTML = `
+            <div class="tile-top">
+              <div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.7rem; color:#3a7bd5; margin-right:3px;"></i>${item.name}</div>
+              <div class="tile-sub"><i class="fa-solid fa-clock"></i> ${elapsedDays}日経過</div>
+            </div>
+            <div class="tile-bottom">
+              <div class="tile-value">${amtStr}</div>
+              <div class="tile-diff">${renderDiffHtml(diffVal, diffPct, item.isPoint)}</div>
+            </div>
+          `;
+          tsumitateGrid.appendChild(tile);
+        }
+      }
+
+      const sidejobGrid = document.getElementById('dashboard-sidejob-grid');
+      sidejobGrid.innerHTML = '';
+      for (let key in appData) {
+        const item = appData[key];
+        if (item.category === '副業状況') {
+          const { diffVal, diffPct } = calcDiff(item);
+          const tile = document.createElement('div');
+          tile.className = 'info-tile';
+          tile.onclick = () => openItemEdit(key);
+          tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}</div><div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div><div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>`;
+          sidejobGrid.appendChild(tile);
+        }
+      }
+
+      renderBankGrid();
+    }
+
+    function renderBankGrid() {
+      const bankGrid = document.getElementById('dashboard-bank-grid');
+      bankGrid.innerHTML = '';
+      for (let key in appData) {
+        const item = appData[key];
+        if (item.category === '銀行預金') {
+          const { diffVal, diffPct } = calcDiff(item);
+          const tile = document.createElement('div');
+          tile.className = 'info-tile';
+          tile.onclick = () => openItemEdit(key);
+          const amtStr = isBankPrivate ? '¥*,***,***' : `¥${item.current.toLocaleString()}`;
+          const maskClass = isBankPrivate ? 'private-mask' : '';
+          const diffHtml = isBankPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(diffVal, diffPct);
+          tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#2c3e50; margin-right:2px;"></i>${item.name}</div><div class="tile-value ${maskClass}" style="color:var(--text-main);">${amtStr}</div><div class="tile-diff">${diffHtml}</div>`;
+          bankGrid.appendChild(tile);
+        }
+      }
+    }
+
+    function toggleBankMask() {
+      isBankPrivate = !isBankPrivate;
+      renderBankGrid();
+    }
+
+    function initCharts() {
+      trendChart = new Chart(document.getElementById('trendChart').getContext('2d'), {
+        type: 'line',
+        data: { labels: [], datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { type: 'linear', display: true, position: 'left', grid: { display: false } },
+            y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+
+      sideJobBarChart = new Chart(document.getElementById('sideJobBarChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: [], datasets: [] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
+
+    function updateCharts() {
+      updateAssetTrendChart();
+      updateSideJobMonthlyChart();
+    }
+
+    // 2. 資産推移チャート更新（選択された区分フィルターを反映）
+    function updateAssetTrendChart() {
+      const monthMap = {};
+      for (let key in appData) {
+        const item = appData[key];
+        // フィルター適用チェック (積立投資カテゴリの該当区分、または全体)
+        if (selectedTrendFilter !== '全体' && item.category === '積立投資' && item.assetDivision !== selectedTrendFilter) {
+          continue;
+        }
+        // 全体表示の場合は積立投資以外も含めるか、要望に合わせて積立投資の特定区分を選択したときに対象項目を絞り込む
+        // ※「暗号資産やFXを選択するとその区分された項目だけ表示」に対応
+        if (selectedTrendFilter !== '全体' && item.assetDivision !== selectedTrendFilter) {
+          continue;
+        }
+
+        item.history?.forEach(h => {
+          if (h.date) monthMap[h.date.substring(0, 7)] = true;
+        });
+      }
+
+      const sortedMonths = Object.keys(monthMap).sort();
+      const labels = sortedMonths.map(m => m.replace('-', '年') + '月');
+      const totalAssetsPerMonth = [];
+      const profitRatePerMonth = [];
+
+      let latestTotalAsset = 0;
+      let latestProfitRate = 0;
+
+      sortedMonths.forEach(m => {
+        let monthTotalAsset = 0;
+        let monthTotalInv = 0;
+
+        for (let key in appData) {
+          const item = appData[key];
+          if (selectedTrendFilter !== '全体' && item.assetDivision !== selectedTrendFilter) {
+            continue;
+          }
+
+          let targetAmt = item.current;
+          if (item.history && item.history.length > 0) {
+            const matched = item.history.find(h => h.date.startsWith(m));
+            if (matched) targetAmt = matched.amount;
+          }
+          monthTotalAsset += targetAmt;
+          monthTotalInv += (item.cumulativeInvestment || 0);
+        }
+
+        totalAssetsPerMonth.push(monthTotalAsset);
+        const profitRate = monthTotalInv !== 0 ? ((monthTotalAsset - monthTotalInv) / monthTotalInv) * 100 : 0;
+        profitRatePerMonth.push(parseFloat(profitRate.toFixed(1)));
+
+        latestTotalAsset = monthTotalAsset;
+        latestProfitRate = profitRate;
+      });
+
+      if (trendChart) {
+        trendChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
+        trendChart.data.datasets = [
+          {
+            label: selectedTrendFilter === '全体' ? '全資産' : selectedTrendFilter,
+            data: totalAssetsPerMonth.length > 0 ? totalAssetsPerMonth : [0,0,0],
+            borderColor: '#2ecc71',
+            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+            fill: true,
+            tension: 0.35,
+            yAxisID: 'y'
+          },
+          {
+            label: '損益率 (%)',
+            data: profitRatePerMonth.length > 0 ? profitRatePerMonth : [0,0,0],
+            borderColor: '#3a7bd5',
+            backgroundColor: 'transparent',
+            borderDash: [4, 4],
+            tension: 0.35,
+            yAxisID: 'y1'
+          }
+        ];
+        trendChart.update();
+      }
+
+      document.getElementById('metric-label-title').textContent = selectedTrendFilter === '全体' ? '全資産' : selectedTrendFilter;
+      const assetEl = document.getElementById('metric-total-asset');
+      const rateEl = document.getElementById('metric-profit-rate');
+      if (assetEl) assetEl.textContent = `¥${latestTotalAsset.toLocaleString()}`;
+      if (rateEl) {
+        rateEl.textContent = `${latestProfitRate >= 0 ? '+' : ''}${latestProfitRate.toFixed(1)}%`;
+        rateEl.style.color = latestProfitRate >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+      }
+    }
+
+    function updateSideJobMonthlyChart() {
+      const monthlyData = {};
+      const datasetsMap = {};
+
+      for (let key in appData) {
+        const item = appData[key];
+        if (item.category === '副業状況') {
+          datasetsMap[item.name] = {};
+          item.history?.forEach(h => {
+            if (h.date) {
+              const monthKey = h.date.substring(0, 7);
+              monthlyData[monthKey] = true;
+              datasetsMap[item.name][monthKey] = (datasetsMap[item.name][monthKey] || 0) + h.amount;
+            }
+          });
+        }
+      }
+
+      const sortedMonths = Object.keys(monthlyData).sort();
+      const labels = sortedMonths.map(m => m.replace('-', '年') + '月');
+
+      let colorIdx = 0;
+      const datasets = [];
+
+      for (let itemName in datasetsMap) {
+        const dataArr = sortedMonths.map(m => datasetsMap[itemName][m] || 0);
+        
+        const ctx = document.getElementById('sideJobBarChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+        
+        if (colorIdx === 0) { gradient.addColorStop(0, '#fed7aa'); gradient.addColorStop(1, '#ea580c'); }
+        else if (colorIdx === 1) { gradient.addColorStop(0, '#bae6fd'); gradient.addColorStop(1, '#0284c7'); }
+        else if (colorIdx === 2) { gradient.addColorStop(0, '#bbf7d0'); gradient.addColorStop(1, '#16a34a'); }
+        else { gradient.addColorStop(0, '#e9d5ff'); gradient.addColorStop(1, '#9333ea'); }
+
+        datasets.push({
+          label: itemName,
+          data: dataArr,
+          backgroundColor: gradient,
+          borderRadius: 6,
+          borderSkipped: false
+        });
+        colorIdx++;
+      }
+
+      if (sideJobBarChart) {
+        sideJobBarChart.data.labels = labels.length > 0 ? labels : ['5月', '6月', '7月', '8月'];
+        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業売上', data: [0,0,0,0], backgroundColor: '#fed7aa' }];
+        sideJobBarChart.update();
+      }
+    }
+  </script>
+</body>
+</html>
