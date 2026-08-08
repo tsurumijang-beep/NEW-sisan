@@ -1019,6 +1019,15 @@
       return { diffVal, diffPct, prev };
     }
 
+    // 累積投資に対する損益率・損益額を計算する関数
+    function calcProfitLoss(item) {
+      const current = item.current;
+      const cumulative = item.cumulativeInvestment || 0;
+      const diffVal = current - cumulative;
+      const diffPct = cumulative !== 0 ? (diffVal / cumulative) * 100 : 0;
+      return { diffVal, diffPct };
+    }
+
     function calcElapsedDays(item) {
       if (!item.history || item.history.length === 0) return 0;
       const oldestHistory = item.history[item.history.length - 1];
@@ -1485,11 +1494,10 @@
         const item = appData[key];
         const div = item.assetDivision || '未設定';
         if (!divisionMap[div]) {
-          divisionMap[div] = { current: 0, prev: 0 };
+          divisionMap[div] = { current: 0, cumulative: 0 };
         }
         divisionMap[div].current += item.current;
-        const prevAmt = (item.history && item.history.length > 1) ? item.history[1].amount : item.current;
-        divisionMap[div].prev += prevAmt;
+        divisionMap[div].cumulative += (item.cumulativeInvestment || 0);
       }
 
       let sortedDivisions = Object.keys(divisionMap).sort((a, b) => {
@@ -1498,8 +1506,8 @@
 
       sortedDivisions.forEach(div => {
         const data = divisionMap[div];
-        const diffVal = data.current - data.prev;
-        const diffPct = data.prev !== 0 ? (diffVal / data.prev) * 100 : 0;
+        const diffVal = data.current - data.cumulative;
+        const diffPct = data.cumulative !== 0 ? (diffVal / data.cumulative) * 100 : 0;
         const ratio = grandTotal !== 0 ? (data.current / grandTotal) * 100 : 0;
 
         const row = document.createElement('div');
@@ -1550,7 +1558,7 @@
       let colorIndex = 0;
       tsumitateKeys.forEach(key => {
         const item = appData[key];
-        const { diffVal, diffPct } = calcDiff(item);
+        const { diffVal, diffPct } = calcProfitLoss(item);
         const elapsedDays = calcElapsedDays(item);
         const tile = document.createElement('div');
         tile.className = 'info-tile-large';
