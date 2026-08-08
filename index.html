@@ -241,6 +241,7 @@
       overflow-x: auto;
       padding-bottom: 2px;
       margin-bottom: 4px;
+      align-items: center;
     }
 
     .filter-btn {
@@ -259,6 +260,20 @@
       background: var(--primary-color);
       color: #fff;
       border-color: var(--primary-color);
+    }
+
+    .filter-select {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: var(--text-main);
+      font-weight: bold;
+      outline: none;
+      cursor: pointer;
+      margin-bottom: 4px;
+      width: 100%;
     }
 
     .chart-box {
@@ -289,7 +304,6 @@
 
     .asset-row-right { display: flex; gap: 6px; align-items: center; }
 
-    /* 3. 積立投資 カードスタイル */
     .grid-large-tsumitate {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -735,7 +749,7 @@
             <div class="card-title">
               <span>2. 資産推移</span>
             </div>
-            <div class="filter-bar" id="trend-filter-bar"></div>
+            <div id="trend-filter-container"></div>
             <div class="chart-box" style="height: 295px;"><canvas id="trendChart"></canvas></div>
             
             <div class="trend-metrics-container">
@@ -1000,7 +1014,6 @@
     // 입력 필드 자동 콤마 바인딩 이벤트 리스너 설정
     function initAmountInputs() {
       document.querySelectorAll('.amount-input').forEach(input => {
-        // 초기 로드시 값 포맷팅
         if (input.value) {
           input.value = formatNumberWithCommas(input.value);
         }
@@ -1575,20 +1588,54 @@
         tsumitateBar.appendChild(btn);
       });
 
-      const trendBar = document.getElementById('trend-filter-bar');
-      trendBar.innerHTML = '';
+      const trendContainer = document.getElementById('trend-filter-container');
+      trendContainer.innerHTML = '';
+
+      const select = document.createElement('select');
+      select.className = 'filter-select';
       
-      const trendOptions = ['全体', ...Array.from(tsumitateDivisions)];
-      trendOptions.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = `filter-btn ${selectedTrendFilter === opt ? 'active' : ''}`;
-        btn.textContent = opt;
-        btn.onclick = () => {
-          selectedTrendFilter = opt;
-          updateAssetTrendChart();
-        };
-        trendBar.appendChild(btn);
+      const optAll = document.createElement('option');
+      optAll.value = '全体';
+      optAll.textContent = '全体 (전체)';
+      if (selectedTrendFilter === '全体') optAll.selected = true;
+      select.appendChild(optAll);
+
+      // 수정: 왼쪽 메뉴와 동일한 순서 (積立投資 ➔ 副業状況 ➔ 銀行預金 순서 및 번호 오름차순)로 풀다운 항목 정렬
+      const categoryOrder = ['積立投資', '副業状況', '銀行預金'];
+      
+      const sortedKeys = Object.keys(appData).sort((a, b) => {
+        const itemA = appData[a];
+        const itemB = appData[b];
+        
+        const catIdxA = categoryOrder.indexOf(itemA.category);
+        const catIdxB = categoryOrder.indexOf(itemB.category);
+        
+        if (catIdxA !== catIdxB) {
+          return (catIdxA === -1 ? 99 : catIdxA) - (catIdxB === -1 ? 99 : catIdxB);
+        }
+
+        const numA = getSortNum(itemA.name);
+        const numB = getSortNum(itemB.name);
+        if (numA !== numB) return numA - numB;
+        
+        return (itemA.name || '').localeCompare(itemB.name || '');
       });
+
+      sortedKeys.forEach(key => {
+        const item = appData[key];
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = `[${item.category}] ${item.name}`;
+        if (selectedTrendFilter === key) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      select.onchange = (e) => {
+        selectedTrendFilter = e.target.value;
+        updateAssetTrendChart();
+      };
+
+      trendContainer.appendChild(select);
     }
 
     function renderDashboardGrids() {
@@ -1828,15 +1875,21 @@
 
     function updateAssetTrendChart() {
       const monthMap = {};
-      for (let key in appData) {
-        const item = appData[key];
-        if (selectedTrendFilter !== '全体' && item.assetDivision !== selectedTrendFilter) {
-          continue;
+      
+      if (selectedTrendFilter === '全体') {
+        for (let key in appData) {
+          const item = appData[key];
+          item.history?.forEach(h => {
+            if (h.date) monthMap[h.date.substring(0, 7)] = true;
+          });
         }
-
-        item.history?.forEach(h => {
-          if (h.date) monthMap[h.date.substring(0, 7)] = true;
-        });
+      } else {
+        const targetItem = appData[selectedTrendFilter];
+        if (targetItem && targetItem.history) {
+          targetItem.history.forEach(h => {
+            if (h.date) monthMap[h.date.substring(0, 7)] = true;
+          });
+        }
       }
 
       const sortedMonths = Object.keys(monthMap).sort();
@@ -1851,19 +1904,28 @@
         let monthTotalAsset = 0;
         let monthTotalInv = 0;
 
-        for (let key in appData) {
-          const item = appData[key];
-          if (selectedTrendFilter !== '全体' && item.assetDivision !== selectedTrendFilter) {
-            continue;
+        if (selectedTrendFilter === '全体') {
+          for (let key in appData) {
+            const item = appData[key];
+            let targetAmt = item.current;
+            if (item.history && item.history.length > 0) {
+              const matched = item.history.find(h => h.date.startsWith(m));
+              if (matched) targetAmt = matched.amount;
+            }
+            monthTotalAsset += targetAmt;
+            monthTotalInv += (item.cumulativeInvestment || 0);
           }
-
-          let targetAmt = item.current;
-          if (item.history && item.history.length > 0) {
-            const matched = item.history.find(h => h.date.startsWith(m));
-            if (matched) targetAmt = matched.amount;
+        } else {
+          const item = appData[selectedTrendFilter];
+          if (item) {
+            let targetAmt = item.current;
+            if (item.history && item.history.length > 0) {
+              const matched = item.history.find(h => h.date.startsWith(m));
+              if (matched) targetAmt = matched.amount;
+            }
+            monthTotalAsset = targetAmt;
+            monthTotalInv = (item.cumulativeInvestment || 0);
           }
-          monthTotalAsset += targetAmt;
-          monthTotalInv += (item.cumulativeInvestment || 0);
         }
 
         totalAssetsPerMonth.push(monthTotalAsset);
@@ -1874,11 +1936,16 @@
         latestProfitRate = profitRate;
       });
 
+      let datasetLabel = '全資産';
+      if (selectedTrendFilter !== '全体' && appData[selectedTrendFilter]) {
+        datasetLabel = appData[selectedTrendFilter].name;
+      }
+
       if (trendChart) {
         trendChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
         trendChart.data.datasets = [
           {
-            label: selectedTrendFilter === '全体' ? '全資産' : selectedTrendFilter,
+            label: datasetLabel,
             data: totalAssetsPerMonth.length > 0 ? totalAssetsPerMonth : [0,0,0],
             borderColor: '#2ecc71',
             backgroundColor: 'rgba(46, 204, 113, 0.1)',
@@ -1899,7 +1966,7 @@
         trendChart.update();
       }
 
-      document.getElementById('metric-label-title').textContent = selectedTrendFilter === '全体' ? '全資産' : selectedTrendFilter;
+      document.getElementById('metric-label-title').textContent = datasetLabel;
       const assetEl = document.getElementById('metric-total-asset');
       const rateEl = document.getElementById('metric-profit-rate');
       if (assetEl) assetEl.textContent = `¥${latestTotalAsset.toLocaleString()}`;
