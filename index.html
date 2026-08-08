@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -348,7 +347,6 @@
     .info-tile-large .tile-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
     .info-tile-large .tile-value { font-size: 1.05rem; font-weight: 900; color: var(--primary-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
 
-    /* 今月の定期積立一覧表（余白スペース用カード）スタイル */
     .monthly-plan-card {
       grid-column: span 2;
       background: linear-gradient(145deg, #ffffff, #f4f7fc);
@@ -727,7 +725,6 @@
     <section id="view-dashboard" class="view-section active">
       <div class="dashboard-grid">
         
-        <!-- 1列: 1.全資産 (サマリー) & 2.資産推移 (区分フィルター付き) -->
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <div class="card" style="height: 310px;">
             <div class="card-title">1. 全資産 (サマリー)</div>
@@ -738,7 +735,6 @@
             <div class="card-title">
               <span>2. 資産推移</span>
             </div>
-            <!-- 2.資産推移の区分選択フィルター -->
             <div class="filter-bar" id="trend-filter-bar"></div>
             <div class="chart-box" style="height: 295px;"><canvas id="trendChart"></canvas></div>
             
@@ -755,17 +751,14 @@
           </div>
         </div>
 
-        <!-- 2列: 3. 積立投資 (区分フィルター付き) -->
         <div class="card" style="grid-row: span 2;">
           <div class="card-title">
             <span>3. 積立投資</span>
           </div>
-          <!-- 3.積立投資の区分選択フィルター -->
           <div class="filter-bar" id="tsumitate-filter-bar"></div>
           <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
         </div>
 
-        <!-- 3列: 4. 副業状況 & 5. 銀行預金 -->
         <div style="display: flex; flex-direction: column; gap: 6px; grid-row: span 2;">
           <div class="card" style="flex-grow: 1;">
             <div class="card-title">4. 副業状況 (月別集計)</div>
@@ -864,15 +857,15 @@
             </div>
             <div class="form-group">
               <label for="input-cumulative-inv">累積投資額</label>
-              <input type="number" id="input-cumulative-inv" class="form-control" required>
+              <input type="text" inputmode="numeric" id="input-cumulative-inv" class="form-control amount-input" required>
             </div>
             <div class="form-group">
               <label for="input-daily-inv">毎日投資額</label>
-              <input type="number" id="input-daily-inv" class="form-control" value="0">
+              <input type="text" inputmode="numeric" id="input-daily-inv" class="form-control amount-input" value="0">
             </div>
             <div class="form-group">
               <label for="input-monthly-inv">毎月投資額</label>
-              <input type="number" id="input-monthly-inv" class="form-control" value="0">
+              <input type="text" inputmode="numeric" id="input-monthly-inv" class="form-control amount-input" value="0">
             </div>
             <button type="submit" class="btn-submit" style="background:#27ae60; padding:6px; font-size:0.8rem;">設定を保存する</button>
           </form>
@@ -906,11 +899,11 @@
             <input type="hidden" id="edit-history-index" value="-1">
             <div class="form-group">
               <label for="input-amount">金額</label>
-              <input type="number" id="input-amount" class="form-control" required>
+              <input type="text" inputmode="numeric" id="input-amount" class="form-control amount-input" required>
             </div>
             <div class="form-group">
               <label for="input-investment">今回の投資額</label>
-              <input type="number" id="input-investment" class="form-control" value="0" required>
+              <input type="text" inputmode="numeric" id="input-investment" class="form-control amount-input" value="0" required>
             </div>
             <div class="form-group">
               <label for="input-date">登録日</label>
@@ -949,7 +942,6 @@
       measurementId: "G-FGJ15BKDQM"
     };
 
-    // Firebase初期化
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -989,6 +981,50 @@
       return circleNums[char] !== undefined ? circleNums[char] : 999;
     }
 
+    // --- 金額フォーマット用 유틸리티 함수 ---
+    function formatNumberWithCommas(value) {
+      if (value === null || value === undefined || value === '') return '';
+      const stringVal = String(value).replace(/,/g, '');
+      const num = Number(stringVal);
+      if (isNaN(num)) return stringVal;
+      return num.toLocaleString();
+    }
+
+    function parseFormattedNumber(value) {
+      if (!value) return 0;
+      const cleanVal = String(value).replace(/,/g, '');
+      const num = Number(cleanVal);
+      return isNaN(num) ? 0 : num;
+    }
+
+    // 입력 필드 자동 콤마 바인딩 이벤트 리스너 설정
+    function initAmountInputs() {
+      document.querySelectorAll('.amount-input').forEach(input => {
+        // 초기 로드시 값 포맷팅
+        if (input.value) {
+          input.value = formatNumberWithCommas(input.value);
+        }
+
+        input.addEventListener('input', function(e) {
+          const cursorPosition = this.selectionStart;
+          const originalLength = this.value.length;
+
+          let val = this.value.replace(/[^0-9]/g, '');
+          if (val === '') {
+            this.value = '';
+            return;
+          }
+          this.value = formatNumberWithCommas(val);
+
+          const newLength = this.value.length;
+          const diff = newLength - originalLength;
+          try {
+            this.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+          } catch (err) {}
+        });
+      });
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         const docRef = doc(db, "assets", "mainData");
@@ -1009,6 +1045,7 @@
       updateDashboard();
       renderSidebarMenu();
       updateDatalists();
+      initAmountInputs();
       document.getElementById('input-date').valueAsDate = new Date();
     });
 
@@ -1227,7 +1264,6 @@
       tbody.insertBefore(totalTr, tbody.firstChild);
     }
 
-    // --- データ 추출(CSV / 복사) 관련 함수 ---
     window.exportTableToCSV = function(tbodyId, filename) {
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
@@ -1311,9 +1347,9 @@
 
       document.getElementById('input-item-category').value = item.assetDivision || '';
       document.getElementById('input-item-name').value = item.name;
-      document.getElementById('input-cumulative-inv').value = item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0;
-      document.getElementById('input-daily-inv').value = item.dailyInvestment !== undefined ? item.dailyInvestment : 0;
-      document.getElementById('input-monthly-inv').value = item.monthlyInvestment !== undefined ? item.monthlyInvestment : 0;
+      document.getElementById('input-cumulative-inv').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
+      document.getElementById('input-daily-inv').value = formatNumberWithCommas(item.dailyInvestment !== undefined ? item.dailyInvestment : 0);
+      document.getElementById('input-monthly-inv').value = formatNumberWithCommas(item.monthlyInvestment !== undefined ? item.monthlyInvestment : 0);
       
       document.getElementById('edit-item-display-name').textContent = item.name;
       document.getElementById('edit-item-current-amount').textContent = `¥${item.current.toLocaleString()}`;
@@ -1347,8 +1383,8 @@
       if (!target) return;
 
       document.getElementById('edit-history-index').value = index;
-      document.getElementById('input-amount').value = target.amount;
-      document.getElementById('input-investment').value = target.investment !== undefined ? target.investment : 0;
+      document.getElementById('input-amount').value = formatNumberWithCommas(target.amount);
+      document.getElementById('input-investment').value = formatNumberWithCommas(target.investment !== undefined ? target.investment : 0);
       document.getElementById('input-date').value = target.date;
       document.getElementById('input-note').value = target.note || '';
 
@@ -1392,9 +1428,9 @@
       if (!activeItemKey || !appData[activeItemKey]) return;
       const newDivision = document.getElementById('input-item-category').value.trim();
       const newName = document.getElementById('input-item-name').value.trim();
-      const newCumulative = parseFloat(document.getElementById('input-cumulative-inv').value);
-      const newDaily = parseFloat(document.getElementById('input-daily-inv').value) || 0;
-      const newMonthly = parseFloat(document.getElementById('input-monthly-inv').value) || 0;
+      const newCumulative = parseFormattedNumber(document.getElementById('input-cumulative-inv').value);
+      const newDaily = parseFormattedNumber(document.getElementById('input-daily-inv').value);
+      const newMonthly = parseFormattedNumber(document.getElementById('input-monthly-inv').value);
       if (!newName || isNaN(newCumulative)) return;
 
       appData[activeItemKey].assetDivision = newDivision;
@@ -1445,8 +1481,8 @@
       e.preventDefault();
       if (!activeItemKey || !appData[activeItemKey]) return;
       const editIndex = parseInt(document.getElementById('edit-history-index').value);
-      const newAmount = parseFloat(document.getElementById('input-amount').value);
-      const newInvestment = parseFloat(document.getElementById('input-investment').value) || 0;
+      const newAmount = parseFormattedNumber(document.getElementById('input-amount').value);
+      const newInvestment = parseFormattedNumber(document.getElementById('input-investment').value);
       const newDate = document.getElementById('input-date').value;
       const newNote = document.getElementById('input-note').value;
       if (isNaN(newAmount)) return;
@@ -1599,7 +1635,6 @@
         assetListEl.appendChild(row);
       });
 
-      // 積立投資カードの並び替え（番号順）
       const tsumitateKeys = Object.keys(appData).filter(key => {
         const item = appData[key];
         if (item.category !== '積立投資') return false;
@@ -1678,7 +1713,6 @@
         tsumitateGrid.appendChild(tile);
       });
 
-      // 余白部分に「今月の定期積立一覧」カードを追加挿入
       if (selectedTsumitateFilter === '全体' && monthlyPlanRowsHtml !== '') {
         const monthlyCard = document.createElement('div');
         monthlyCard.className = 'monthly-plan-card';
@@ -1694,7 +1728,6 @@
         tsumitateGrid.appendChild(monthlyCard);
       }
 
-      // 副業状況カードの並び替え（番号順）
       const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
       sidejobKeys.sort((a, b) => {
         const nameA = appData[a].name || '';
@@ -1721,7 +1754,6 @@
     }
 
     function renderBankGrid() {
-      // 銀行預金カードの並び替え（番号順）
       const bankKeys = Object.keys(appData).filter(key => appData[key].category === '銀行預金');
       bankKeys.sort((a, b) => {
         const nameA = appData[a].name || '';
