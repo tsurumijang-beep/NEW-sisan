@@ -1224,10 +1224,19 @@
           </div>
           <button type="button" class="btn-submit btn-danger" style="padding:6px; font-size:0.8rem;" onclick="deleteCurrentItem()">この項目を削除</button>
 
-          <!-- <issue> 入力欄（左パネル最下部） -->
+          <!-- <issue> 入力欄 ＆ 保存/削除ボタン -->
           <div class="form-group" style="margin-top: 10px;">
             <label for="input-issue-note" style="color: var(--primary-dark); font-weight: bold;"><i class="fa-solid fa-newspaper"></i> &lt;issue&gt; 主要ニュース・ブログ記事メモ</label>
             <textarea id="input-issue-note" class="form-control" rows="3" placeholder="例:&#10;・イラン・アメリカ戦争の長期化&#10;・入金 3万円反映"></textarea>
+            
+            <div style="display: flex; gap: 6px; margin-top: 6px;">
+              <button type="button" class="btn-submit" style="flex:1; background: #27ae60; padding: 6px 10px; font-size: 0.78rem;" onclick="saveIssueNote()">
+                <i class="fa-solid fa-floppy-disk"></i> 内容保存
+              </button>
+              <button type="button" class="btn-submit" style="background: #e74c3c; padding: 6px 10px; font-size: 0.78rem;" onclick="clearIssueNote()">
+                <i class="fa-solid fa-trash-can"></i> 内容削除
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1265,10 +1274,7 @@
             </div>
           </form>
           
-          <!-- タイトル文言を削除してカードプレビューのみ表示 -->
           <div id="edit-item-card-preview" style="margin-top: 10px;"></div>
-
-          <!-- タイトル文言を削除して <issue> ブルーカードのみ表示 -->
           <div id="edit-item-issue-preview" style="margin-top: 10px;"></div>
         </div>
 
@@ -1417,8 +1423,7 @@
         { name: 'CRCL サークル・インターネット・グループ', qty: '5 株', price: '73.5700 USD', eval: '59,496 円', rate: '-35.7%' },
         { name: 'BMNR ビットマイン・イマージョン・テクノロジーズ', qty: '130 株', price: '13.5600 USD', eval: '285,115 円', rate: '-34.5%' },
         { name: 'GLXY ギャラクシー・デジタル', qty: '101 株', price: '29.2600 USD', eval: '477,983 円', rate: '+13.0%' },
-        { name: 'FWDI フォワード・インダストリーズ', qty: '85 株', price: '3.9600 USD', eval: '54,441 円', rate: '-10.4%' },
-        { name: 'BIDU バイドゥ', qty: '5 株', price: '104.2200 USD', eval: '84,282 円', rate: '+2.3%' },
+        { name: 'FWDI フォワード・インダストリーズ', qty: '85 株', price: '3.9600 USD', eval: '54,441 円', rate: '-10.4%' },        { name: 'BIDU バイドゥ', qty: '5 株', price: '104.2200 USD', eval: '84,282 円', rate: '+2.3%' },
         { name: 'FXI iシェアーズ 中国大型株 ETF', qty: '49 株', price: '31.5900 USD', eval: '250,358 円', rate: '-10.5%' },
         { name: 'BIIB バイオジェン', qty: '4 株', price: '216.0300 USD', eval: '139,762 円', rate: '+53.7%' }
       ],
@@ -1561,6 +1566,26 @@
       }
       updateDatalists();
     }
+
+    /* --- <issue> 저장 및 삭제 전용 함수 --- */
+    window.saveIssueNote = function() {
+      if (!activeItemKey || !appData[activeItemKey]) return;
+      const textVal = document.getElementById('input-issue-note').value;
+      appData[activeItemKey].issueNote = textVal;
+      saveData();
+      renderItemCardPreview();
+      showToast('<issue>メモを保存しました！');
+    };
+
+    window.clearIssueNote = function() {
+      if (!activeItemKey || !appData[activeItemKey]) return;
+      if (!confirm('<issue> メモの内容を削除しますか？')) return;
+      document.getElementById('input-issue-note').value = '';
+      appData[activeItemKey].issueNote = '';
+      saveData();
+      renderItemCardPreview();
+      showToast('<issue>メモを削除しました。');
+    };
 
     function updateDatalists() {
       const categories = new Set();
@@ -2055,7 +2080,7 @@
         </div>
       `;
 
-      // <issue> ブルーカードのレンダリング（見出しテキストなし）
+      // <issue> ブルーカードのレンダリング
       if (issueContainer) {
         const issueText = item.issueNote || '・(未入力)';
         issueContainer.innerHTML = `
