@@ -2566,6 +2566,16 @@
       updateSideJobMonthlyChart();
     }
 
+    // 各項目について「指定した月時点で最新の履歴金額」を取得するヘルパー
+    // (その月以前に登録された履歴がなければ null を返し、集計から除外する)
+    function getItemAmountAtMonth(item, monthStr) {
+      if (!item.history || item.history.length === 0) return null;
+      const candidates = item.history.filter(h => h.date && h.date.substring(0, 7) <= monthStr);
+      if (candidates.length === 0) return null;
+      candidates.sort((a, b) => new Date(b.date) - new Date(a.date));
+      return candidates[0].amount;
+    }
+
     function updateAssetTrendChart() {
       const monthMap = {};
 
@@ -2604,24 +2614,20 @@
             const item = appData[key];
             if (item.category === '副業状況' || item.category === '銀行預金') continue;
 
-            let targetAmt = item.current;
-            if (item.history && item.history.length > 0) {
-              const matched = item.history.find(h => h.date.startsWith(m));
-              if (matched) targetAmt = matched.amount;
+            const amt = getItemAmountAtMonth(item, m);
+            if (amt !== null) {
+              monthTotalAsset += amt;
+              monthTotalInv += (item.cumulativeInvestment || 0);
             }
-            monthTotalAsset += targetAmt;
-            monthTotalInv += (item.cumulativeInvestment || 0);
           }
         } else {
           const item = appData[selectedTrendFilter];
           if (item) {
-            let targetAmt = item.current;
-            if (item.history && item.history.length > 0) {
-              const matched = item.history.find(h => h.date.startsWith(m));
-              if (matched) targetAmt = matched.amount;
+            const amt = getItemAmountAtMonth(item, m);
+            if (amt !== null) {
+              monthTotalAsset += amt;
+              monthTotalInv += (item.cumulativeInvestment || 0);
             }
-            monthTotalAsset += targetAmt;
-            monthTotalInv += (item.cumulativeInvestment || 0);
           }
         }
 
