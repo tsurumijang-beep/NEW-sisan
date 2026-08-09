@@ -298,33 +298,30 @@
       flex-grow: 1;
     }
 
-    /* ★ [1. 全資産 (サマリー) 表示レイアウト調整] ★ */
     .asset-list-mini {
       display: flex;
       flex-direction: column;
-      overflow: hidden; /* スクロールなし */
+      gap: 3px;
+      overflow: hidden;
       flex-grow: 1;
-      justify-content: space-around; /* 上下均等配置 */
-      height: 100%;
-      gap: 2px;
+      justify-content: space-between;
     }
 
     .asset-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 2px 5px;
-      border-radius: 5px;
+      padding: 3px 4px;
+      border-radius: 4px;
+      font-size: 0.68rem;
       font-weight: 600;
-      flex-shrink: 1;
-      min-height: 0;
     }
 
     .asset-row:nth-child(odd) { background: #ffffff; }
     .asset-row:nth-child(even) { background: #f0f7ff; }
 
-    .asset-row-left { display: flex; align-items: center; gap: 5px; overflow: hidden; }
-    .asset-row-right { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+    .asset-row-left { display: flex; align-items: center; gap: 4px; overflow: hidden; }
+    .asset-row-right { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
     .grid-large-tsumitate {
       display: grid;
@@ -391,6 +388,7 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
+      margin-top: 2px;
     }
 
     .monthly-plan-header {
@@ -673,7 +671,6 @@
 
     .toast.show { opacity: 1; transform: translateY(0); }
 
-    /* --- データ取り込みモーダル用スタイル --- */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -699,7 +696,6 @@
       gap: 12px;
     }
 
-    /* --- 3D風パステルNISA個別ページ専用 スタイル --- */
     .nisa-market-panel {
       background: linear-gradient(145deg, #ffffff, #f4f7fc);
       border: 1px solid rgba(255,255,255,0.9);
@@ -802,7 +798,6 @@
     .text-plus { color: var(--accent-green); font-weight: bold; }
     .text-minus { color: var(--accent-red); font-weight: bold; }
 
-    /* --- <issue> 専用ブルーカードスタイル --- */
     .issue-card-box {
       background: linear-gradient(135deg, #3a7bd5 0%, #295bb1 100%);
       color: #ffffff;
@@ -833,7 +828,6 @@
       opacity: 0.95;
     }
 
-    /* --- レスポンシブ対応 (768px以下) --- */
     @media screen and (max-width: 768px) {
       body {
         flex-direction: column;
@@ -895,6 +889,7 @@
         display: flex !important;
       }
       .asset-row {
+        font-size: 0.62rem;
         padding: 4px 2px;
       }
       .asset-row-left {
@@ -975,18 +970,16 @@
     <section id="view-dashboard" class="view-section active">
       <div class="dashboard-grid">
         <div class="dashboard-column">
-          <!-- ★ [1. 全資産 (サマリー)] 文字拡大・スクロールなしでぴったり収まるよう調整 ★ -->
-          <div class="card" style="flex: 1; min-height: 240px;">
+          <div class="card" style="height: 310px;">
             <div class="card-title">1. 全資産 (サマリー)</div>
             <div class="asset-list-mini" id="dashboard-asset-list"></div>
           </div>
-          <!-- ★ [2. 資産推移] 高さ265px ★ -->
-          <div class="card" style="flex-shrink: 0;">
+          <div class="card" style="flex-grow: 1;">
             <div class="card-title">
               <span>2. 資産推移</span>
             </div>
             <div id="trend-filter-container"></div>
-            <div class="chart-box" style="height: 265px;"><canvas id="trendChart"></canvas></div>
+            <div class="chart-box" style="height: 295px;"><canvas id="trendChart"></canvas></div>
             <div class="trend-metrics-container">
               <div class="metric-3d-box">
                 <div class="metric-3d-label" id="metric-label-title">全資産</div>
@@ -1000,14 +993,18 @@
           </div>
         </div>
 
+        <!-- 가운데 컬럼: 3. 積立投資 및 그 바로 아래에 배치된 今月の定期積立一覧 (8月) -->
         <div class="dashboard-column" style="grid-row: span 1; height: 100%;">
-          <div class="card" style="height: 100%;">
+          <div class="card" style="flex: 1; min-height: 0;">
             <div class="card-title">
               <span>3. 積立投資</span>
             </div>
             <div class="filter-bar" id="tsumitate-filter-bar"></div>
             <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
           </div>
+          
+          <!-- ★ 3. 積立投資 바로 아래로 이동 배치된 카드 -->
+          <div class="monthly-plan-card" id="dashboard-monthly-plan-card"></div>
         </div>
 
         <div class="dashboard-column">
@@ -1023,9 +1020,6 @@
             </div>
             <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
           </div>
-
-          <!-- 5. 銀行預金 下部に位置する 今月の定期積立一覧 (8月) カード -->
-          <div class="monthly-plan-card" id="dashboard-monthly-plan-card"></div>
         </div>
       </div>
     </section>
@@ -1072,7 +1066,6 @@
           </div>
         </div>
 
-        <!-- 評価額・収益率の並べ替えコントロールバー -->
         <div style="display: flex; align-items: center; gap: 10px; background: linear-gradient(145deg, #ffffff, #f0f4f8); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 0.8rem; flex-wrap: wrap; box-shadow: 2px 2px 6px #cbd5e1, -2px -2px 6px #ffffff;">
           <span style="font-weight: bold; color: var(--text-main);"><i class="fa-solid fa-arrow-up-wide-short"></i> 並べ替え設定:</span>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -1084,7 +1077,6 @@
           </div>
         </div>
 
-        <!-- 投資信託 -->
         <div class="nisa-market-panel">
           <div class="nisa-market-heading">
             <span>■ 投資信託</span>
@@ -1107,7 +1099,6 @@
           <div class="nisa-card-mobile" id="nisa-card-trust"></div>
         </div>
 
-        <!-- 国内株式 -->
         <div class="nisa-market-panel">
           <div class="nisa-market-heading">
             <span>■ 国内株式</span>
@@ -1130,7 +1121,6 @@
           <div class="nisa-card-mobile" id="nisa-card-jp"></div>
         </div>
 
-        <!-- 米国市場 -->
         <div class="nisa-market-panel">
           <div class="nisa-market-heading">
             <span>■ 米国市場</span>
@@ -1153,7 +1143,6 @@
           <div class="nisa-card-mobile" id="nisa-card-us"></div>
         </div>
 
-        <!-- 中国市場 -->
         <div class="nisa-market-panel">
           <div class="nisa-market-heading">
             <span>■ 中国市場 (香港株)</span>
@@ -1182,7 +1171,6 @@
     <section id="view-edit-item" class="view-section">
       <div class="edit-split-container">
         
-        <!-- 左パネル：設定・履歴一覧 -->
         <div class="panel-box">
           <div class="card-title" style="color: var(--primary-color);">
             <span><i class="fa-solid fa-pen"></i> 設定 & 履歴</span>
@@ -1231,7 +1219,6 @@
           </div>
           <button type="button" class="btn-submit btn-danger" style="padding:6px; font-size:0.8rem;" onclick="deleteCurrentItem()">この項目を削除</button>
 
-          <!-- <issue> 入力欄 ＆ 保存/削除ボタン -->
           <div class="form-group" style="margin-top: 10px;">
             <label for="input-issue-note" style="color: var(--primary-dark); font-weight: bold;"><i class="fa-solid fa-newspaper"></i> &lt;issue&gt; 主要ニュース・ブログ記事メモ</label>
             <textarea id="input-issue-note" class="form-control" rows="3" placeholder="例:&#10;・イラン・アメリカ戦争の長期化&#10;・入金 3万円反映"></textarea>
@@ -1247,7 +1234,6 @@
           </div>
         </div>
 
-        <!-- 右パネル：新規更新 & プレビュー -->
         <div class="panel-box">
           <div class="current-val-card">
             <div class="label" id="edit-item-display-name">項目名</div>
@@ -1289,7 +1275,6 @@
     </section>
   </main>
 
-  <!-- データ取り込みモーダル -->
   <div class="modal-overlay" id="import-modal">
     <div class="modal-content">
       <div class="card-title" style="color: var(--primary-color);">
@@ -1308,7 +1293,6 @@
     </div>
   </div>
 
-  <!-- 楽天NISA 個別銘柄 編集/追加モーダル -->
   <div class="modal-overlay" id="nisa-item-modal">
     <div class="modal-content">
       <div class="card-title" style="color: var(--primary-color);">
@@ -1430,7 +1414,8 @@
         { name: 'CRCL サークル・インターネット・グループ', qty: '5 株', price: '73.5700 USD', eval: '59,496 円', rate: '-35.7%' },
         { name: 'BMNR ビットマイン・イマージョン・テクノロジーズ', qty: '130 株', price: '13.5600 USD', eval: '285,115 円', rate: '-34.5%' },
         { name: 'GLXY ギャラクシー・デジタル', qty: '101 株', price: '29.2600 USD', eval: '477,983 円', rate: '+13.0%' },
-        { name: 'FWDI フォワード・インダストリーズ', qty: '85 株', price: '3.9600 USD', eval: '54,441 円', rate: '-10.4%' },        { name: 'BIDU バイドゥ', qty: '5 株', price: '104.2200 USD', eval: '84,282 円', rate: '+2.3%' },
+        { name: 'FWDI フォワード・インダストリーズ', qty: '85 株', price: '3.9600 USD', eval: '54,441 円', rate: '-10.4%' },
+        { name: 'BIDU バイドゥ', qty: '5 株', price: '104.2200 USD', eval: '84,282 円', rate: '+2.3%' },
         { name: 'FXI iシェアーズ 中国大型株 ETF', qty: '49 株', price: '31.5900 USD', eval: '250,358 円', rate: '-10.5%' },
         { name: 'BIIB バイオジェン', qty: '4 株', price: '216.0300 USD', eval: '139,762 円', rate: '+53.7%' }
       ],
@@ -2519,22 +2504,6 @@
         return divisionMap[b].current - divisionMap[a].current;
       });
 
-      /* ★ [1. 全資産 (サマリー) フォント拡大 & スクロール回避調整] ★ */
-      const rowCount = sortedDivisions.length;
-      let fontSize = '0.78rem';
-      let tagSize = '0.7rem';
-      let padding = '3px 6px';
-
-      if (rowCount > 8) {
-        fontSize = '0.68rem';
-        tagSize = '0.62rem';
-        padding = '2px 4px';
-      } else if (rowCount > 6) {
-        fontSize = '0.73rem';
-        tagSize = '0.66rem';
-        padding = '2.5px 5px';
-      }
-
       sortedDivisions.forEach(div => {
         const data = divisionMap[div];
         let divPrevTotal = 0;
@@ -2554,21 +2523,18 @@
 
         const row = document.createElement('div');
         row.className = 'asset-row';
-        row.style.fontSize = fontSize;
-        row.style.padding = padding;
-
         const amtStr = `¥${data.current.toLocaleString()}`;
         const itemsStr = data.items.join(' ');
 
         const hideProfitPct = (data.category === '副業状況' || data.category === '銀行預金');
         row.innerHTML = `
           <div class="asset-row-left">
-            <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:${tagSize}; font-weight:bold;">${div}</span></span>
-            <span style="font-size:calc(${fontSize} - 0.08rem); color:var(--text-sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${itemsStr}</span>
+            <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:0.6rem; font-weight:bold;">${div}</span></span>
+            <span style="font-size:0.52rem; color:var(--text-sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${itemsStr}</span>
           </div>
           <div class="asset-row-right">
             <strong>${amtStr}</strong>
-            <span style="font-size:calc(${fontSize} - 0.06rem); color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
+            <span style="font-size:0.55rem; color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
             ${renderDiffHtml(profitVal, profitPct, hideProfitPct)}
           </div>
         `;
