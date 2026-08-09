@@ -220,7 +220,7 @@
       flex-direction: column;
       gap: 6px;
       height: 100%;
-      overflow-y: auto; /* 오른쪽 컬럼 전체 스크롤 지원 */
+      overflow-y: auto;
     }
 
     .card {
@@ -298,30 +298,33 @@
       flex-grow: 1;
     }
 
+    /* ★ [1. 全資産 (サマリー) 表示レイアウト調整] ★ */
     .asset-list-mini {
       display: flex;
       flex-direction: column;
-      gap: 3px;
-      overflow: hidden;
+      overflow: hidden; /* スクロールなし */
       flex-grow: 1;
-      justify-content: space-between;
+      justify-content: space-around; /* 上下均等配置 */
+      height: 100%;
+      gap: 2px;
     }
 
     .asset-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 3px 4px;
-      border-radius: 4px;
-      font-size: 0.68rem;
+      padding: 2px 5px;
+      border-radius: 5px;
       font-weight: 600;
+      flex-shrink: 1;
+      min-height: 0;
     }
 
     .asset-row:nth-child(odd) { background: #ffffff; }
     .asset-row:nth-child(even) { background: #f0f7ff; }
 
-    .asset-row-left { display: flex; align-items: center; gap: 4px; overflow: hidden; }
-    .asset-row-right { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+    .asset-row-left { display: flex; align-items: center; gap: 5px; overflow: hidden; }
+    .asset-row-right { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
 
     .grid-large-tsumitate {
       display: grid;
@@ -379,7 +382,6 @@
     .info-tile-large .tile-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
     .info-tile-large .tile-value { font-size: 1.05rem; font-weight: 900; color: var(--primary-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
 
-    /* ★ スクロールなしで全件表示できるように調整 */
     .monthly-plan-card {
       background: linear-gradient(145deg, #ffffff, #f4f7fc);
       border-radius: 10px;
@@ -406,7 +408,7 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      max-height: none; /* 스크롤 없이 전체 표시 */
+      max-height: none;
       overflow: visible;
       padding-right: 2px;
     }
@@ -893,7 +895,6 @@
         display: flex !important;
       }
       .asset-row {
-        font-size: 0.62rem;
         padding: 4px 2px;
       }
       .asset-row-left {
@@ -974,16 +975,18 @@
     <section id="view-dashboard" class="view-section active">
       <div class="dashboard-grid">
         <div class="dashboard-column">
-          <div class="card" style="height: 310px;">
+          <!-- ★ [1. 全資産 (サマリー)] 文字拡大・スクロールなしでぴったり収まるよう調整 ★ -->
+          <div class="card" style="flex: 1; min-height: 240px;">
             <div class="card-title">1. 全資産 (サマリー)</div>
             <div class="asset-list-mini" id="dashboard-asset-list"></div>
           </div>
-          <div class="card" style="flex-grow: 1;">
+          <!-- ★ [2. 資産推移] 高さ265px ★ -->
+          <div class="card" style="flex-shrink: 0;">
             <div class="card-title">
               <span>2. 資産推移</span>
             </div>
             <div id="trend-filter-container"></div>
-            <div class="chart-box" style="height: 295px;"><canvas id="trendChart"></canvas></div>
+            <div class="chart-box" style="height: 265px;"><canvas id="trendChart"></canvas></div>
             <div class="trend-metrics-container">
               <div class="metric-3d-box">
                 <div class="metric-3d-label" id="metric-label-title">全資産</div>
@@ -1011,7 +1014,6 @@
           <div class="card">
             <div class="card-title">4. 副業状況 (月別集計)</div>
             <div class="grid-2col" id="dashboard-sidejob-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2px;"></div>
-            <!-- ★ [수정 1] 높이를 기존의 2배(196px)로 확대 -->
             <div class="chart-box" style="height: 196px;"><canvas id="sideJobBarChart"></canvas></div>
           </div>
           <div class="card">
@@ -1022,7 +1024,7 @@
             <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
           </div>
 
-          <!-- 5. 銀行預金 하단에 위치한 今月の定期積立一覧 (8月) 카드 -->
+          <!-- 5. 銀行預金 下部に位置する 今月の定期積立一覧 (8月) カード -->
           <div class="monthly-plan-card" id="dashboard-monthly-plan-card"></div>
         </div>
       </div>
@@ -1548,7 +1550,6 @@
       initAmountInputs();
       document.getElementById('input-date').valueAsDate = new Date();
 
-      // <issue> 텍スト実時間反映
       const issueInput = document.getElementById('input-issue-note');
       if (issueInput) {
         issueInput.addEventListener('input', function() {
@@ -1572,7 +1573,6 @@
       updateDatalists();
     }
 
-    /* --- <issue> 保存および削除専用関数 --- */
     window.saveIssueNote = function() {
       if (!activeItemKey || !appData[activeItemKey]) return;
       const textVal = document.getElementById('input-issue-note').value;
@@ -1646,7 +1646,6 @@
       });
     }
 
-    // --- 楽天NISA 並べ替え機能 ---
     window.setNisaSort = function(key, order) {
       currentNisaSortKey = key;
       currentNisaSortOrder = order;
@@ -1695,7 +1694,6 @@
           const colorClass = isPlus ? 'text-plus' : 'text-minus';
           const colorStyle = isPlus ? 'color: #16a34a; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
 
-          // PCテーブル用行
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td style="width: 38%;">${item.name}</td>
@@ -1710,7 +1708,6 @@
           `;
           tbody.appendChild(tr);
 
-          // スマホカード用要素
           const card = document.createElement('div');
           card.className = 'nisa-m-card';
           card.innerHTML = `
@@ -2085,7 +2082,6 @@
         </div>
       `;
 
-      // <issue> ブルーカードのレンダリング
       if (issueContainer) {
         const issueText = item.issueNote || '・(未入力)';
         issueContainer.innerHTML = `
@@ -2523,6 +2519,22 @@
         return divisionMap[b].current - divisionMap[a].current;
       });
 
+      /* ★ [1. 全資産 (サマリー) フォント拡大 & スクロール回避調整] ★ */
+      const rowCount = sortedDivisions.length;
+      let fontSize = '0.78rem';
+      let tagSize = '0.7rem';
+      let padding = '3px 6px';
+
+      if (rowCount > 8) {
+        fontSize = '0.68rem';
+        tagSize = '0.62rem';
+        padding = '2px 4px';
+      } else if (rowCount > 6) {
+        fontSize = '0.73rem';
+        tagSize = '0.66rem';
+        padding = '2.5px 5px';
+      }
+
       sortedDivisions.forEach(div => {
         const data = divisionMap[div];
         let divPrevTotal = 0;
@@ -2542,18 +2554,21 @@
 
         const row = document.createElement('div');
         row.className = 'asset-row';
+        row.style.fontSize = fontSize;
+        row.style.padding = padding;
+
         const amtStr = `¥${data.current.toLocaleString()}`;
         const itemsStr = data.items.join(' ');
 
         const hideProfitPct = (data.category === '副業状況' || data.category === '銀行預金');
         row.innerHTML = `
           <div class="asset-row-left">
-            <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:0.6rem; font-weight:bold;">${div}</span></span>
-            <span style="font-size:0.52rem; color:var(--text-sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${itemsStr}</span>
+            <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:${tagSize}; font-weight:bold;">${div}</span></span>
+            <span style="font-size:calc(${fontSize} - 0.08rem); color:var(--text-sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${itemsStr}</span>
           </div>
           <div class="asset-row-right">
             <strong>${amtStr}</strong>
-            <span style="font-size:0.55rem; color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
+            <span style="font-size:calc(${fontSize} - 0.06rem); color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
             ${renderDiffHtml(profitVal, profitPct, hideProfitPct)}
           </div>
         `;
@@ -2639,7 +2654,6 @@
         tsumitateGrid.appendChild(tile);
       });
 
-      // 今月の定期積立一覧 (8月) 카드 동적 렌더링
       const monthlyCard = document.getElementById('dashboard-monthly-plan-card');
       if (monthlyCard) {
         if (monthlyPlanRowsHtml !== '') {
@@ -2927,7 +2941,6 @@
         const dataArr = sortedMonths.map(m => datasetsMap[itemName][m] || 0);
 
         const ctx = document.getElementById('sideJobBarChart').getContext('2d');
-        // ★ 196px 높이에 맞는 그라데ーション 범위 적용
         const gradient = ctx.createLinearGradient(0, 0, 0, 196);
 
         if (colorIdx === 0) { gradient.addColorStop(0, '#fed7aa'); gradient.addColorStop(1, '#ea580c'); }
