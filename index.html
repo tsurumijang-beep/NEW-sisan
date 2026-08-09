@@ -220,6 +220,7 @@
       flex-direction: column;
       gap: 6px;
       height: 100%;
+      overflow-y: auto; /* 오른쪽 컬럼 전체 스크롤 지원 */
     }
 
     .card {
@@ -378,16 +379,16 @@
     .info-tile-large .tile-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
     .info-tile-large .tile-value { font-size: 1.05rem; font-weight: 900; color: var(--primary-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
 
+    /* ★ スクロールなしで全件表示できるように調整 */
     .monthly-plan-card {
-      grid-column: span 2;
       background: linear-gradient(145deg, #ffffff, #f4f7fc);
-      border-radius: 12px;
-      padding: 10px 14px;
+      border-radius: 10px;
+      padding: 8px 10px;
       box-shadow: 4px 4px 10px rgba(58, 123, 213, 0.08), -4px -4px 10px #ffffff;
       border: 1px solid rgba(58, 123, 213, 0.25);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     .monthly-plan-header {
@@ -395,7 +396,7 @@
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 6px;
+      padding-bottom: 4px;
       font-size: 0.82rem;
       font-weight: bold;
       color: var(--primary-dark);
@@ -405,8 +406,8 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      max-height: 140px;
-      overflow-y: auto;
+      max-height: none; /* 스크롤 없이 전체 표시 */
+      overflow: visible;
       padding-right: 2px;
     }
 
@@ -414,8 +415,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.76rem;
-      padding: 5px 8px;
+      font-size: 0.74rem;
+      padding: 4px 6px;
       border-radius: 6px;
       background: #ffffff;
       border: 1px solid #edf2f7;
@@ -1007,18 +1008,22 @@
         </div>
 
         <div class="dashboard-column">
-          <div class="card" style="flex-grow: 1;">
+          <div class="card">
             <div class="card-title">4. 副業状況 (月別集計)</div>
             <div class="grid-2col" id="dashboard-sidejob-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2px;"></div>
-            <div class="chart-box" style="height: 140px;"><canvas id="sideJobBarChart"></canvas></div>
+            <!-- ★ [수정 1] 높이를 기존의 2배(196px)로 확대 -->
+            <div class="chart-box" style="height: 196px;"><canvas id="sideJobBarChart"></canvas></div>
           </div>
-          <div class="card" style="flex-grow: 1;">
+          <div class="card">
             <div class="card-title">
               5. 銀行預金
               <button onclick="toggleBankMask()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer;">非公開切替</button>
             </div>
             <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
           </div>
+
+          <!-- 5. 銀行預金 하단에 위치한 今月の定期積立一覧 (8月) 카드 -->
+          <div class="monthly-plan-card" id="dashboard-monthly-plan-card"></div>
         </div>
       </div>
     </section>
@@ -1403,7 +1408,7 @@
         { name: '日経平均高配当利回り株ファンド', qty: '19,983 口', price: '22,355 円', eval: '44,672 円', rate: '-1.9%' }
       ],
       jp: [
-        { name: '2621 ＩＳ米国債２０年ヘッジ', qty: '100 株', price: '1,065.0 円', eval: '106,500 円', rate: '-2.4%' },
+        { name: '2621 ＩＳ米国債２0年ヘッジ', qty: '100 株', price: '1,065.0 円', eval: '106,500 円', rate: '-2.4%' },
         { name: '3350 メタプラネット <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>', qty: '500 株', price: '197.0 円', eval: '98,500 円', rate: '-36.5%' }
       ],
       us: [
@@ -1543,7 +1548,7 @@
       initAmountInputs();
       document.getElementById('input-date').valueAsDate = new Date();
 
-      // <issue> 텍스트 실시간 반영
+      // <issue> 텍スト実時間反映
       const issueInput = document.getElementById('input-issue-note');
       if (issueInput) {
         issueInput.addEventListener('input', function() {
@@ -1567,7 +1572,7 @@
       updateDatalists();
     }
 
-    /* --- <issue> 저장 및 삭제 전용 함수 --- */
+    /* --- <issue> 保存および削除専用関数 --- */
     window.saveIssueNote = function() {
       if (!activeItemKey || !appData[activeItemKey]) return;
       const textVal = document.getElementById('input-issue-note').value;
@@ -2634,19 +2639,23 @@
         tsumitateGrid.appendChild(tile);
       });
 
-      if (selectedTsumitateFilter === '全体' && monthlyPlanRowsHtml !== '') {
-        const monthlyCard = document.createElement('div');
-        monthlyCard.className = 'monthly-plan-card';
-        monthlyCard.innerHTML = `
-          <div class="monthly-plan-header">
-            <span><i class="fa-solid fa-calendar-days" style="color:var(--primary-color); margin-right:4px;"></i> 今月の定期積立一覧 (8月)</span>
-            <span style="color:var(--accent-green); font-size:0.85rem;">合計: ¥${totalMonthlyExpected.toLocaleString()}</span>
-          </div>
-          <div class="monthly-plan-list">
-            ${monthlyPlanRowsHtml}
-          </div>
-        `;
-        tsumitateGrid.appendChild(monthlyCard);
+      // 今月の定期積立一覧 (8月) 카드 동적 렌더링
+      const monthlyCard = document.getElementById('dashboard-monthly-plan-card');
+      if (monthlyCard) {
+        if (monthlyPlanRowsHtml !== '') {
+          monthlyCard.style.display = 'flex';
+          monthlyCard.innerHTML = `
+            <div class="monthly-plan-header">
+              <span><i class="fa-solid fa-calendar-days" style="color:var(--primary-color); margin-right:4px;"></i> 今月の定期積立一覧 (8月)</span>
+              <span style="color:var(--accent-green); font-size:0.85rem;">合計: ¥${totalMonthlyExpected.toLocaleString()}</span>
+            </div>
+            <div class="monthly-plan-list">
+              ${monthlyPlanRowsHtml}
+            </div>
+          `;
+        } else {
+          monthlyCard.style.display = 'none';
+        }
       }
 
       const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
@@ -2904,7 +2913,11 @@
         }
       }
 
-      const sortedMonths = Object.keys(monthlyData).sort();
+      let sortedMonths = Object.keys(monthlyData).sort();
+      if (sortedMonths.length > 3) {
+        sortedMonths = sortedMonths.slice(sortedMonths.length - 3);
+      }
+
       const labels = sortedMonths.map(m => m.replace('-', '年') + '月');
 
       let colorIdx = 0;
@@ -2914,7 +2927,8 @@
         const dataArr = sortedMonths.map(m => datasetsMap[itemName][m] || 0);
 
         const ctx = document.getElementById('sideJobBarChart').getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+        // ★ 196px 높이에 맞는 그라데ーション 범위 적용
+        const gradient = ctx.createLinearGradient(0, 0, 0, 196);
 
         if (colorIdx === 0) { gradient.addColorStop(0, '#fed7aa'); gradient.addColorStop(1, '#ea580c'); }
         else if (colorIdx === 1) { gradient.addColorStop(0, '#bae6fd'); gradient.addColorStop(1, '#0284c7'); }
@@ -2932,8 +2946,8 @@
       }
 
       if (sideJobBarChart) {
-        sideJobBarChart.data.labels = labels.length > 0 ? labels : ['5月', '6月', '7月', '8月'];
-        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業売上', data: [0,0,0,0], backgroundColor: '#fed7aa' }];
+        sideJobBarChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
+        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業売上', data: [0,0,0], backgroundColor: '#fed7aa' }];
         sideJobBarChart.update();
       }
     }
