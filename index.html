@@ -264,7 +264,7 @@
       font-weight: bold;
       outline: none;
       cursor: pointer;
-      margin-bottom: 4px;
+      margin-bottom: 0;
       width: 100%;
     }
 
@@ -983,17 +983,15 @@
     <section id="view-dashboard" class="view-section active">
       <div class="dashboard-grid">
         <div class="dashboard-column">
-          <!-- ★ [수정] 짤림 방지: 높이 고정(310px)을 제거하고 자동 조절 및 스크롤 설정 -->
           <div class="card" style="max-height: fit-content; flex-shrink: 0;">
             <div class="card-title">1. 全資産 (サマリー)</div>
             <div class="asset-list-mini" id="dashboard-asset-list"></div>
           </div>
-          <!-- ★ [수정] 아래 그래프 영역이 남은 높이를 유연하게 채우도록 flex:1 적용 -->
           <div class="card" style="flex: 1; min-height: 250px;">
             <div class="card-title">
               <span>2. 資産推移</span>
+              <div id="trend-filter-container" style="width: 140px;"></div>
             </div>
-            <div id="trend-filter-container"></div>
             <div class="chart-box" style="height: 100%; min-height: 180px;"><canvas id="trendChart"></canvas></div>
             <div class="trend-metrics-container">
               <div class="metric-3d-box">
@@ -1012,7 +1010,6 @@
           <div class="card" style="flex: 1; min-height: 0;">
             <div class="card-title">
               <span>3. 積立投資</span>
-              <!-- ★ [수정] 타이틀 바로 옆에 풀다운 셀렉트 박스 배치 -->
               <div id="tsumitate-filter-container" style="width: 140px;"></div>
             </div>
             <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
@@ -2543,13 +2540,11 @@
         }
       }
 
-      /* ★ [수정] 積立投資 필터바를 셀렉트 박스(풀ダウン)로 전환 */
       const tsumitateContainer = document.getElementById('tsumitate-filter-container');
       tsumitateContainer.innerHTML = '';
 
       const tsumitateSelect = document.createElement('select');
       tsumitateSelect.className = 'filter-select';
-      tsumitateSelect.style.marginBottom = '0';
 
       const tsumitateOptions = ['全体', ...Array.from(tsumitateDivisions)];
       tsumitateOptions.forEach(opt => {
@@ -2658,7 +2653,6 @@
 
         const profitVal = data.current - divCumulative;
         const profitPct = divCumulative !== 0 ? (profitVal / divCumulative) * 100 : 0;
-        const ratio = grandTotal !== 0 ? (data.current / grandTotal) * 100 : 0;
 
         const row = document.createElement('div');
         row.className = 'asset-row';
@@ -2666,6 +2660,8 @@
         const itemsStr = data.items.join(' ');
 
         const hideProfitPct = (data.category === '副業状況' || data.category === '銀行預金');
+        
+        /* ★ [수정] 파란색 자산 비중 퍼센트((86.9%) 등) 요소 삭제 */
         row.innerHTML = `
           <div class="asset-row-left">
             <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:0.6rem; font-weight:bold;">${div}</span></span>
@@ -2673,7 +2669,6 @@
           </div>
           <div class="asset-row-right">
             <strong>${amtStr}</strong>
-            <span style="font-size:0.55rem; color:var(--primary-color); font-weight:bold;">(${ratio.toFixed(1)}%)</span>
             ${renderDiffHtml(profitVal, profitPct, hideProfitPct)}
           </div>
         `;
