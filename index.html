@@ -427,7 +427,7 @@
       border-color: #cbd5e1;
     }
 
-    /* ★ 6. メモ (상아색 파스テル톤 카드) 전용 스타일 */
+    /* ★ 6. メモ (상아색 파스텔톤 카드) 전용 스타일 */
     .memo-card {
       background: linear-gradient(145deg, #fffdfa, #fef3c7);
       border-radius: 10px;
@@ -1052,7 +1052,7 @@
             <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
           </div>
 
-          <!-- ★ [신규 추가] 5. 銀行預金 아래 남는 공간을 채우는 상아색 파스텔 톤 6. メモ 카드 -->
+          <!-- ★ Firebase リアルタイム同期メモカード -->
           <div class="memo-card">
             <div class="card-title" style="color: #854d0e; border-bottom-color: rgba(217, 119, 6, 0.2);">
               <span><i class="fa-solid fa-note-sticky" style="color: #d97706; margin-right: 4px;"></i> 6. メモ</span>
@@ -1390,7 +1390,7 @@
   <!-- Firebase SDK (Modular v10) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyADKizjKvIsKTMiSS6cYnZQNIc3mlL80OM",
@@ -1543,26 +1543,40 @@
       });
     }
 
-    /* ★ 6. メモ (ダッシュボード) 保存・自動読み込み機能 */
-    window.saveDashboardMemo = function() {
+    /* ★ 6. Firebase Firestore 실시간 메모 동기화 기능 */
+    window.saveDashboardMemo = async function() {
       const memoText = document.getElementById('dashboard-memo-input').value;
-      localStorage.setItem('dashboard_memo_text', memoText);
-      showToast('メモを保存しました！');
-    };
-
-    window.clearDashboardMemo = function() {
-      if (!confirm('メモを削除しますか？')) return;
-      document.getElementById('dashboard-memo-input').value = '';
-      localStorage.removeItem('dashboard_memo_text');
-      showToast('メモを削除しました。');
-    };
-
-    function loadDashboardMemo() {
-      const savedMemo = localStorage.getItem('dashboard_memo_text');
-      const memoInput = document.getElementById('dashboard-memo-input');
-      if (savedMemo && memoInput) {
-        memoInput.value = savedMemo;
+      try {
+        const memoRef = doc(db, "assets", "memo");
+        await setDoc(memoRef, { text: memoText, updatedAt: new Date() });
+        showToast('メモを保存しました！');
+      } catch (e) {
+        console.error("Firestore 메모 저장 오류: ", e);
+        showToast('保存に失敗しました。');
       }
+    };
+
+    window.clearDashboardMemo = async function() {
+      if (!confirm('メモを削除しますか？')) return;
+      try {
+        const memoRef = doc(db, "assets", "memo");
+        await setDoc(memoRef, { text: "", updatedAt: new Date() });
+        showToast('メモを削除しました。');
+      } catch (e) {
+        console.error("Firestore 메모 삭제 오류: ", e);
+      }
+    };
+
+    function setupMemoListener() {
+      const memoRef = doc(db, "assets", "memo");
+      onSnapshot(memoRef, (docSnap) => {
+        const memoInput = document.getElementById('dashboard-memo-input');
+        if (docSnap.exists() && memoInput) {
+          memoInput.value = docSnap.data().text || '';
+        }
+      }, (error) => {
+        console.error("Firestore 메모 실시간 감지 오류:", error);
+      });
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -1598,7 +1612,7 @@
       renderNisaTables();
       updateDatalists();
       initAmountInputs();
-      loadDashboardMemo();
+      setupMemoListener(); // Firestore 실시간 메모 감지 시작
       document.getElementById('input-date').valueAsDate = new Date();
 
       const issueInput = document.getElementById('input-issue-note');
