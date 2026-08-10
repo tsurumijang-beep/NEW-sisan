@@ -2661,7 +2661,6 @@
 
         const hideProfitPct = (data.category === '副業状況' || data.category === '銀行預金');
         
-        /* ★ [수정] 파란색 자산 비중 퍼센트((86.9%) 등) 요소 삭제 */
         row.innerHTML = `
           <div class="asset-row-left">
             <span><span style="background:#ffffff; border: 1px solid #cbd5e1; padding:1px 4px; border-radius:4px; font-size:0.6rem; font-weight:bold;">${div}</span></span>
@@ -2949,7 +2948,8 @@
 
         const profitRate = monthTotalInv !== 0 ? ((monthTotalAsset - monthTotalInv) / monthTotalInv) * 100 : 0;
 
-        if (m >= '2026-08' || selectedTrendFilter !== '全体') {
+        /* ★ [수정] 모든 선택 항목의 손익률은 2026년 8월부터만 표시 */
+        if (m >= '2026-08') {
           profitRatePerMonth.push(parseFloat(profitRate.toFixed(1)));
           latestProfitRate = profitRate;
         } else {
