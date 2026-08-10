@@ -167,9 +167,10 @@
 
     .header-stats {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       font-size: 1.05rem;
       font-weight: bold;
+      align-items: center;
     }
 
     .stat-badge {
@@ -180,6 +181,13 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+
+    .clock-badge {
+      color: var(--primary-dark);
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
     }
 
     .diff-badge {
@@ -427,7 +435,6 @@
       border-color: #cbd5e1;
     }
 
-    /* ★ 6. メモ (상아색 파스텔톤 카드) 전용 스타일 */
     .memo-card {
       background: linear-gradient(145deg, #fffdfa, #fef3c7);
       border-radius: 10px;
@@ -436,7 +443,7 @@
       border: 1px solid #fde68a;
       display: flex;
       flex-direction: column;
-      flex: 1; /* 남은 하단 공간을 자동으로 채움 */
+      flex: 1;
       min-height: 120px;
     }
 
@@ -984,8 +991,15 @@
       <div class="header-title">
         <i class="fa-solid fa-chart-simple" style="color: var(--primary-color);"></i>
         <span id="header-view-title">資産管理 Dashboard</span>
+        <!-- ★ [신규 추가] 헤더 전용 비공개 전환 버튼 -->
+        <button onclick="toggleHeaderMask()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; border:1px solid #cbd5e1; background:#f8fafc; border-radius:4px; font-weight:bold; color:var(--text-sub); margin-left:4px;">非公開切替</button>
       </div>
       <div class="header-stats">
+        <div class="stat-badge">
+          <i class="fa-regular fa-clock" style="color:var(--primary-color);"></i>
+          <strong id="header-clock" class="clock-badge">----年 --月 --日 (-) --:--:--</strong>
+        </div>
+
         <div class="stat-badge">
           <span style="color:var(--text-sub);">総資産:</span>
           <strong id="header-total-assets">¥0</strong>
@@ -1427,6 +1441,7 @@
     let appData = {};
     let activeItemKey = null;
     let isBankPrivate = true;
+    let isHeaderPrivate = false; // ★ 헤더 금액 비공개 플래그
     let selectedTrendFilter = '全体';
     let selectedTsumitateFilter = '全体';
     let trendChart, sideJobBarChart;
@@ -1543,12 +1558,52 @@
       });
     }
 
-    /* ★ 6. Firebase Firestore 실시간 메모 동기화 기능 */
+    /* ★ 헤더 실시간 시계 업데이트 기능 */
+    function updateHeaderClock() {
+      const clockEl = document.getElementById('header-clock');
+      if (!clockEl) return;
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+      const dayName = weekDays[now.getDay()];
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+
+      clockEl.textContent = `${yyyy}年 ${mm}月 ${dd}日 (${dayName}) ${hh}:${min}:${ss}`;
+    }
+
+    /* ★ 헤더 금액 공개/비공개 토글 함수 */
+    window.toggleHeaderMask = function() {
+      isHeaderPrivate = !isHeaderPrivate;
+      updateDashboard();
+    };
+
+    /* ★ 6. Firebase Firestore 실시간 메모 동기화 및 타임스탬프 자동 생성 기능 */
     window.saveDashboardMemo = async function() {
-      const memoText = document.getElementById('dashboard-memo-input').value;
+      const inputEl = document.getElementById('dashboard-memo-input');
+      let memoText = inputEl.value;
+      
+      memoText = memoText.replace(/\n*\[\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}\]$/g, '').trimEnd();
+      
+      if (memoText !== '') {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const timestamp = `[${yyyy}/${mm}/${dd} ${hh}:${min}]`;
+        
+        memoText = `${memoText}\n${timestamp}`;
+      }
+
       try {
         const memoRef = doc(db, "assets", "memo");
         await setDoc(memoRef, { text: memoText, updatedAt: new Date() });
+        inputEl.value = memoText;
         showToast('メモを保存しました！');
       } catch (e) {
         console.error("Firestore 메모 저장 오류: ", e);
@@ -1580,6 +1635,9 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
+      updateHeaderClock();
+      setInterval(updateHeaderClock, 1000);
+
       try {
         const docRef = doc(db, "assets", "mainData");
         const docSnap = await getDoc(docRef);
@@ -1612,7 +1670,7 @@
       renderNisaTables();
       updateDatalists();
       initAmountInputs();
-      setupMemoListener(); // Firestore 실시간 메모 감지 시작
+      setupMemoListener();
       document.getElementById('input-date').valueAsDate = new Date();
 
       const issueInput = document.getElementById('input-issue-note');
@@ -2470,15 +2528,25 @@
         }
       }
 
-      document.getElementById('header-total-assets').textContent = `¥${totalAssets.toLocaleString()}`;
+      const totalAssetsStr = isHeaderPrivate ? '¥*,***,***' : `¥${totalAssets.toLocaleString()}`;
+      const sideIncomeStr = isHeaderPrivate ? '+¥*,***,***' : `+¥${sideJobTotal.toLocaleString()}`;
+      const maskClass = isHeaderPrivate ? 'private-mask' : '';
+
+      document.getElementById('header-total-assets').textContent = totalAssetsStr;
+      document.getElementById('header-total-assets').className = maskClass;
+
       const tDiff = totalAssets - prevTotalAssets;
       const tPct = prevTotalAssets !== 0 ? (tDiff / prevTotalAssets) * 100 : 0;
-      document.getElementById('header-total-diff').outerHTML = `<span id="header-total-diff">${renderDiffHtml(tDiff, tPct)}</span>`;
+      const totalDiffHtml = isHeaderPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(tDiff, tPct);
+      document.getElementById('header-total-diff').outerHTML = `<span id="header-total-diff">${totalDiffHtml}</span>`;
 
-      document.getElementById('header-side-income').textContent = `+¥${sideJobTotal.toLocaleString()}`;
+      document.getElementById('header-side-income').textContent = sideIncomeStr;
+      document.getElementById('header-side-income').className = maskClass;
+
       const sDiff = sideJobTotal - prevSideJobTotal;
       const sPct = prevSideJobTotal !== 0 ? (sDiff / prevSideJobTotal) * 100 : 0;
-      document.getElementById('header-side-diff').outerHTML = `<span id="header-side-diff">${renderDiffHtml(sDiff, sPct, true)}</span>`;
+      const sideDiffHtml = isHeaderPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(sDiff, sPct, true);
+      document.getElementById('header-side-diff').outerHTML = `<span id="header-side-diff">${sideDiffHtml}</span>`;
 
       renderFilterBars();
       renderDashboardGrids();
