@@ -1569,7 +1569,7 @@
         inputEl.value = memoText;
         showToast('メモを保存しました！');
       } catch (e) {
-        console.error("Firestore 메모 저장 오류: ", e);
+        console.error("Firestore メモ保存エラー: ", e);
         showToast('保存に失敗しました。');
       }
     };
@@ -1581,7 +1581,7 @@
         await setDoc(memoRef, { text: "", updatedAt: new Date() });
         showToast('メモを削除しました。');
       } catch (e) {
-        console.error("Firestore 메모 삭제 오류: ", e);
+        console.error("Firestore メモ削除エラー: ", e);
       }
     };
 
@@ -1593,7 +1593,7 @@
           memoInput.value = docSnap.data().text || '';
         }
       }, (error) => {
-        console.error("Firestore 메모 실時間 감지 오류:", error);
+        console.error("Firestore メモリアルタイム検知エラー:", error);
       });
     }
 
@@ -2501,9 +2501,17 @@
           totalCumulative += cumulative;
         }
 
+        /* ★ [수정] 今月の副業収入 계산 시 누적 손익(netProfit)이 마이너스인 항목은 0으로 처리하여 합산 */
         if (item.category === '副業状況') {
-          sideJobTotal += curAmt;
-          prevSideJobTotal += prevAmt;
+          const netProfit = curAmt - cumulative;
+          if (netProfit > 0) {
+            sideJobTotal += netProfit;
+          }
+
+          const prevNetProfit = prevAmt - cumulative;
+          if (prevNetProfit > 0) {
+            prevSideJobTotal += prevNetProfit;
+          }
         }
       }
 
@@ -2771,6 +2779,7 @@
         }
       }
 
+      /* ★ 4. 副業状況 (月別集計) - 累積投資額 기준 최신 金額 증감액 및 % 산出 */
       const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
       sidejobKeys.sort((a, b) => {
         const nameA = appData[a].name || '';
@@ -2785,11 +2794,20 @@
       sidejobGrid.innerHTML = '';
       sidejobKeys.forEach(key => {
         const item = appData[key];
-        const { diffVal, diffPct } = calcDiff(item);
+        
+        const { diffVal, diffPct } = calcProfitLoss(item);
+        
         const tile = document.createElement('div');
         tile.className = 'info-tile';
         tile.onclick = () => openItemEdit(key);
-        tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}</div><div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div><div class="tile-diff">${renderDiffHtml(diffVal, diffPct, true)}</div>`;
+        
+        tile.innerHTML = `
+          <div class="tile-label">
+            <i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}
+          </div>
+          <div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div>
+          <div class="tile-diff">${renderDiffHtml(diffVal, diffPct, false)}</div>
+        `;
         sidejobGrid.appendChild(tile);
       });
 
@@ -2948,7 +2966,6 @@
 
         const profitRate = monthTotalInv !== 0 ? ((monthTotalAsset - monthTotalInv) / monthTotalInv) * 100 : 0;
 
-        /* ★ [수정] 모든 선택 항목의 손익률은 2026년 8월부터만 표시 */
         if (m >= '2026-08') {
           profitRatePerMonth.push(parseFloat(profitRate.toFixed(1)));
           latestProfitRate = profitRate;
