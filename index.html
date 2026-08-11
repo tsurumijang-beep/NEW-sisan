@@ -505,6 +505,17 @@
     .info-tile .tile-value { font-size: 0.82rem; font-weight: bold; color: var(--primary-color); text-align: right; }
     .info-tile .tile-diff { text-align: right; }
 
+    /* ★ 年間累積 배지 스타일 */
+    .badge-year-cumulative {
+      background-color: #000000;
+      color: #ffffff;
+      font-size: 0.6rem;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
     .detail-container {
       background: var(--panel-bg);
       border-radius: 14px;
@@ -1909,7 +1920,6 @@
       showToast('銘柄を削除しました。');
     };
 
-    /* ★ [수정] targetTargetDate(7일 전 대표 날짜) 이하의 최신 금액을 가져오는 calcDiff 로직 */
     function calcDiff(item, targetTargetDate = null) {
       if (!item.history || item.history.length === 0) {
         return { diffVal: 0, diffPct: 0, prev: item.current, curDate: '', prevDate: '' };
@@ -1925,7 +1935,6 @@
       let prevDate = item.history[1].date || '';
 
       if (targetTargetDate) {
-        // targetTargetDate(예: 0804) 이하인 기록 중 가장 최신 데이터 탐색
         let found = false;
         for (let i = 1; i < item.history.length; i++) {
           if (!item.history[i].date) continue;
@@ -1936,13 +1945,11 @@
             break;
           }
         }
-        // 만약 7일 전 이하의 기록이 없다면 직전 기록(history[1]) 사용
         if (!found) {
           prev = item.history[1].amount;
           prevDate = item.history[1].date || '';
         }
       } else {
-        // 기존 fallback: 현재 등록일 기준 7일 이상 경과한 기록
         if (item.history[0].date) {
           const latestDate = new Date(item.history[0].date);
           for (let i = 1; i < item.history.length; i++) {
@@ -2017,14 +2024,12 @@
       }
     };
 
-    /* ★ [수정] 가장 최신 등록일 기준 정확히 7일 전(예: 0811 → 0804) 대표 날짜를 구하고 개別 항목 금액 조회 */
     function renderAllAssetsTable() {
       const tbody = document.getElementById('all-assets-table-body');
       tbody.innerHTML = '';
 
       let maxCurDateStr = '';
 
-      // 1. 전체 자산 중 가장 최신의 등록 날짜(maxCurDateStr) 구하기
       for (let key in appData) {
         const item = appData[key];
         if (item.history && item.history.length > 0 && item.history[0].date) {
@@ -2034,7 +2039,6 @@
         }
       }
 
-      // 2. 가장 최신 날짜의 정확히 7일 전 대표 날짜(targetTargetDateStr) 계산 (예: 2026-08-11 -> 2026-08-04)
       let targetTargetDateStr = '';
       if (maxCurDateStr) {
         const maxD = new Date(maxCurDateStr);
@@ -2051,7 +2055,6 @@
       sortedKeys.forEach(key => {
         const item = appData[key];
         
-        // 7일 전 대표 날짜(targetTargetDateStr) 기준으로 개별 항목의 지난 금액 조회
         const { diffVal, diffPct, prev } = calcDiff(item, targetTargetDateStr);
         const cumulativeInv = item.cumulativeInvestment || 0;
         const profitVal = item.current - cumulativeInv;
@@ -2083,13 +2086,11 @@
         tbody.appendChild(tr);
       });
 
-      // 헤더 타이틀에 <MMDD> 대표 표기 적용 (예: 今回金額 <0811>, 前回金額 <0804>)
       const curDateLabel = maxCurDateStr ? ` <span style="font-size:0.72rem; color:var(--text-sub); font-weight:normal;">${formatMMDD(maxCurDateStr)}</span>` : '';
       const prevDateLabel = targetTargetDateStr ? ` <span style="font-size:0.72rem; color:var(--text-sub); font-weight:normal;">${formatMMDD(targetTargetDateStr)}</span>` : '';
       document.getElementById('th-cur-amount').innerHTML = `今回金額${curDateLabel}`;
       document.getElementById('th-prev-amount').innerHTML = `前回金額${prevDateLabel}`;
 
-      // 合計 행 생성 및 맨 아래(최하端)에 추가
       const sumPct = sumPrev !== 0 ? (sumDiff / sumPrev) * 100 : 0;
       const sumProfitPct = sumCumulative !== 0 ? (sumProfit / sumCumulative) * 100 : 0;
       const totalTr = document.createElement('tr');
@@ -2847,6 +2848,7 @@
         }
       }
 
+      /* ★ 4. 副業状況 - 年間累積 (검은색 배지) 표기 반영 */
       const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
       sidejobKeys.sort((a, b) => {
         const nameA = appData[a].name || '';
@@ -2861,7 +2863,6 @@
       sidejobGrid.innerHTML = '';
       sidejobKeys.forEach(key => {
         const item = appData[key];
-        
         const { diffVal, diffPct } = calcProfitLoss(item);
         
         const tile = document.createElement('div');
@@ -2873,7 +2874,10 @@
             <i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}
           </div>
           <div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div>
-          <div class="tile-diff">${renderDiffHtml(diffVal, diffPct, false)}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+            <span class="badge-year-cumulative">年間累積</span>
+            <div class="tile-diff">${renderDiffHtml(diffVal, diffPct, false)}</div>
+          </div>
         `;
         sidejobGrid.appendChild(tile);
       });
