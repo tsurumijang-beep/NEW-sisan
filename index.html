@@ -1064,8 +1064,8 @@
               <tr>
                 <th>区分</th>
                 <th>項目名</th>
-                <th>今回金額</th>
-                <th>前回金額</th>
+                <th id="th-cur-amount">今回金額</th>
+                <th id="th-prev-amount">前回金額</th>
                 <th>前回比 増減額 (%)</th>
                 <th>累積投資額</th>
                 <th>損益額 (%)</th>
@@ -1498,6 +1498,11 @@
       return isNaN(num) ? 0 : num;
     }
 
+    function formatMMDD(dateStr) {
+      if (!dateStr || dateStr.length < 10) return '';
+      return `<${dateStr.substring(5, 7)}${dateStr.substring(8, 10)}>`;
+    }
+
     function initAmountInputs() {
       document.querySelectorAll('.amount-input').forEach(input => {
         if (input.value) {
@@ -1904,29 +1909,59 @@
       showToast('銘柄を削除しました。');
     };
 
-    function calcDiff(item) {
-      if (!item.history || item.history.length < 2) return { diffVal: 0, diffPct: 0, prev: item.current };
+    /* ★ [수정] targetTargetDate(7일 전 대표 날짜) 이하의 최신 금액을 가져오는 calcDiff 로직 */
+    function calcDiff(item, targetTargetDate = null) {
+      if (!item.history || item.history.length === 0) {
+        return { diffVal: 0, diffPct: 0, prev: item.current, curDate: '', prevDate: '' };
+      }
+      if (item.history.length < 2) {
+        return { diffVal: 0, diffPct: 0, prev: item.current, curDate: item.history[0].date || '', prevDate: '' };
+      }
+      
       const current = item.history[0].amount;
+      const curDate = item.history[0].date || '';
       
       let prev = item.history[1].amount;
-      
-      if (item.history[0].date) {
-        const latestDate = new Date(item.history[0].date);
+      let prevDate = item.history[1].date || '';
+
+      if (targetTargetDate) {
+        // targetTargetDate(예: 0804) 이하인 기록 중 가장 최신 데이터 탐색
+        let found = false;
         for (let i = 1; i < item.history.length; i++) {
           if (!item.history[i].date) continue;
-          const targetDate = new Date(item.history[i].date);
-          const diffDays = Math.floor((latestDate - targetDate) / (1000 * 60 * 60 * 24));
-          
-          if (diffDays === 7) {
+          if (item.history[i].date <= targetTargetDate) {
             prev = item.history[i].amount;
+            prevDate = item.history[i].date;
+            found = true;
             break;
+          }
+        }
+        // 만약 7일 전 이하의 기록이 없다면 직전 기록(history[1]) 사용
+        if (!found) {
+          prev = item.history[1].amount;
+          prevDate = item.history[1].date || '';
+        }
+      } else {
+        // 기존 fallback: 현재 등록일 기준 7일 이상 경과한 기록
+        if (item.history[0].date) {
+          const latestDate = new Date(item.history[0].date);
+          for (let i = 1; i < item.history.length; i++) {
+            if (!item.history[i].date) continue;
+            const targetDate = new Date(item.history[i].date);
+            const diffDays = Math.floor((latestDate - targetDate) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays >= 7) {
+              prev = item.history[i].amount;
+              prevDate = item.history[i].date;
+              break;
+            }
           }
         }
       }
 
       const diffVal = current - prev;
       const diffPct = prev !== 0 ? ((diffVal / prev) * 100) : 0;
-      return { diffVal, diffPct, prev };
+      return { diffVal, diffPct, prev, curDate, prevDate };
     }
 
     function calcProfitLoss(item) {
@@ -1982,16 +2017,42 @@
       }
     };
 
+    /* ★ [수정] 가장 최신 등록일 기준 정확히 7일 전(예: 0811 → 0804) 대표 날짜를 구하고 개別 항목 금액 조회 */
     function renderAllAssetsTable() {
       const tbody = document.getElementById('all-assets-table-body');
       tbody.innerHTML = '';
+
+      let maxCurDateStr = '';
+
+      // 1. 전체 자산 중 가장 최신의 등록 날짜(maxCurDateStr) 구하기
+      for (let key in appData) {
+        const item = appData[key];
+        if (item.history && item.history.length > 0 && item.history[0].date) {
+          if (item.history[0].date > maxCurDateStr) {
+            maxCurDateStr = item.history[0].date;
+          }
+        }
+      }
+
+      // 2. 가장 최신 날짜의 정확히 7일 전 대표 날짜(targetTargetDateStr) 계산 (예: 2026-08-11 -> 2026-08-04)
+      let targetTargetDateStr = '';
+      if (maxCurDateStr) {
+        const maxD = new Date(maxCurDateStr);
+        maxD.setDate(maxD.getDate() - 7);
+        const yyyy = maxD.getFullYear();
+        const mm = String(maxD.getMonth() + 1).padStart(2, '0');
+        const dd = String(maxD.getDate()).padStart(2, '0');
+        targetTargetDateStr = `${yyyy}-${mm}-${dd}`;
+      }
 
       let sumCurrent = 0, sumPrev = 0, sumDiff = 0, sumCumulative = 0, sumProfit = 0;
 
       const sortedKeys = sortKeysByMenuOrder(Object.keys(appData));
       sortedKeys.forEach(key => {
         const item = appData[key];
-        const { diffVal, diffPct, prev } = calcDiff(item);
+        
+        // 7일 전 대표 날짜(targetTargetDateStr) 기준으로 개별 항목의 지난 금액 조회
+        const { diffVal, diffPct, prev } = calcDiff(item, targetTargetDateStr);
         const cumulativeInv = item.cumulativeInvestment || 0;
         const profitVal = item.current - cumulativeInv;
         const profitPct = cumulativeInv !== 0 ? (profitVal / cumulativeInv) * 100 : 0;
@@ -2004,6 +2065,7 @@
 
         const division = item.assetDivision || '未設定';
         const tr = document.createElement('tr');
+        
         const curStr = `¥${item.current.toLocaleString()}`;
         const prevStr = `¥${prev.toLocaleString()}`;
         const invStr = `¥${cumulativeInv.toLocaleString()}`;
@@ -2021,6 +2083,13 @@
         tbody.appendChild(tr);
       });
 
+      // 헤더 타이틀에 <MMDD> 대표 표기 적용 (예: 今回金額 <0811>, 前回金額 <0804>)
+      const curDateLabel = maxCurDateStr ? ` <span style="font-size:0.72rem; color:var(--text-sub); font-weight:normal;">${formatMMDD(maxCurDateStr)}</span>` : '';
+      const prevDateLabel = targetTargetDateStr ? ` <span style="font-size:0.72rem; color:var(--text-sub); font-weight:normal;">${formatMMDD(targetTargetDateStr)}</span>` : '';
+      document.getElementById('th-cur-amount').innerHTML = `今回金額${curDateLabel}`;
+      document.getElementById('th-prev-amount').innerHTML = `前回金額${prevDateLabel}`;
+
+      // 合計 행 생성 및 맨 아래(최하端)에 추가
       const sumPct = sumPrev !== 0 ? (sumDiff / sumPrev) * 100 : 0;
       const sumProfitPct = sumCumulative !== 0 ? (sumProfit / sumCumulative) * 100 : 0;
       const totalTr = document.createElement('tr');
@@ -2033,7 +2102,7 @@
         <td>¥${sumCumulative.toLocaleString()}</td>
         <td>${renderDiffHtml(sumProfit, sumProfitPct)}</td>
       `;
-      tbody.insertBefore(totalTr, tbody.firstChild);
+      tbody.appendChild(totalTr);
     }
 
     window.exportTableToCSV = function(tbodyId, filename) {
@@ -2501,7 +2570,6 @@
           totalCumulative += cumulative;
         }
 
-        /* ★ [수정] 今月の副業収入 계산 시 누적 손익(netProfit)이 마이너스인 항목은 0으로 처리하여 합산 */
         if (item.category === '副業状況') {
           const netProfit = curAmt - cumulative;
           if (netProfit > 0) {
@@ -2779,7 +2847,6 @@
         }
       }
 
-      /* ★ 4. 副業状況 (月別集計) - 累積投資額 기준 최신 金額 증감액 및 % 산出 */
       const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
       sidejobKeys.sort((a, b) => {
         const nameA = appData[a].name || '';
