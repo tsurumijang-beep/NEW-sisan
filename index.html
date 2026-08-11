@@ -985,7 +985,6 @@
         <div class="stat-badge">
           <span style="color:var(--text-sub);">今月の副業収入:</span>
           <strong id="header-side-income" style="color:var(--accent-green);">+¥0</strong>
-          <span id="header-side-diff" class="diff-badge zero">--</span>
         </div>
       </div>
     </header>
@@ -2813,11 +2812,6 @@
 
       document.getElementById('header-side-income').textContent = sideIncomeStr;
       document.getElementById('header-side-income').className = maskClass;
-
-      const sDiff = sideJobTotal - prevSideJobTotal;
-      const sPct = prevSideJobTotal !== 0 ? (sDiff / prevSideJobTotal) * 100 : 0;
-      const sideDiffHtml = isHeaderPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(sDiff, sPct, true);
-      document.getElementById('header-side-diff').outerHTML = `<span id="header-side-diff">${sideDiffHtml}</span>`;
 
       renderFilterBars();
       renderDashboardGrids();
