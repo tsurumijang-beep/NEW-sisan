@@ -1226,8 +1226,9 @@
               <input type="text" inputmode="numeric" id="input-cumulative-inv" class="form-control amount-input" value="0">
             </div>
 
+            <!-- ▼ ここを「累積収益」から「累積投資額」に変更 (副業状況以外で表示) -->
             <div class="form-group" id="group-cumulative-income">
-              <label for="input-cumulative-income" id="label-cumulative-income">累積収益</label>
+              <label for="input-cumulative-income" id="label-cumulative-income">累積投資額</label>
               <input type="text" inputmode="numeric" id="input-cumulative-income" class="form-control amount-input" required>
             </div>
 
@@ -1542,7 +1543,6 @@
       return `<${dateStr.substring(5, 7)}${dateStr.substring(8, 10)}>`;
     }
 
-    /* ★ [수정] 증감액(自動計算)에 입력한 금액 또는 전회비 증감액이 올바르게 표시되도록 설정 */
     function updateDiffCalcDisplay() {
       if (!activeItemKey || !appData[activeItemKey]) return;
       const item = appData[activeItemKey];
@@ -2289,7 +2289,7 @@
       document.getElementById('input-item-category').value = item.assetDivision || '';
       document.getElementById('input-item-name').value = item.name;
       document.getElementById('input-cumulative-inv').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
-      document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current !== undefined ? item.current : 0);
+      document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
       document.getElementById('input-daily-inv').value = formatNumberWithCommas(item.dailyInvestment !== undefined ? item.dailyInvestment : 0);
       document.getElementById('input-monthly-inv').value = formatNumberWithCommas(item.monthlyInvestment !== undefined ? item.monthlyInvestment : 0);
       document.getElementById('input-issue-note').value = item.issueNote || '';
@@ -2306,9 +2306,13 @@
       const groupInputInvestment = document.getElementById('group-input-investment');
       const groupReasonType = document.getElementById('group-reason-type');
       const groupDiffCalc = document.getElementById('group-diff-calc');
+      const groupCumulativeIncome = document.getElementById('group-cumulative-income');
 
       if (item.category === '副業状況') {
         if (groupCumulativeInv) groupCumulativeInv.style.display = 'flex';
+        if (groupCumulativeIncome) groupCumulativeIncome.style.display = 'flex';
+        document.getElementById('label-cumulative-income').textContent = '累積収益';
+        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current !== undefined ? item.current : 0);
         if (groupDaily) groupDaily.style.display = 'none';
         if (groupMonthly) groupMonthly.style.display = 'none';
 
@@ -2318,6 +2322,9 @@
         if (groupDiffCalc) groupDiffCalc.style.display = 'flex';
       } else {
         if (groupCumulativeInv) groupCumulativeInv.style.display = 'none';
+        if (groupCumulativeIncome) groupCumulativeIncome.style.display = 'flex';
+        document.getElementById('label-cumulative-income').textContent = '累積投資額';
+        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
         if (groupDaily) groupDaily.style.display = 'flex';
         if (groupMonthly) groupMonthly.style.display = 'flex';
 
@@ -2459,7 +2466,11 @@
       }
 
       item.current = item.history[0].amount;
-      document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current);
+      if (item.category === '副業状況') {
+        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current);
+      } else {
+        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment || 0);
+      }
 
       saveData();
       renderHistoryTable();
@@ -2473,20 +2484,18 @@
       if (!activeItemKey || !appData[activeItemKey]) return;
       const newDivision = document.getElementById('input-item-category').value.trim();
       const newName = document.getElementById('input-item-name').value.trim();
-      const newCumulativeInv = parseFormattedNumber(document.getElementById('input-cumulative-inv').value);
-      const newCumulativeIncome = parseFormattedNumber(document.getElementById('input-cumulative-income').value);
+      const newCumulativeVal = parseFormattedNumber(document.getElementById('input-cumulative-income').value);
       const newDaily = parseFormattedNumber(document.getElementById('input-daily-inv').value);
       const newMonthly = parseFormattedNumber(document.getElementById('input-monthly-inv').value);
       const newIssueNote = document.getElementById('input-issue-note').value;
-      if (!newName || isNaN(newCumulativeIncome)) return;
+      if (!newName || isNaN(newCumulativeVal)) return;
 
       appData[activeItemKey].assetDivision = newDivision;
       appData[activeItemKey].name = newName;
       if (appData[activeItemKey].category === '副業状況') {
-        appData[activeItemKey].cumulativeInvestment = newCumulativeInv;
-        appData[activeItemKey].current = newCumulativeIncome;
+        appData[activeItemKey].current = newCumulativeVal;
       } else {
-        appData[activeItemKey].cumulativeInvestment = newCumulativeInv;
+        appData[activeItemKey].cumulativeInvestment = newCumulativeVal;
       }
       appData[activeItemKey].dailyInvestment = newDaily;
       appData[activeItemKey].monthlyInvestment = newMonthly;
@@ -2531,7 +2540,6 @@
       showToast('項目を削除しました。');
     };
 
-    /* ★ [수정] handleFormSubmit - 증감액(自動計算)에 표시된 금액(calcDiffVal)이 누적 수익(累積収益)에 정확히 가산되도록 수정 */
     window.handleFormSubmit = function(e) {
       e.preventDefault();
       if (!activeItemKey || !appData[activeItemKey]) return;
@@ -2567,7 +2575,7 @@
         if (item.category !== '副業状況') {
           const oldInvestment = item.history[editIndex].investment || 0;
           const diffInvestment = newInvestment - oldInvestment;
-          item.cumulativeInvestment = (item.cumulativeInvestment || 0) + diffInvestment;
+          item.cumulativeInvestment = Math.max(0, (item.cumulativeInvestment || 0) + diffInvestment);
         }
 
         item.history[editIndex] = { 
@@ -2599,13 +2607,13 @@
         if (newReasonType === '入金' || newReasonType === '出金') {
           item.current = newAmount;
         } else {
-          // ★ 증감액(自動計算)에 표시된 금액을 이번에 추가될 누적 수익(current)에 정확히 반영
           item.current = (item.current || 0) + calcDiffVal;
           item.history[0].amount = item.current;
         }
         document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current);
       } else {
         item.current = item.history[0].amount;
+        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment || 0);
       }
 
       saveData();
