@@ -2049,22 +2049,24 @@
         return { diffVal: 0, diffPct: 0 };
       }
       
-      let totalSum = 0;
+      let totalWithdrawals = 0;
+      let latestProfit = 0;
+
       const sortedHistory = [...item.history].sort((a, b) => new Date(a.date) - new Date(b.date));
       
       sortedHistory.forEach(h => {
         const inv = h.investment || 0;
         const rType = h.reasonType;
         
-        if (rType === '出金' || rType === '入金') {
-          totalSum += inv;
-        } else {
-          totalSum += inv;
+        if (rType === '出金') {
+          totalWithdrawals += Math.abs(inv);
         }
       });
 
       const cumulativeInv = item.cumulativeInvestment || 0;
-      const diffVal = totalSum;
+      latestProfit = item.current - cumulativeInv;
+
+      const diffVal = totalWithdrawals + latestProfit;
       const diffPct = cumulativeInv !== 0 ? (diffVal / cumulativeInv) * 100 : 0;
       return { diffVal, diffPct };
     }
