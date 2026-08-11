@@ -1093,6 +1093,8 @@
         <div class="card-title" style="font-size: 1.1rem; color: var(--primary-color); flex-wrap: wrap; gap: 8px;">
           <span><i class="fa-solid fa-chart-line"></i> 2. 楽天NISA 保有銘柄詳細</span>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <!-- ★ 일괄 CSV 다운로드 버튼 추가 -->
+            <button class="btn-export" onclick="exportAllNisaToCSV()" style="font-size:0.7rem; padding:6px 12px; background:#3498db;"><i class="fa-solid fa-download"></i> CSV batch export</button>
             <button class="btn-export" onclick="openImportModal()" style="font-size:0.7rem; padding:6px 12px; background:var(--accent-orange);"><i class="fa-solid fa-file-import"></i> データ取り込み</button>
             <button class="btn-export" onclick="openNisaAddModal()" style="font-size:0.7rem; padding:6px 12px; background:#27ae60;"><i class="fa-solid fa-plus"></i> 銘柄追加</button>
             <button class="btn-export" onclick="switchNav('dashboard')" style="font-size:0.7rem; padding:6px 12px;"><i class="fa-solid fa-arrow-left"></i> ダッシュボードへ戻る</button>
@@ -1915,6 +1917,61 @@
         });
       });
     }
+
+    /* ★ 2. 楽天NISA状況 保有銘柄 一括 CSV 抽出関数 */
+    window.exportAllNisaToCSV = function() {
+      const marketNames = {
+        trust: '投資信託',
+        jp: '国内株式',
+        us: '米国市場',
+        cn: '中国市場 (香港株)'
+      };
+
+      let csvRows = [];
+      // Header
+      csvRows.push(['"区分(市場)"', '"銘柄名"', '"数量"', '"現在値"', '"評価額"', '"収益率"'].join(','));
+
+      ['trust', 'jp', 'us', 'cn'].forEach(market => {
+        const items = nisaHoldings[market] || [];
+        const marketLabel = marketNames[market] || market;
+
+        items.forEach(item => {
+          // HTML 태그 제거 (예: <span ...>【一般】</span> -> 【一般】)
+          let cleanName = item.name ? item.name.replace(/<[^>]*>?/gm, '').trim() : '';
+          cleanName = cleanName.replace(/"/g, '""');
+
+          const qty = (item.qty || '-').replace(/"/g, '""');
+          const price = (item.price || '-').replace(/"/g, '""');
+          const evalAmt = (item.eval || '-').replace(/"/g, '""');
+          const rate = (item.rate || '-').replace(/"/g, '""');
+
+          csvRows.push([
+            `"${marketLabel}"`,
+            `"${cleanName}"`,
+            `"${qty}"`,
+            `"${price}"`,
+            `"${evalAmt}"`,
+            `"${rate}"`
+          ].join(','));
+        });
+      });
+
+      if (csvRows.length <= 1) {
+        alert('추출할 보유 종목 데이터가 없습니다.');
+        return;
+      }
+
+      // UTF-8 BOM 포함 CSV 다운로드
+      const blob = new Blob(["\uFEFF" + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `楽天NISA_保有銘柄一覧_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('楽天NISAの保有銘柄をCSVで一括出力しました！');
+    };
 
     window.openNisaAddModal = function() {
       document.getElementById('nisa-modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> 新規銘柄の追加';
