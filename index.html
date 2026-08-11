@@ -1226,7 +1226,6 @@
               <input type="text" inputmode="numeric" id="input-cumulative-inv" class="form-control amount-input" value="0">
             </div>
 
-            <!-- ▼ ここを「累積収益」から「累積投資額」に変更 (副業状況以外で表示) -->
             <div class="form-group" id="group-cumulative-income">
               <label for="input-cumulative-income" id="label-cumulative-income">累積投資額</label>
               <input type="text" inputmode="numeric" id="input-cumulative-income" class="form-control amount-input" required>
@@ -2349,50 +2348,67 @@
       }
 
       const item = appData[activeItemKey];
-      const { diffVal, diffPct } = calcProfitLoss(item);
-      const elapsedDays = calcElapsedDays(item);
+      const issueText = item.issueNote || '・(未入力)';
 
-      const daily = item.dailyInvestment || 0;
-      const monthly = item.monthlyInvestment || 0;
-      const dailyText = (daily > 0) ? `毎日 ¥${daily.toLocaleString()} 定期積立` : '';
-      const monthlyText = (monthly > 0) ? `毎月 ¥${monthly.toLocaleString()} 定期積立` : '';
-      const plansHtml = (dailyText || monthlyText) ? `<div class="tile-plans"><span>${dailyText}</span><span>${monthlyText}</span></div>` : `<div class="tile-plans" style="color:var(--text-sub);"><span>非定期積立</span></div>`;
+      if (item.category === '副業状況') {
+        const { diffVal, diffPct } = calcSideJobProfitLoss(item);
+        container.innerHTML = `
+          <div class="info-tile" style="padding: 10px 12px; cursor: default; background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 10px; box-shadow: 3px 3px 8px rgba(0,0,0,0.04);">
+            <div class="tile-label" style="font-size: 0.85rem; font-weight: bold; margin-bottom: 4px;">
+              <i class="fa-solid fa-hand-pointer" style="font-size:0.75rem; color:#e67e22; margin-right:4px;"></i>${item.name}
+            </div>
+            <div class="tile-value" style="color:var(--accent-orange); font-size: 1.15rem; font-weight: 900; text-align: right; margin-bottom: 6px;">¥${item.current.toLocaleString()}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="badge-year-cumulative">年間累積</span>
+              <div class="tile-diff">${renderDiffHtml(diffVal, diffPct, false)}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        const { diffVal, diffPct } = calcProfitLoss(item);
+        const elapsedDays = calcElapsedDays(item);
 
-      const amtStr = `¥${item.current.toLocaleString()}`;
-      const pastelColors = [
-        'linear-gradient(145deg, #ffffff, #ffc9c9)',
-        'linear-gradient(145deg, #ffffff, #bbf7d0)',
-        'linear-gradient(145deg, #ffffff, #bae6fd)',
-        'linear-gradient(145deg, #ffffff, #e9d5ff)',
-        'linear-gradient(145deg, #ffffff, #fef08a)',
-        'linear-gradient(145deg, #ffffff, #99f6e4)',
-        'linear-gradient(145deg, #ffffff, #ffedd5)',
-        'linear-gradient(145deg, #ffffff, #f3e8ff)',
-        'linear-gradient(145deg, #ffffff, #e4e4e7)'
-      ];
+        const daily = item.dailyInvestment || 0;
+        const monthly = item.monthlyInvestment || 0;
+        const dailyText = (daily > 0) ? `毎日 ¥${daily.toLocaleString()} 定期積立` : '';
+        const monthlyText = (monthly > 0) ? `毎月 ¥${monthly.toLocaleString()} 定期積立` : '';
+        const plansHtml = (dailyText || monthlyText) ? `<div class="tile-plans"><span>${dailyText}</span><span>${monthlyText}</span></div>` : `<div class="tile-plans" style="color:var(--text-sub);"><span>非定期積立</span></div>`;
 
-      let hash = 0;
-      for (let i = 0; i < activeItemKey.length; i++) {
-        hash = activeItemKey.charCodeAt(i) + ((hash << 5) - hash);
+        const amtStr = `¥${item.current.toLocaleString()}`;
+        const pastelColors = [
+          'linear-gradient(145deg, #ffffff, #ffc9c9)',
+          'linear-gradient(145deg, #ffffff, #bbf7d0)',
+          'linear-gradient(145deg, #ffffff, #bae6fd)',
+          'linear-gradient(145deg, #ffffff, #e9d5ff)',
+          'linear-gradient(145deg, #ffffff, #fef08a)',
+          'linear-gradient(145deg, #ffffff, #99f6e4)',
+          'linear-gradient(145deg, #ffffff, #ffedd5)',
+          'linear-gradient(145deg, #ffffff, #f3e8ff)',
+          'linear-gradient(145deg, #ffffff, #e4e4e7)'
+        ];
+
+        let hash = 0;
+        for (let i = 0; i < activeItemKey.length; i++) {
+          hash = activeItemKey.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const bgStyle = pastelColors[Math.abs(hash) % pastelColors.length];
+
+        container.innerHTML = `
+          <div class="info-tile-large" style="background: ${bgStyle}; min-height: 110px; cursor: default;">
+            <div class="tile-top">
+              <div class="tile-label"><i class="fa-solid fa-bookmark" style="font-size:0.7rem; color:#3a7bd5; margin-right:3px;"></i>${item.name} (${item.assetDivision || '未設定'})</div>
+              <div class="tile-sub"><i class="fa-solid fa-clock"></i> ${elapsedDays}日経過</div>
+            </div>
+            ${plansHtml}
+            <div class="tile-bottom">
+              <div class="tile-value">${amtStr}</div>
+              <div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>
+            </div>
+          </div>
+        `;
       }
-      const bgStyle = pastelColors[Math.abs(hash) % pastelColors.length];
-
-      container.innerHTML = `
-        <div class="info-tile-large" style="background: ${bgStyle}; min-height: 110px; cursor: default;">
-          <div class="tile-top">
-            <div class="tile-label"><i class="fa-solid fa-bookmark" style="font-size:0.7rem; color:#3a7bd5; margin-right:3px;"></i>${item.name} (${item.assetDivision || '未設定'})</div>
-            <div class="tile-sub"><i class="fa-solid fa-clock"></i> ${elapsedDays}日経過</div>
-          </div>
-          ${plansHtml}
-          <div class="tile-bottom">
-            <div class="tile-value">${amtStr}</div>
-            <div class="tile-diff">${renderDiffHtml(diffVal, diffPct)}</div>
-          </div>
-        </div>
-      `;
 
       if (issueContainer) {
-        const issueText = item.issueNote || '・(未入力)';
         issueContainer.innerHTML = `
           <div class="issue-card-box">
             <div class="issue-card-title">
