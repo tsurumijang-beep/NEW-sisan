@@ -505,7 +505,7 @@
     .info-tile .tile-value { font-size: 0.82rem; font-weight: bold; color: var(--primary-color); text-align: right; }
     .info-tile .tile-diff { text-align: right; }
 
-    /* ★ 年間累積 배지 스타일 */
+    /* 年間累積 Badge */
     .badge-year-cumulative {
       background-color: #000000;
       color: #ffffff;
@@ -1220,18 +1220,26 @@
               <input type="text" id="input-item-name" class="form-control" list="name-list" required>
               <datalist id="name-list"></datalist>
             </div>
-            <div class="form-group">
+            
+            <div class="form-group" id="group-cumulative-inv" style="display: none;">
               <label for="input-cumulative-inv">累積投資額</label>
-              <input type="text" inputmode="numeric" id="input-cumulative-inv" class="form-control amount-input" required>
+              <input type="text" inputmode="numeric" id="input-cumulative-inv" class="form-control amount-input" value="0">
             </div>
-            <div class="form-group">
+
+            <div class="form-group" id="group-cumulative-income">
+              <label for="input-cumulative-income" id="label-cumulative-income">累積収益</label>
+              <input type="text" inputmode="numeric" id="input-cumulative-income" class="form-control amount-input" required>
+            </div>
+
+            <div class="form-group" id="group-daily-inv">
               <label for="input-daily-inv">毎日投資額</label>
               <input type="text" inputmode="numeric" id="input-daily-inv" class="form-control amount-input" value="0">
             </div>
-            <div class="form-group">
+            <div class="form-group" id="group-monthly-inv">
               <label for="input-monthly-inv">毎月投資額</label>
               <input type="text" inputmode="numeric" id="input-monthly-inv" class="form-control amount-input" value="0">
             </div>
+
             <button type="submit" class="btn-submit" style="background:#27ae60; padding:6px; font-size:0.8rem;">設定を保存する</button>
           </form>
 
@@ -1244,7 +1252,7 @@
               <thead>
                 <tr>
                   <th>日付</th>
-                  <th>金額 (投資)</th>
+                  <th>金額 (区分)</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -1268,6 +1276,7 @@
           </div>
         </div>
 
+        <!-- 右側: 新規データ追加・更新 -->
         <div class="panel-box">
           <div class="current-val-card">
             <div class="label" id="edit-item-display-name">項目名</div>
@@ -1279,14 +1288,33 @@
           </div>
           <form id="item-update-form" onsubmit="handleFormSubmit(event)">
             <input type="hidden" id="edit-history-index" value="-1">
+            
             <div class="form-group">
-              <label for="input-amount">金額</label>
+              <label for="input-amount" id="label-input-amount">金額</label>
               <input type="text" inputmode="numeric" id="input-amount" class="form-control amount-input" required>
             </div>
-            <div class="form-group">
+
+            <div class="form-group" id="group-input-investment">
               <label for="input-investment">今回の投資額</label>
               <input type="text" inputmode="numeric" id="input-investment" class="form-control amount-input" value="0" required>
             </div>
+
+            <!-- 区分 (収益, 入金, 損失, 出金) -->
+            <div class="form-group" id="group-reason-type" style="display: none;">
+              <label for="input-reason-type">区分</label>
+              <select id="input-reason-type" class="form-control" onchange="updateDiffCalcDisplay()">
+                <option value="収益">収益</option>
+                <option value="入金">入金</option>
+                <option value="損失">損失</option>
+                <option value="出金">出金</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="group-diff-calc" style="display: none;">
+              <label for="input-diff-calc" style="color: var(--primary-dark); font-weight: bold;">増減額 (自動計算)</label>
+              <input type="text" id="input-diff-calc" class="form-control" style="background: #f1f5f9; font-weight: bold; color: var(--primary-dark);" readonly placeholder="¥0 (前回比)">
+            </div>
+
             <div class="form-group">
               <label for="input-date">登録日</label>
               <input type="date" id="input-date" class="form-control" required>
@@ -1397,22 +1425,22 @@
     const db = getFirestore(app);
 
     const defaultData = {
-      nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, dailyInvestment: 1000, monthlyInvestment: 30000, issueNote: '・イラン・アメリカ戦争の長期化\n・入金 3万円反映', history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, note: '8月'}] },
-      ideco: { name: '② 楽天iDeCo', category: '積立投資', assetDivision: '年金/iDeCo', current: 1026743, cumulativeInvestment: 1000000, dailyInvestment: 0, monthlyInvestment: 23000, issueNote: '', history: [{date: '2026-05-01', amount: 1000000, investment: 1000000, note: '初回'}, {date: '2026-08-01', amount: 1026743, investment: 23000, note: '8月'}] },
-      moomoo: { name: '③ MOOMOO証券', category: '積立投資', assetDivision: '米国株', current: 1244330, cumulativeInvestment: 1100000, dailyInvestment: 0, monthlyInvestment: 50000, issueNote: '', history: [{date: '2026-05-01', amount: 1100000, investment: 1100000, note: '初回'}, {date: '2026-08-01', amount: 1244330, investment: 80000, note: '8月'}] },
-      jfx: { name: '④ JFX高金利積立', category: '積立投資', assetDivision: 'FX/高金利', current: 1200377, cumulativeInvestment: 1150000, dailyInvestment: 0, monthlyInvestment: 0, issueNote: '', history: [{date: '2026-05-01', amount: 1150000, investment: 1150000, note: '初回'}, {date: '2026-08-01', amount: 1200377, investment: 430000, note: '8月'}] },
-      gmo: { name: '⑤ GMOコイン', category: '積立投資', assetDivision: '暗号資産', current: 790990, cumulativeInvestment: 750000, dailyInvestment: 500, monthlyInvestment: 15000, issueNote: '', history: [{date: '2026-05-01', amount: 750000, investment: 750000, note: '初回'}, {date: '2026-08-01', amount: 790990, investment: 50000, note: '8月'}] },
-      melcoin: { name: '⑥ メルコイン', category: '積立投資', assetDivision: '暗号資産', current: 26293, cumulativeInvestment: 25000, dailyInvestment: 0, monthlyInvestment: 5000, issueNote: '', history: [{date: '2026-06-01', amount: 25000, investment: 25000, note: '初回'}, {date: '2026-08-01', amount: 26293, investment: 5000, note: '8月'}] },
-      gold: { name: '⑦ GOLD投資', category: '積立投資', assetDivision: 'コモディティ', current: 500000, cumulativeInvestment: 500000, dailyInvestment: 0, monthlyInvestment: 10000, issueNote: '', history: [{date: '2026-05-01', amount: 500000, investment: 500000, note: '初回'}, {date: '2026-08-01', amount: 500000, investment: 500000, note: '8月'}] },
-      paypay_pt: { name: '⑧ PAYPAYポイント', category: '積立投資', assetDivision: 'ポイント', current: 18400, cumulativeInvestment: 0, dailyInvestment: 0, monthlyInvestment: 0, issueNote: '', history: [{date: '2026-07-01', amount: 16200, investment: 0, note: '初回'}] },
-      rakuten_pt: { name: '⑨ 楽天ポイント', category: '積立投資', assetDivision: 'ポイント', current: 24500, cumulativeInvestment: 0, dailyInvestment: 0, monthlyInvestment: 0, issueNote: '', history: [{date: '2026-07-01', amount: 28000, investment: 0, note: '初回'}] },
-      mercari: { name: '① メルカリ売上', category: '副業状況', assetDivision: '物販', current: 85000, cumulativeInvestment: 0, issueNote: '', history: [{date: '2026-05-01', amount: 80000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 85000, investment: 0, note: '8月'}] },
-      fx: { name: '② FX売買', category: '副業状況', assetDivision: 'FX', current: 42000, cumulativeInvestment: 0, issueNote: '', history: [{date: '2026-05-01', amount: 45000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 42000, investment: 0, note: '8月'}] },
-      content: { name: '③ 各種コンテンツ', category: '副業状況', assetDivision: 'コンテンツ', current: 30000, cumulativeInvestment: 0, issueNote: '', history: [{date: '2026-05-01', amount: 28000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 30000, investment: 0, note: '8月'}] },
-      other: { name: '④ その他', category: '副業状況', assetDivision: 'その他', current: 12000, cumulativeInvestment: 0, issueNote: '', history: [{date: '2026-05-01', amount: 15000, investment: 0, note: '5月'}, {date: '2026-08-01', amount: 12000, investment: 0, note: '8月'}] },
-      bank_rakuten: { name: '① 楽天銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 2500000, cumulativeInvestment: 2400000, issueNote: '', history: [{date: '2026-06-01', amount: 2300000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 2500000, investment: 0, note: '8月'}] },
-      bank_paypay: { name: '② PAYPAY銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 1200000, cumulativeInvestment: 1200000, issueNote: '', history: [{date: '2026-06-01', amount: 1100000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 1200000, investment: 0, note: '8月'}] },
-      bank_resona: { name: '③ その他銀行 ※非公開※', category: '銀行預金', assetDivision: 'メガバンク', current: 486139, cumulativeInvestment: 500000, issueNote: '', history: [{date: '2026-06-01', amount: 500000, investment: 0, note: '6月'}, {date: '2026-08-01', amount: 486139, investment: 0, note: '8月'}] }
+      nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, dailyInvestment: 1000, monthlyInvestment: 30000, issueNote: '・イラン・アメリカ戦争の長期化\n・入金 3万円反映', history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, reasonType: '入金', note: '8月'}] },
+      ideco: { name: '② 楽天iDeCo', category: '積立投資', assetDivision: '年金/iDeCo', current: 1026743, cumulativeInvestment: 1000000, dailyInvestment: 0, monthlyInvestment: 23000, issueNote: '', history: [{date: '2026-05-01', amount: 1000000, investment: 1000000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 1026743, investment: 23000, reasonType: '入金', note: '8月'}] },
+      moomoo: { name: '③ MOOMOO証券', category: '積立投資', assetDivision: '米国株', current: 1244330, cumulativeInvestment: 1100000, dailyInvestment: 0, monthlyInvestment: 50000, issueNote: '', history: [{date: '2026-05-01', amount: 1100000, investment: 1100000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 1244330, investment: 80000, reasonType: '入金', note: '8月'}] },
+      jfx: { name: '④ JFX高金利積立', category: '積立投資', assetDivision: 'FX/高金利', current: 1200377, cumulativeInvestment: 1150000, dailyInvestment: 0, monthlyInvestment: 0, issueNote: '', history: [{date: '2026-05-01', amount: 1150000, investment: 1150000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 1200377, investment: 430000, reasonType: '入金', note: '8月'}] },
+      gmo: { name: '⑤ GMOコイン', category: '積立投資', assetDivision: '暗号資産', current: 790990, cumulativeInvestment: 750000, dailyInvestment: 500, monthlyInvestment: 15000, issueNote: '', history: [{date: '2026-05-01', amount: 750000, investment: 750000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 790990, investment: 50000, reasonType: '入金', note: '8月'}] },
+      melcoin: { name: '⑥ メルコイン', category: '積立投資', assetDivision: '暗号資産', current: 26293, cumulativeInvestment: 25000, dailyInvestment: 0, monthlyInvestment: 5000, issueNote: '', history: [{date: '2026-06-01', amount: 25000, investment: 25000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 26293, investment: 5000, reasonType: '入金', note: '8月'}] },
+      gold: { name: '⑦ GOLD投資', category: '積立投資', assetDivision: 'コモディティ', current: 500000, cumulativeInvestment: 500000, dailyInvestment: 0, monthlyInvestment: 10000, issueNote: '', history: [{date: '2026-05-01', amount: 500000, investment: 500000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 500000, investment: 500000, reasonType: '入金', note: '8月'}] },
+      paypay_pt: { name: '⑧ PAYPAYポイント', category: '積立投資', assetDivision: 'ポイント', current: 18400, cumulativeInvestment: 0, dailyInvestment: 0, monthlyInvestment: 0, issueNote: '', history: [{date: '2026-07-01', amount: 16200, investment: 0, reasonType: '収益', note: '初回'}] },
+      rakuten_pt: { name: '⑨ 楽天ポイント', category: '積立投資', assetDivision: 'ポイント', current: 24500, cumulativeInvestment: 0, dailyInvestment: 0, monthlyInvestment: 0, issueNote: '', history: [{date: '2026-07-01', amount: 28000, investment: 0, reasonType: '収益', note: '初回'}] },
+      mercari: { name: '① メルカリ売上', category: '副業状況', assetDivision: '物販', current: 85000, cumulativeInvestment: 50000, incomeSum: 85000, issueNote: '', history: [{date: '2026-05-01', amount: 80000, investment: 80000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 85000, investment: 5000, reasonType: '収益', note: '8月'}] },
+      fx: { name: '② FX売買', category: '副業状況', assetDivision: 'FX', current: 47797, cumulativeInvestment: 100000, incomeSum: 47797, issueNote: '', history: [{date: '2026-01-05', amount: 100000, investment: 100000, reasonType: '収益', note: ''}, {date: '2026-07-30', amount: 48000, investment: -52000, reasonType: '損失', note: ''}, {date: '2026-08-08', amount: 47797, investment: -203, reasonType: '損失', note: ''}] },
+      content: { name: '③ 各種コンテンツ', category: '副業状況', assetDivision: 'コンテンツ', current: 30000, cumulativeInvestment: 10000, incomeSum: 30000, issueNote: '', history: [{date: '2026-05-01', amount: 28000, investment: 28000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 30000, investment: 2000, reasonType: '収益', note: '8月'}] },
+      other: { name: '④ その他', category: '副業状況', assetDivision: 'その他', current: 12000, cumulativeInvestment: 0, incomeSum: 12000, issueNote: '', history: [{date: '2026-05-01', amount: 15000, investment: 15000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 12000, investment: -3000, reasonType: '損失', note: '8月'}] },
+      bank_rakuten: { name: '① 楽天銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 2500000, cumulativeInvestment: 2400000, issueNote: '', history: [{date: '2026-06-01', amount: 2300000, investment: 0, reasonType: '入金', note: '6月'}, {date: '2026-08-01', amount: 2500000, investment: 0, reasonType: '入金', note: '8月'}] },
+      bank_paypay: { name: '② PAYPAY銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 1200000, cumulativeInvestment: 1200000, issueNote: '', history: [{date: '2026-06-01', amount: 1100000, investment: 0, reasonType: '入金', note: '6月'}, {date: '2026-08-01', amount: 1200000, investment: 0, reasonType: '入金', note: '8月'}] },
+      bank_resona: { name: '③ その他銀行 ※非公開※', category: '銀行預金', assetDivision: 'メガバンク', current: 486139, cumulativeInvestment: 500000, issueNote: '', history: [{date: '2026-06-01', amount: 500000, investment: 0, reasonType: '入金', note: '6月'}, {date: '2026-08-01', amount: 486139, investment: 0, reasonType: '出金', note: '8月'}] }
     };
 
     let appData = {};
@@ -1514,6 +1542,47 @@
       return `<${dateStr.substring(5, 7)}${dateStr.substring(8, 10)}>`;
     }
 
+    /* ★ [수정] 증감액(自動計算)에 입력한 금액 또는 전회비 증감액이 올바르게 표시되도록 설정 */
+    function updateDiffCalcDisplay() {
+      if (!activeItemKey || !appData[activeItemKey]) return;
+      const item = appData[activeItemKey];
+      if (item.category !== '副業状況') return;
+
+      const editIndex = parseInt(document.getElementById('edit-history-index').value);
+      const newAmt = parseFormattedNumber(document.getElementById('input-amount').value);
+      const reasonType = document.getElementById('input-reason-type').value;
+
+      let prevAmt = 0;
+      if (item.history && item.history.length > 0) {
+        if (editIndex >= 0) {
+          prevAmt = item.history[editIndex + 1] ? item.history[editIndex + 1].amount : 0;
+        } else {
+          prevAmt = item.history[0] ? item.history[0].amount : 0;
+        }
+      }
+
+      let diff = 0;
+      if (reasonType === '入金' || reasonType === '出金') {
+        diff = newAmt;
+      } else {
+        diff = newAmt - prevAmt;
+      }
+
+      const sign = (diff > 0 && reasonType !== '入金' && reasonType !== '出金') ? '+' : '';
+      const diffEl = document.getElementById('input-diff-calc');
+      if (diffEl) {
+        if (reasonType === '入金' || reasonType === '出金') {
+          diffEl.value = `¥${diff.toLocaleString()} (${reasonType}金額)`;
+          diffEl.style.color = 'var(--primary-dark)';
+        } else {
+          diffEl.value = `${sign}¥${diff.toLocaleString()} (前回比)`;
+          if (diff > 0) diffEl.style.color = '#16a34a';
+          else if (diff < 0) diffEl.style.color = '#dc2626';
+          else diffEl.style.color = '#64748b';
+        }
+      }
+    }
+
     function initAmountInputs() {
       document.querySelectorAll('.amount-input').forEach(input => {
         if (input.value) {
@@ -1527,6 +1596,7 @@
           let val = this.value.replace(/[^0-9]/g, '');
           if (val === '') {
             this.value = '';
+            updateDiffCalcDisplay();
             return;
           }
           this.value = formatNumberWithCommas(val);
@@ -1536,6 +1606,10 @@
           try {
             this.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
           } catch (err) {}
+
+          if (this.id === 'input-amount') {
+            updateDiffCalcDisplay();
+          }
         });
       });
     }
@@ -1971,6 +2045,31 @@
       return { diffVal, diffPct, prev, curDate, prevDate };
     }
 
+    function calcSideJobProfitLoss(item) {
+      if (!item.history || item.history.length === 0) {
+        return { diffVal: 0, diffPct: 0 };
+      }
+      
+      let totalSum = 0;
+      const sortedHistory = [...item.history].sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      sortedHistory.forEach(h => {
+        const inv = h.investment || 0;
+        const rType = h.reasonType;
+        
+        if (rType === '出金' || rType === '入金') {
+          totalSum += inv;
+        } else {
+          totalSum += inv;
+        }
+      });
+
+      const cumulativeInv = item.cumulativeInvestment || 0;
+      const diffVal = totalSum;
+      const diffPct = cumulativeInv !== 0 ? (diffVal / cumulativeInv) * 100 : 0;
+      return { diffVal, diffPct };
+    }
+
     function calcProfitLoss(item) {
       const current = item.current;
       const cumulative = item.cumulativeInvestment || 0;
@@ -2190,6 +2289,7 @@
       document.getElementById('input-item-category').value = item.assetDivision || '';
       document.getElementById('input-item-name').value = item.name;
       document.getElementById('input-cumulative-inv').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
+      document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current !== undefined ? item.current : 0);
       document.getElementById('input-daily-inv').value = formatNumberWithCommas(item.dailyInvestment !== undefined ? item.dailyInvestment : 0);
       document.getElementById('input-monthly-inv').value = formatNumberWithCommas(item.monthlyInvestment !== undefined ? item.monthlyInvestment : 0);
       document.getElementById('input-issue-note').value = item.issueNote || '';
@@ -2198,8 +2298,38 @@
       document.getElementById('edit-item-current-amount').textContent = `¥${item.current.toLocaleString()}`;
       document.getElementById('edit-item-last-update').textContent = `最終更新: ${item.history?.[0]?.date || '未登録'}`;
 
+      const groupCumulativeInv = document.getElementById('group-cumulative-inv');
+      const groupDaily = document.getElementById('group-daily-inv');
+      const groupMonthly = document.getElementById('group-monthly-inv');
+
+      const labelInputAmount = document.getElementById('label-input-amount');
+      const groupInputInvestment = document.getElementById('group-input-investment');
+      const groupReasonType = document.getElementById('group-reason-type');
+      const groupDiffCalc = document.getElementById('group-diff-calc');
+
+      if (item.category === '副業状況') {
+        if (groupCumulativeInv) groupCumulativeInv.style.display = 'flex';
+        if (groupDaily) groupDaily.style.display = 'none';
+        if (groupMonthly) groupMonthly.style.display = 'none';
+
+        if (labelInputAmount) labelInputAmount.textContent = '現在評価金額';
+        if (groupInputInvestment) groupInputInvestment.style.display = 'none';
+        if (groupReasonType) groupReasonType.style.display = 'flex';
+        if (groupDiffCalc) groupDiffCalc.style.display = 'flex';
+      } else {
+        if (groupCumulativeInv) groupCumulativeInv.style.display = 'none';
+        if (groupDaily) groupDaily.style.display = 'flex';
+        if (groupMonthly) groupMonthly.style.display = 'flex';
+
+        if (labelInputAmount) labelInputAmount.textContent = '金額';
+        if (groupInputInvestment) groupInputInvestment.style.display = 'flex';
+        if (groupReasonType) groupReasonType.style.display = 'none';
+        if (groupDiffCalc) groupDiffCalc.style.display = 'none';
+      }
+
       renderHistoryTable();
       renderItemCardPreview();
+      updateDiffCalcDisplay();
     }
 
     function renderItemCardPreview() {
@@ -2273,7 +2403,8 @@
       tbody.innerHTML = '';
       item.history?.forEach((h, idx) => {
         const tr = document.createElement('tr');
-        const invText = h.investment !== undefined ? `(投資: ¥${h.investment.toLocaleString()})` : '';
+        const reasonText = h.reasonType ? ` [${h.reasonType}]` : '';
+        const invText = h.investment !== undefined ? `(増減: ¥${h.investment.toLocaleString()}${reasonText})` : reasonText;
         tr.innerHTML = `
           <td>${h.date}</td>
           <td style="font-weight:bold;">¥${h.amount.toLocaleString()} <span style="font-size:0.7rem; color:var(--text-sub);">${invText}</span></td>
@@ -2294,19 +2425,23 @@
       document.getElementById('edit-history-index').value = index;
       document.getElementById('input-amount').value = formatNumberWithCommas(target.amount);
       document.getElementById('input-investment').value = formatNumberWithCommas(target.investment !== undefined ? target.investment : 0);
+      document.getElementById('input-reason-type').value = target.reasonType || '収益';
       document.getElementById('input-date').value = target.date;
       document.getElementById('input-note').value = target.note || '';
 
       document.getElementById('btn-cancel-edit').style.display = 'inline-block';
+      updateDiffCalcDisplay();
     };
 
     window.resetHistoryForm = function() {
       document.getElementById('edit-history-index').value = '-1';
       document.getElementById('input-amount').value = '';
       document.getElementById('input-investment').value = '0';
+      document.getElementById('input-reason-type').value = '収益';
       document.getElementById('input-date').valueAsDate = new Date();
       document.getElementById('input-note').value = '';
       document.getElementById('btn-cancel-edit').style.display = 'none';
+      updateDiffCalcDisplay();
     };
 
     window.deleteHistory = function(index) {
@@ -2319,11 +2454,12 @@
       if (!confirm(`本当にこの履歴（日付: ${targetHistory.date}, 金額: ¥${targetHistory.amount.toLocaleString()}）を削除しますか？`)) return;
 
       const deletedHistory = item.history.splice(index, 1)[0];
-      if (deletedHistory && deletedHistory.investment) {
+      if (deletedHistory && deletedHistory.investment && item.category !== '副業状況') {
         item.cumulativeInvestment = Math.max(0, (item.cumulativeInvestment || 0) - deletedHistory.investment);
       }
 
       item.current = item.history[0].amount;
+      document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current);
 
       saveData();
       renderHistoryTable();
@@ -2337,15 +2473,21 @@
       if (!activeItemKey || !appData[activeItemKey]) return;
       const newDivision = document.getElementById('input-item-category').value.trim();
       const newName = document.getElementById('input-item-name').value.trim();
-      const newCumulative = parseFormattedNumber(document.getElementById('input-cumulative-inv').value);
+      const newCumulativeInv = parseFormattedNumber(document.getElementById('input-cumulative-inv').value);
+      const newCumulativeIncome = parseFormattedNumber(document.getElementById('input-cumulative-income').value);
       const newDaily = parseFormattedNumber(document.getElementById('input-daily-inv').value);
       const newMonthly = parseFormattedNumber(document.getElementById('input-monthly-inv').value);
       const newIssueNote = document.getElementById('input-issue-note').value;
-      if (!newName || isNaN(newCumulative)) return;
+      if (!newName || isNaN(newCumulativeIncome)) return;
 
       appData[activeItemKey].assetDivision = newDivision;
       appData[activeItemKey].name = newName;
-      appData[activeItemKey].cumulativeInvestment = newCumulative;
+      if (appData[activeItemKey].category === '副業状況') {
+        appData[activeItemKey].cumulativeInvestment = newCumulativeInv;
+        appData[activeItemKey].current = newCumulativeIncome;
+      } else {
+        appData[activeItemKey].cumulativeInvestment = newCumulativeInv;
+      }
       appData[activeItemKey].dailyInvestment = newDaily;
       appData[activeItemKey].monthlyInvestment = newMonthly;
       appData[activeItemKey].issueNote = newIssueNote;
@@ -2370,7 +2512,7 @@
         dailyInvestment: 0,
         monthlyInvestment: 0,
         issueNote: '',
-        history: [{ date: new Date().toISOString().split('T')[0], amount: 0, investment: 0, note: '初回' }]
+        history: [{ date: new Date().toISOString().split('T')[0], amount: 0, investment: 0, reasonType: '収益', note: '初回' }]
       };
       saveData();
       renderSidebarMenu();
@@ -2389,11 +2531,14 @@
       showToast('項目を削除しました。');
     };
 
+    /* ★ [수정] handleFormSubmit - 증감액(自動計算)에 표시된 금액(calcDiffVal)이 누적 수익(累積収益)에 정확히 가산되도록 수정 */
     window.handleFormSubmit = function(e) {
       e.preventDefault();
       if (!activeItemKey || !appData[activeItemKey]) return;
+      
       const editIndex = parseInt(document.getElementById('edit-history-index').value);
       const newAmount = parseFormattedNumber(document.getElementById('input-amount').value);
+      const newReasonType = document.getElementById('input-reason-type').value;
       const newInvestment = parseFormattedNumber(document.getElementById('input-investment').value);
       const newDate = document.getElementById('input-date').value;
       const newNote = document.getElementById('input-note').value;
@@ -2402,22 +2547,66 @@
       const item = appData[activeItemKey];
       if (!item.history) item.history = [];
 
-      if (editIndex >= 0) {
-        const oldInvestment = item.history[editIndex].investment || 0;
-        const diffInvestment = newInvestment - oldInvestment;
-        item.cumulativeInvestment = (item.cumulativeInvestment || 0) + diffInvestment;
+      let prevAmount = 0;
+      if (item.history.length > 0) {
+        if (editIndex >= 0) {
+          prevAmount = item.history[editIndex + 1] ? item.history[editIndex + 1].amount : 0;
+        } else {
+          prevAmount = item.history[0].amount;
+        }
+      }
 
-        item.history[editIndex] = { date: newDate, amount: newAmount, investment: newInvestment, note: newNote };
+      let calcDiffVal = 0;
+      if (newReasonType === '入金' || newReasonType === '出金') {
+        calcDiffVal = newAmount;
+      } else {
+        calcDiffVal = newAmount - prevAmount;
+      }
+
+      if (editIndex >= 0) {
+        if (item.category !== '副業状況') {
+          const oldInvestment = item.history[editIndex].investment || 0;
+          const diffInvestment = newInvestment - oldInvestment;
+          item.cumulativeInvestment = (item.cumulativeInvestment || 0) + diffInvestment;
+        }
+
+        item.history[editIndex] = { 
+          date: newDate, 
+          amount: newAmount, 
+          investment: item.category === '副業状況' ? (newReasonType === '入金' || newReasonType === '出金' ? newAmount : calcDiffVal) : newInvestment, 
+          reasonType: newReasonType, 
+          note: newNote 
+        };
         showToast('履歴を修正しました！');
       } else {
-        item.cumulativeInvestment = (item.cumulativeInvestment || 0) + newInvestment;
+        if (item.category !== '副業状況') {
+          item.cumulativeInvestment = (item.cumulativeInvestment || 0) + newInvestment;
+        }
 
-        item.history.unshift({ date: newDate, amount: newAmount, investment: newInvestment, note: newNote });
+        item.history.unshift({ 
+          date: newDate, 
+          amount: newAmount, 
+          investment: item.category === '副業状況' ? (newReasonType === '入金' || newReasonType === '出金' ? newAmount : calcDiffVal) : newInvestment, 
+          reasonType: newReasonType, 
+          note: newNote 
+        });
         showToast('データを追加しました！');
       }
 
       item.history.sort((a, b) => new Date(b.date) - new Date(a.date));
-      item.current = item.history[0].amount;
+      
+      if (item.category === '副業状況') {
+        if (newReasonType === '入金' || newReasonType === '出金') {
+          item.current = newAmount;
+        } else {
+          // ★ 증감액(自動計算)에 표시된 금액을 이번에 추가될 누적 수익(current)에 정확히 반영
+          item.current = (item.current || 0) + calcDiffVal;
+          item.history[0].amount = item.current;
+        }
+        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current);
+      } else {
+        item.current = item.history[0].amount;
+      }
 
       saveData();
       openItemEdit(activeItemKey);
@@ -2848,7 +3037,6 @@
         }
       }
 
-      /* ★ 4. 副業状況 - 年間累積 (검은색 배지) 표기 반영 */
       const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
       sidejobKeys.sort((a, b) => {
         const nameA = appData[a].name || '';
@@ -2863,7 +3051,7 @@
       sidejobGrid.innerHTML = '';
       sidejobKeys.forEach(key => {
         const item = appData[key];
-        const { diffVal, diffPct } = calcProfitLoss(item);
+        const { diffVal, diffPct } = calcSideJobProfitLoss(item);
         
         const tile = document.createElement('div');
         tile.className = 'info-tile';
