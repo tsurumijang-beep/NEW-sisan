@@ -47,7 +47,7 @@
       background: rgba(235, 241, 250, 0.95);
       backdrop-filter: blur(12px);
       border-right: var(--panel-border);
-      padding: 12px 8px;
+      padding: 10px 6px;
       display: flex;
       flex-direction: column;
       box-shadow: 4px 0 12px rgba(0,0,0,0.05);
@@ -63,30 +63,30 @@
       font-size: 1rem;
       font-weight: bold;
       color: var(--primary-color);
-      margin-bottom: 12px;
-      padding-left: 6px;
+      margin-bottom: 10px;
+      padding-left: 4px;
     }
 
     .nav-group {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .nav-title {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: bold;
       color: var(--text-sub);
       text-transform: uppercase;
       margin-bottom: 2px;
-      padding-left: 6px;
+      padding-left: 4px;
     }
 
     .nav-item {
-      padding: 7px 10px;
-      margin-bottom: 3px;
+      padding: 6px 8px;
+      margin-bottom: 2px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       transition: all 0.22s ease;
       color: var(--text-main);
       display: flex;
@@ -108,13 +108,13 @@
 
     .sub-menu {
       list-style: none;
-      padding-left: 8px;
+      padding-left: 6px;
       margin-top: 1px;
     }
 
     .sub-item {
-      padding: 4px 8px;
-      font-size: 0.75rem;
+      padding: 3px 6px;
+      font-size: 0.72rem;
       color: var(--text-sub);
       cursor: pointer;
       border-radius: 6px;
@@ -134,6 +134,55 @@
       color: var(--primary-dark);
       background: #ffffff;
       font-weight: bold;
+    }
+
+    /* ★ 修正: スクリーン内に収まるようコンパクトな2列グリッドレイアウトへ変更 */
+    .quick-links-group {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .quick-links-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+
+    .quick-link-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: #ffffff;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 0.72rem;
+      font-weight: bold;
+      box-shadow: 1px 1px 3px #c5d0e0;
+      transition: all 0.15s ease;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .quick-link-btn:hover {
+      transform: translateY(-1px);
+      background: #f0f7ff;
+      color: var(--primary-color);
+      box-shadow: 2px 3px 6px rgba(58, 123, 213, 0.2);
+    }
+
+    .quick-link-btn i {
+      font-size: 0.8rem;
+      width: 14px;
+      text-align: center;
+      flex-shrink: 0;
     }
 
     /* --- メインコンテンツ --- */
@@ -972,7 +1021,7 @@
       <span><i class="fa-solid fa-bolt"></i> ※リアルタイム積立※</span>
     </div>
 
-    <div class="nav-group" style="margin-top: 10px;">
+    <div class="nav-group" style="margin-top: 8px;">
       <div class="nav-title">3. 積立投資 <i class="fa-solid fa-plus" style="cursor:pointer; float:right;" onclick="openAddItemModal('積立投資')"></i></div>
       <ul class="sub-menu" id="menu-group-積立投資"></ul>
     </div>
@@ -983,6 +1032,41 @@
     <div class="nav-group">
       <div class="nav-title">5. 銀行預金 <i class="fa-solid fa-plus" style="cursor:pointer; float:right;" onclick="openAddItemModal('銀行預金')"></i></div>
       <ul class="sub-menu" id="menu-group-銀行預金"></ul>
+    </div>
+
+    <!-- ★ コンパクト2列化されたクイックリンク集 -->
+    <div class="quick-links-group">
+      <div class="nav-title">クイックリンク</div>
+      <div class="quick-links-grid">
+        <a href="https://docs.google.com/spreadsheets/d/16beSSLQCky1mkj6KTQSF5u3cnECOUWyU/edit?gid=891923447#gid=891923447" target="_blank" class="quick-link-btn" title="スプレッドシート">
+          <i class="fa-solid fa-table" style="color: #0f9d58;"></i>
+          <span>スプレッド</span>
+        </a>
+        <a href="https://tsurumijang-beep.github.io/merukari/" target="_blank" class="quick-link-btn" title="メルカリ管理システム">
+          <i class="fa-solid fa-store" style="color: #ea4335;"></i>
+          <span>メルカリ</span>
+        </a>
+        <a href="https://draft.blogger.com/blog/posts/1097250025428793297" target="_blank" class="quick-link-btn" title="ブロガー">
+          <i class="fa-bold" style="color: #ff5722;"></i>
+          <span>ブロガー</span>
+        </a>
+        <a href="https://note.com/jazzy_rabbit3813" target="_blank" class="quick-link-btn" title="NOTE">
+          <i class="fa-solid fa-book-open" style="color: #2cb696;"></i>
+          <span>NOTE</span>
+        </a>
+        <a href="https://x.com/all_tsumitate" target="_blank" class="quick-link-btn" title="X">
+          <i class="fa-brands fa-x-twitter" style="color: #000000;"></i>
+          <span>X</span>
+        </a>
+        <a href="https://www.threads.com/@tsurumijang" target="_blank" class="quick-link-btn" title="Threads">
+          <i class="fa-brands fa-threads" style="color: #000000;"></i>
+          <span>Threads</span>
+        </a>
+        <a href="https://draft.blogger.com/blog/posts/1097250025428793297" target="_blank" class="quick-link-btn" style="grid-column: span 2;" title="MOOMOO">
+          <i class="fa-solid fa-chart-line" style="color: #3a7bd5;"></i>
+          <span>MOOMOO</span>
+        </a>
+      </div>
     </div>
   </aside>
 
@@ -1017,7 +1101,6 @@
       <div class="dashboard-grid">
         <div class="dashboard-column">
           <div class="card" style="max-height: fit-content; flex-shrink: 0;">
-            <!-- ★ 修正: タイトル横に非公開切替ボタンを追加 -->
             <div class="card-title">
               <span>1. 全資産 (サマリー)</span>
               <button onclick="toggleSummaryMask()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; border:1px solid #cbd5e1; background:#f8fafc; border-radius:4px; font-weight:bold; color:var(--text-sub);">非公開切替</button>
@@ -1479,7 +1562,7 @@
     let activeItemKey = null;
     let isBankPrivate = true;
     let isHeaderPrivate = false;
-    let isSummaryPrivate = false; // ★ サマリー用非公開フラグ
+    let isSummaryPrivate = false;
     let selectedTrendFilter = '全体';
     let selectedTsumitateFilter = '全体';
     let trendChart, sideJobBarChart;
@@ -1642,7 +1725,6 @@
       updateDashboard();
     };
 
-    /* ★ サマリーの非公開切り替え関数 */
     window.toggleSummaryMask = function() {
       isSummaryPrivate = !isSummaryPrivate;
       renderDashboardGrids();
@@ -2321,7 +2403,7 @@
         cols.forEach(col => {
           data.push(col.innerText.replace(/[\n\r]+/g, ' '));
         });
-        textData.push(data.join('\n'));
+        textData.push(data.join('\t'));
       });
 
       navigator.clipboard.writeText(textData.join('\n')).then(() => {
@@ -3012,7 +3094,6 @@
         const row = document.createElement('div');
         row.className = 'asset-row';
         
-        // ★ サマリーの非公開切り替え対応
         const amtStr = isSummaryPrivate ? '¥*,***,***' : `¥${data.current.toLocaleString()}`;
         const maskClass = isSummaryPrivate ? 'private-mask' : '';
         const itemsStr = data.items.join(' ');
