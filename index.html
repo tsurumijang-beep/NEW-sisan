@@ -846,6 +846,21 @@
       opacity: 0.95;
     }
 
+    /* 評価額合計バッジ */
+    .eval-total-badge {
+      margin-left: auto;
+      background: linear-gradient(135deg, #1e3a8a 0%, #3a7bd5 100%);
+      color: #ffffff;
+      padding: 5px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 6px rgba(58, 123, 213, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     @media screen and (max-width: 768px) {
       body {
         flex-direction: column;
@@ -924,6 +939,11 @@
       .diff-badge {
         font-size: 0.58rem;
         padding: 1px 2px;
+      }
+      .eval-total-badge {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
       }
     }
   </style>
@@ -1042,7 +1062,7 @@
             <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
           </div>
 
-          <!-- ★ Firebase リアルタイム同期メモカード -->
+          <!-- Firebase リアルタイム同期メモカード -->
           <div class="memo-card">
             <div class="card-title" style="color: #854d0e; border-bottom-color: rgba(217, 119, 6, 0.2);">
               <span><i class="fa-solid fa-note-sticky" style="color: #d97706; margin-right: 4px;"></i> 6. メモ</span>
@@ -1093,7 +1113,6 @@
         <div class="card-title" style="font-size: 1.1rem; color: var(--primary-color); flex-wrap: wrap; gap: 8px;">
           <span><i class="fa-solid fa-chart-line"></i> 2. 楽天NISA 保有銘柄詳細</span>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <!-- ★ 일괄 CSV 다운로드 버튼 추가 -->
             <button class="btn-export" onclick="exportAllNisaToCSV()" style="font-size:0.7rem; padding:6px 12px; background:#3498db;"><i class="fa-solid fa-download"></i> CSV batch export</button>
             <button class="btn-export" onclick="openImportModal()" style="font-size:0.7rem; padding:6px 12px; background:var(--accent-orange);"><i class="fa-solid fa-file-import"></i> データ取り込み</button>
             <button class="btn-export" onclick="openNisaAddModal()" style="font-size:0.7rem; padding:6px 12px; background:#27ae60;"><i class="fa-solid fa-plus"></i> 銘柄追加</button>
@@ -1109,6 +1128,11 @@
             <button class="filter-btn" id="sort-rate-desc" onclick="setNisaSort('rate', 'desc')">収益率が高い順 (↓)</button>
             <button class="filter-btn" id="sort-rate-asc" onclick="setNisaSort('rate', 'asc')">収益率が低い順 (↑)</button>
             <button class="filter-btn" id="sort-default" onclick="setNisaSort('default', 'asc')">デフォルト順</button>
+          </div>
+          <!-- 並べ替え設定の横に表示される評価額合計バッジ -->
+          <div class="eval-total-badge">
+            <i class="fa-solid fa-coins"></i>
+            <span>評価額合計: <strong id="nisa-total-eval-display" style="font-size: 0.95rem;">¥0</strong></span>
           </div>
         </div>
 
@@ -1454,43 +1478,18 @@
 
     let nisaHoldingsOriginal = {
       trust: [
-        { name: 'eMAXIS Slim 新興国株式インデックス', qty: '120,710 口', price: '28,615 円', eval: '345,412 円', rate: '+41.0%' },
-        { name: '日経平均高配当利回り株ファンド', qty: '19,983 口', price: '22,355 円', eval: '44,672 円', rate: '-1.9%' }
+        { name: 'eMAXIS Slim 新興国株式インデックス', qty: '128,055 口', price: '26,842 円', eval: '343,725 円', rate: '+29.7%' },
+        { name: '日経平均高配当利回り株ファンド', qty: '24,139 口', price: '25,008 円', eval: '60,367 円', rate: '+8.7%' }
       ],
       jp: [
-        { name: '2621 ＩＳ米国債２0年ヘッジ', qty: '100 株', price: '1,065.0 円', eval: '106,500 円', rate: '-2.4%' },
-        { name: '3350 メタプラネット <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>', qty: '500 株', price: '197.0 円', eval: '98,500 円', rate: '-36.5%' }
+        { name: '2621 ＩＳ米国債２0年ヘッジ', qty: '100 株', price: '999.0 円', eval: '99,900 円', rate: '-8.4%' },
+        { name: '3350 メタプラネット 決算発表日 <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>', qty: '500 株', price: '221.0 円', eval: '110,500 円', rate: '-28.7%' },
+        { name: '3825 リミックスポイント 決算発表日 <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>', qty: '500 株', price: '223.0 円', eval: '111,500 円', rate: '+12.6%' }
       ],
       us: [
-        { name: 'BABA アリババ・グループ・ホールディング', qty: '20 株', price: '94.8100 USD', eval: '306,691 円', rate: '+28.5%' },
-        { name: 'CXSE ウィズダムツリー中国株ニューエコノミーファンド', qty: '49 株', price: '38.0600 USD', eval: '301,635 円', rate: '+10.1%' },
-        { name: 'MSTR ストラテジー', qty: '6 株', price: '82.3100 USD', eval: '79,876 円', rate: '-52.7%' },
-        { name: 'RIOT ライオット・プラットフォームズ', qty: '31 株', price: '28.5700 USD', eval: '143,248 円', rate: '+112.4%' },
-        { name: 'XPEV シャオペン', qty: '20 株', price: '12.0900 USD', eval: '39,108 円', rate: '-39.4%' },
-        { name: 'CAN カナン', qty: '1,000 株', price: '0.3003 USD', eval: '48,570 円', rate: '-61.9%' },
-        { name: 'MARA マラ・ホールディングス', qty: '130 株', price: '14.5400 USD', eval: '305,720 円', rate: '+52.4%' },
-        { name: 'COIN コインベース <span style="color: #dc2626; font-size: 0.7rem;">【一般】</span>', qty: '5 株', price: '149.0600 USD', eval: '120,544 円', rate: '-12.3%' },
-        { name: 'HOOD ロビンフッド・マーケッツ', qty: '8 株', price: '98.6900 USD', eval: '127,696 円', rate: '+27.8%' },
-        { name: 'IONQ IonQ INC', qty: '15 株', price: '49.3100 USD', eval: '119,630 円', rate: '+88.8%' },
-        { name: 'IREN IREN', qty: '8 株', price: '47.2100 USD', eval: '61,085 円', rate: '+23.0%' },
-        { name: 'WULF テラウルフ', qty: '35 株', price: '25.8300 USD', eval: '146,221 円', rate: '+56.5%' },
-        { name: 'TEM テンパスAI', qty: '16 株', price: '56.1400 USD', eval: '145,281 円', rate: '-9.6%' },
-        { name: 'CRCL サークル・インターネット・グループ', qty: '5 株', price: '73.5700 USD', eval: '59,496 円', rate: '-35.7%' },
-        { name: 'BMNR ビットマイン・イマージョン・テクノロジーズ', qty: '130 株', price: '13.5600 USD', eval: '285,115 円', rate: '-34.5%' },
-        { name: 'GLXY ギャラクシー・デジタル', qty: '101 株', price: '29.2600 USD', eval: '477,983 円', rate: '+13.0%' },
-        { name: 'FWDI フォワード・インダストリーズ', qty: '85 株', price: '3.9600 USD', eval: '54,441 円', rate: '-10.4%' },
-        { name: 'BIDU バイドゥ', qty: '5 株', price: '104.2200 USD', eval: '84,282 円', rate: '+2.3%' },
-        { name: 'FXI iシェアーズ 中国大型株 ETF', qty: '49 株', price: '31.5900 USD', eval: '250,358 円', rate: '-10.5%' },
-        { name: 'BIIB バイオジェン', qty: '4 株', price: '216.0300 USD', eval: '139,762 円', rate: '+53.7%' }
+        { name: 'BABA アリババ・グループ・ホールディング', qty: '20 株', price: '125.2200 USD', eval: '399,351 円', rate: '+69.8%' }
       ],
-      cn: [
-        { name: '00020 センスタイム・グループ', qty: '3,000 株', price: '1.2800 HKD', eval: '79,180 円', rate: '-20.5%' },
-        { name: '00390 チャイナ・レールウェイ', qty: '2,000 株', price: '3.3500 HKD', eval: '138,154 円', rate: '-17.2%' },
-        { name: '00700 テンセント', qty: '100 株', price: '411.8000 HKD', eval: '849,131 円', rate: '+42.4%' },
-        { name: '01186 チャイナ・レールウェイ・コンストラクション', qty: '1,000 株', price: '4.5800 HKD', eval: '94,439 円', rate: '-17.1%' },
-        { name: '01658 ポスタル・セービングス・バンク・オブ・チャイナ', qty: '1,000 株', price: '4.7700 HKD', eval: '98,357 円', rate: '-9.1%' },
-        { name: '01800 チャイナ・コミュニケーションズ・コンストラクション', qty: '1,000 株', price: '3.7000 HKD', eval: '76,294 円', rate: '-27.7%' }
-      ]
+      cn: []
     };
 
     let nisaHoldings = JSON.parse(JSON.stringify(nisaHoldingsOriginal));
@@ -1533,7 +1532,7 @@
 
     function parseFormattedNumber(value) {
       if (!value) return 0;
-      const cleanVal = String(value).replace(/,/g, '');
+      const cleanVal = String(value).replace(/[^0-9.]/g, '');
       const num = Number(cleanVal);
       return isNaN(num) ? 0 : num;
     }
@@ -1856,6 +1855,8 @@
     };
 
     function renderNisaTables() {
+      let grandTotalEval = 0;
+
       ['trust', 'jp', 'us', 'cn'].forEach(market => {
         const tbody = document.getElementById(`nisa-table-${market}`);
         const cardContainer = document.getElementById(`nisa-card-${market}`);
@@ -1866,6 +1867,9 @@
 
         const items = nisaHoldings[market] || [];
         items.forEach((item, idx) => {
+          const evalNum = parseFormattedNumber(item.eval);
+          grandTotalEval += evalNum;
+
           const isPlus = !String(item.rate).includes('-');
           const colorClass = isPlus ? 'text-plus' : 'text-minus';
           const colorStyle = isPlus ? 'color: #16a34a; font-weight: bold;' : 'color: #dc2626; font-weight: bold;';
@@ -1916,9 +1920,13 @@
           cardContainer.appendChild(card);
         });
       });
+
+      const totalDisplayEl = document.getElementById('nisa-total-eval-display');
+      if (totalDisplayEl) {
+        totalDisplayEl.textContent = `¥${grandTotalEval.toLocaleString()}`;
+      }
     }
 
-    /* ★ 2. 楽天NISA状況 保有銘柄 一括 CSV 抽出関数 */
     window.exportAllNisaToCSV = function() {
       const marketNames = {
         trust: '投資信託',
@@ -1928,7 +1936,6 @@
       };
 
       let csvRows = [];
-      // Header
       csvRows.push(['"区分(市場)"', '"銘柄名"', '"数量"', '"現在値"', '"評価額"', '"収益率"'].join(','));
 
       ['trust', 'jp', 'us', 'cn'].forEach(market => {
@@ -1936,7 +1943,6 @@
         const marketLabel = marketNames[market] || market;
 
         items.forEach(item => {
-          // HTML 태그 제거 (예: <span ...>【一般】</span> -> 【一般】)
           let cleanName = item.name ? item.name.replace(/<[^>]*>?/gm, '').trim() : '';
           cleanName = cleanName.replace(/"/g, '""');
 
@@ -1957,11 +1963,10 @@
       });
 
       if (csvRows.length <= 1) {
-        alert('추출할 보유 종목 데이터가 없습니다.');
+        alert('抽出する保有銘柄データがありません。');
         return;
       }
 
-      // UTF-8 BOM 포함 CSV 다운로드
       const blob = new Blob(["\uFEFF" + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2177,6 +2182,7 @@
         document.getElementById('view-rakuten-nisa-status').classList.add('active');
         document.getElementById('menu-rakuten-nisa-status').classList.add('active');
         document.getElementById('header-view-title').textContent = '2. 楽天NISA 保有銘柄詳細';
+        renderNisaTables();
       }
     };
 
@@ -2826,45 +2832,42 @@
       }
     };
 
+    /* ★ 修正: 「1.全資産」の合算ロジックと完全に同期させたダッシュボード更新処理 */
     function updateDashboard() {
-      let totalAssets = 0, prevTotalAssets = 0, totalCumulative = 0;
-      let sideJobTotal = 0, prevSideJobTotal = 0;
+      let sumCurrent = 0, sumCumulative = 0;
+      let sideJobTotal = 0;
 
       for (let key in appData) {
         const item = appData[key];
-        const curAmt = item.current;
-        const { diffVal, diffPct, prev: prevAmt } = calcDiff(item);
+        const curAmt = item.current || 0;
         const cumulative = item.cumulativeInvestment || 0;
 
-        if (item.category !== '副業状況' && item.category !== '銀行預金') {
-          totalAssets += curAmt;
-          prevTotalAssets += prevAmt;
-          totalCumulative += cumulative;
-        }
+        // 全資産の合計金額および累積投資額の合算
+        sumCurrent += curAmt;
+        sumCumulative += cumulative;
 
+        // 今月の副業純利益の集計
         if (item.category === '副業状況') {
           const netProfit = curAmt - cumulative;
           if (netProfit > 0) {
             sideJobTotal += netProfit;
           }
-
-          const prevNetProfit = prevAmt - cumulative;
-          if (prevNetProfit > 0) {
-            prevSideJobTotal += prevNetProfit;
-          }
         }
       }
 
-      const totalAssetsStr = isHeaderPrivate ? '¥*,***,***' : `¥${totalAssets.toLocaleString()}`;
+      // 「1.全資産」の総合計に基づく損益額および損益率の計算
+      const totalProfitVal = sumCurrent - sumCumulative;
+      const totalProfitPct = sumCumulative !== 0 ? (totalProfitVal / sumCumulative) * 100 : 0;
+
+      const totalAssetsStr = isHeaderPrivate ? '¥*,***,***' : `¥${sumCurrent.toLocaleString()}`;
       const sideIncomeStr = isHeaderPrivate ? '+¥*,***,***' : `+¥${sideJobTotal.toLocaleString()}`;
       const maskClass = isHeaderPrivate ? 'private-mask' : '';
 
       document.getElementById('header-total-assets').textContent = totalAssetsStr;
       document.getElementById('header-total-assets').className = maskClass;
 
-      const tDiff = totalAssets - prevTotalAssets;
-      const tPct = prevTotalAssets !== 0 ? (tDiff / prevTotalAssets) * 100 : 0;
-      const totalDiffHtml = isHeaderPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(tDiff, tPct);
+      // ヘッダーバッジへ損益額・損益率(%)を反映
+      const totalDiffHtml = isHeaderPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(totalProfitVal, totalProfitPct);
       document.getElementById('header-total-diff').outerHTML = `<span id="header-total-diff">${totalDiffHtml}</span>`;
 
       document.getElementById('header-side-income').textContent = sideIncomeStr;
