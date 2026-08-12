@@ -136,7 +136,7 @@
       font-weight: bold;
     }
 
-    /* 左サイドバー下部 クイックリンク集スタイル */
+    /* クイックリンク集スタイル */
     .quick-links-group {
       margin-top: 8px;
       padding-top: 8px;
@@ -183,6 +183,25 @@
       width: 14px;
       text-align: center;
       flex-shrink: 0;
+    }
+
+    /* 編集モーダル用スタイル */
+    .quick-link-edit-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+      background: #f8fafc;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .quick-link-edit-row input {
+      padding: 4px 6px;
+      font-size: 0.78rem;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
     }
 
     /* --- メインコンテンツ --- */
@@ -1034,40 +1053,12 @@
       <ul class="sub-menu" id="menu-group-銀行預金"></ul>
     </div>
 
-    <!-- クイックリンク集 -->
+    <!-- ★ クイックリンク集（タイトルクリックで編集モーダル起動） -->
     <div class="quick-links-group">
-      <div class="nav-title">クイックリンク</div>
-      <div class="quick-links-grid">
-        <a href="https://docs.google.com/spreadsheets/d/16beSSLQCky1mkj6KTQSF5u3cnECOUWyU/edit?gid=891923447#gid=891923447" target="_blank" class="quick-link-btn" title="スプレッドシート">
-          <i class="fa-solid fa-table" style="color: #0f9d58;"></i>
-          <span>スプレッド</span>
-        </a>
-        <a href="https://tsurumijang-beep.github.io/merukari/" target="_blank" class="quick-link-btn" title="メルカリ管理システム">
-          <i class="fa-solid fa-store" style="color: #ea4335;"></i>
-          <span>メルカリ</span>
-        </a>
-        <a href="https://draft.blogger.com/blog/posts/1097250025428793297" target="_blank" class="quick-link-btn" title="ブロガー">
-          <i class="fa-bold" style="color: #ff5722;"></i>
-          <span>ブロガー</span>
-        </a>
-        <a href="https://note.com/jazzy_rabbit3813" target="_blank" class="quick-link-btn" title="NOTE">
-          <i class="fa-solid fa-book-open" style="color: #2cb696;"></i>
-          <span>NOTE</span>
-        </a>
-        <a href="https://x.com/all_tsumitate" target="_blank" class="quick-link-btn" title="X">
-          <i class="fa-brands fa-x-twitter" style="color: #000000;"></i>
-          <span>X</span>
-        </a>
-        <a href="https://www.threads.com/@tsurumijang" target="_blank" class="quick-link-btn" title="Threads">
-          <i class="fa-brands fa-threads" style="color: #000000;"></i>
-          <span>Threads</span>
-        </a>
-        <!-- ★ MOOMOOリンクURL更新 -->
-        <a href="https://www.moomoo.com/ja/community/profile/%E5%89%AF%E6%A5%AD%E3%83%A1%E3%82%A4%E3%83%B3%E5%90%9B-181356335?chain_id=y3RRJAqyy9SO-H.1l695lp&global_content=%7B%22promote_id%22%3A%2213126%22,%22sub_promote_id%22%3A%2213%22,%22invite%22%3A%22181356335%22,%22promote_content%22%3A%22mm%3Afeed%3A116926540611590%22,%22f%22%3A%22mm%2Fja%2Fcommunity%2Ffeed%2Fthis-month-s-investment-plan-27-000-this-month-s-116926540611590%22%7D" target="_blank" class="quick-link-btn" style="grid-column: span 2;" title="MOOMOO">
-          <i class="fa-solid fa-chart-line" style="color: #3a7bd5;"></i>
-          <span>MOOMOO</span>
-        </a>
+      <div class="nav-title" onclick="openQuickLinkModal()" style="cursor: pointer;" title="クリックしてリンクを編集">
+        クイックリンク <i class="fa-solid fa-pen-to-square" style="margin-left: 2px;"></i>
       </div>
+      <div class="quick-links-grid" id="sidebar-quick-links-container"></div>
     </div>
   </aside>
 
@@ -1453,6 +1444,27 @@
     </section>
   </main>
 
+  <!-- ★ クイックリンク編集モーダル -->
+  <div class="modal-overlay" id="quick-link-modal">
+    <div class="modal-content" style="max-width: 550px;">
+      <div class="card-title" style="color: var(--primary-color);">
+        <span><i class="fa-solid fa-link"></i> クイックリンクの編集</span>
+        <button onclick="closeQuickLinkModal()" style="border:none; background:none; cursor:pointer; font-size:1rem;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p style="font-size:0.75rem; color:var(--text-sub);">
+        表示名、URL、アイコン（FontAwesome形式）を直接編集・削除が可能です。
+      </p>
+      <div id="quick-link-edit-list" style="max-height: 350px; overflow-y: auto;"></div>
+      <div style="display: flex; gap: 8px; justify-content: space-between; margin-top: 8px;">
+        <button class="btn-submit" style="background:#3498db; padding:6px 12px; font-size: 0.78rem;" onclick="addQuickLinkEditRow()"><i class="fa-solid fa-plus"></i> 新規リンク追加</button>
+        <div style="display: flex; gap: 6px;">
+          <button class="btn-submit" style="background:#95a5a6; padding:6px 12px; font-size: 0.78rem;" onclick="closeQuickLinkModal()">キャンセル</button>
+          <button class="btn-submit" style="background:#27ae60; padding:6px 12px; font-size: 0.78rem;" onclick="saveQuickLinks()">保存する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="import-modal">
     <div class="modal-content">
       <div class="card-title" style="color: var(--primary-color);">
@@ -1559,6 +1571,19 @@
       bank_resona: { name: '③ その他銀行 ※非公開※', category: '銀行預金', assetDivision: 'メガバンク', current: 486139, cumulativeInvestment: 500000, issueNote: '', history: [{date: '2026-06-01', amount: 500000, investment: 0, reasonType: '入金', note: '6月'}, {date: '2026-08-01', amount: 486139, investment: 0, reasonType: '出金', note: '8月'}] }
     };
 
+    // ★ デフォルトのクイックリンク初期値
+    const defaultQuickLinks = [
+      { name: 'スプレッド', url: 'https://docs.google.com/spreadsheets/d/16beSSLQCky1mkj6KTQSF5u3cnECOUWyU/edit?gid=891923447#gid=891923447', icon: 'fa-solid fa-table', color: '#0f9d58' },
+      { name: 'メルカリ', url: 'https://tsurumijang-beep.github.io/merukari/', icon: 'fa-solid fa-store', color: '#ea4335' },
+      { name: 'ブロガー', url: 'https://draft.blogger.com/blog/posts/1097250025428793297', icon: 'fa-bold', color: '#ff5722' },
+      { name: 'NOTE', url: 'https://note.com/jazzy_rabbit3813', icon: 'fa-solid fa-book-open', color: '#2cb696' },
+      { name: 'X', url: 'https://x.com/all_tsumitate', icon: 'fa-brands fa-x-twitter', color: '#000000' },
+      { name: 'Threads', url: 'https://www.threads.com/@tsurumijang', icon: 'fa-brands fa-threads', color: '#000000' },
+      { name: 'MOOMOO', url: 'https://www.moomoo.com/ja/community/profile/%E5%89%AF%E6%A5%AD%E3%83%A1%E3%82%A4%E3%83%B3%E5%90%9B-181356335?chain_id=y3RRJAqyy9SO-H.1l695lp&global_content=%7B%22promote_id%22%3A%2213126%22,%22sub_promote_id%22%3A%2213%22,%22invite%22%3A%22181356335%22,%22promote_content%22%3A%22mm%3Afeed%3A116926540611590%22,%22f%22%3A%22mm%2Fja%2Fcommunity%2Ffeed%2Fthis-month-s-investment-plan-27-000-this-month-s-116926540611590%22%7D', icon: 'fa-solid fa-chart-line', color: '#3a7bd5', fullWidth: true }
+    ];
+
+    let quickLinksData = [];
+
     let appData = {};
     let activeItemKey = null;
     let isBankPrivate = true;
@@ -1593,6 +1618,87 @@
       const char = (name || '').charAt(0);
       return circleNums[char] !== undefined ? circleNums[char] : 999;
     }
+
+    /* ★ クイックリンク描画＆モーダル関連関数 */
+    function renderSidebarQuickLinks() {
+      const container = document.getElementById('sidebar-quick-links-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      quickLinksData.forEach(link => {
+        const a = document.createElement('a');
+        a.href = link.url;
+        a.target = '_blank';
+        a.className = 'quick-link-btn';
+        if (link.fullWidth) a.style.gridColumn = 'span 2';
+        a.title = link.name;
+        a.innerHTML = `<i class="${link.icon || 'fa-solid fa-link'}" style="color: ${link.color || '#3a7bd5'};"></i><span>${link.name}</span>`;
+        container.appendChild(a);
+      });
+    }
+
+    window.openQuickLinkModal = function() {
+      const listEl = document.getElementById('quick-link-edit-list');
+      listEl.innerHTML = '';
+
+      quickLinksData.forEach((link, idx) => {
+        const row = document.createElement('div');
+        row.className = 'quick-link-edit-row';
+        row.innerHTML = `
+          <input type="text" value="${link.name}" placeholder="表示名" style="width: 25%;">
+          <input type="text" value="${link.url}" placeholder="URL" style="width: 45%;">
+          <input type="text" value="${link.icon || ''}" placeholder="Icon CSS" style="width: 20%;">
+          <button onclick="removeQuickLinkEditRow(this)" style="border:none; background:#ef4444; color:#fff; border-radius:4px; padding:3px 6px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+        `;
+        listEl.appendChild(row);
+      });
+
+      document.getElementById('quick-link-modal').classList.add('active');
+    };
+
+    window.closeQuickLinkModal = function() {
+      document.getElementById('quick-link-modal').classList.remove('active');
+    };
+
+    window.addQuickLinkEditRow = function() {
+      const listEl = document.getElementById('quick-link-edit-list');
+      const row = document.createElement('div');
+      row.className = 'quick-link-edit-row';
+      row.innerHTML = `
+        <input type="text" value="" placeholder="表示名" style="width: 25%;">
+        <input type="text" value="" placeholder="URL" style="width: 45%;">
+        <input type="text" value="fa-solid fa-link" placeholder="Icon CSS" style="width: 20%;">
+        <button onclick="removeQuickLinkEditRow(this)" style="border:none; background:#ef4444; color:#fff; border-radius:4px; padding:3px 6px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+      `;
+      listEl.appendChild(row);
+    };
+
+    window.removeQuickLinkEditRow = function(btn) {
+      btn.closest('.quick-link-edit-row').remove();
+    };
+
+    window.saveQuickLinks = function() {
+      const rows = document.querySelectorAll('#quick-link-edit-list .quick-link-edit-row');
+      const newLinks = [];
+
+      rows.forEach((row, idx) => {
+        const inputs = row.querySelectorAll('input');
+        const name = inputs[0].value.trim();
+        const url = inputs[1].value.trim();
+        const icon = inputs[2].value.trim() || 'fa-solid fa-link';
+
+        if (name && url) {
+          const oldColor = quickLinksData[idx]?.color || '#3a7bd5';
+          newLinks.push({ name, url, icon, color: oldColor });
+        }
+      });
+
+      quickLinksData = newLinks;
+      localStorage.setItem('custom_quick_links_data', JSON.stringify(quickLinksData));
+      renderSidebarQuickLinks();
+      closeQuickLinkModal();
+      showToast('クイックリンクを更新しました！');
+    };
 
     function sortKeysByMenuOrder(keys) {
       const categoryOrder = ['積立投資', '副業状況', '銀行預金'];
@@ -1786,6 +1892,11 @@
     window.addEventListener('DOMContentLoaded', async () => {
       updateHeaderClock();
       setInterval(updateHeaderClock, 1000);
+
+      // クイックリンクの読み込み
+      const savedLinks = localStorage.getItem('custom_quick_links_data');
+      quickLinksData = savedLinks ? JSON.parse(savedLinks) : JSON.parse(JSON.stringify(defaultQuickLinks));
+      renderSidebarQuickLinks();
 
       try {
         const docRef = doc(db, "assets", "mainData");
