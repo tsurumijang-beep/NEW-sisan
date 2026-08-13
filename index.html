@@ -1096,21 +1096,21 @@
     <!-- 3.積立投資、4.副業状況、5.銀行預金 (サイズ・デザインを統一し、パステルベージュ色へ変更) -->
     <div class="nav-group" style="margin-top: 6px;">
       <div class="nav-section-header">
-        <span>3. 積立投資</span>
+        <span>積立投資</span>
         <i class="fa-solid fa-plus" style="cursor:pointer;" onclick="openAddItemModal('積立投資')"></i>
       </div>
       <ul class="sub-menu" id="menu-group-積立投資"></ul>
     </div>
     <div class="nav-group">
       <div class="nav-section-header">
-        <span>4. 副業状況</span>
+        <span>副業状況</span>
         <i class="fa-solid fa-plus" style="cursor:pointer;" onclick="openAddItemModal('副業状況')"></i>
       </div>
       <ul class="sub-menu" id="menu-group-副業状況"></ul>
     </div>
     <div class="nav-group">
       <div class="nav-section-header">
-        <span>5. 銀行預金</span>
+        <span>銀行預金</span>
         <i class="fa-solid fa-plus" style="cursor:pointer;" onclick="openAddItemModal('銀行預金')"></i>
       </div>
       <ul class="sub-menu" id="menu-group-銀行預金"></ul>
@@ -1158,14 +1158,14 @@
         <div class="dashboard-column">
           <div class="card" style="max-height: fit-content; flex-shrink: 0;">
             <div class="card-title">
-              <span>1. 全資産 (サマリー)</span>
+              <span>全資産 (サマリー)</span>
               <button onclick="toggleSummaryMask()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; border:1px solid #cbd5e1; background:#f8fafc; border-radius:4px; font-weight:bold; color:var(--text-sub);">非公開切替</button>
             </div>
             <div class="asset-list-mini" id="dashboard-asset-list"></div>
           </div>
           <div class="card" style="flex: 1; min-height: 250px;">
             <div class="card-title">
-              <span>2. 全投資資産の推移</span>
+              <span>全投資資産の推移</span>
               <div id="trend-filter-container" style="width: 140px;"></div>
             </div>
             <div class="chart-box" style="height: 100%; min-height: 180px;"><canvas id="trendChart"></canvas></div>
@@ -1185,7 +1185,7 @@
         <div class="dashboard-column" style="grid-row: span 1; height: 100%;">
           <div class="card" style="flex: 1; min-height: 0;">
             <div class="card-title">
-              <span>3. 積立投資</span>
+              <span>積立投資</span>
               <div id="tsumitate-filter-container" style="width: 140px;"></div>
             </div>
             <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
@@ -1196,13 +1196,13 @@
 
         <div class="dashboard-column">
           <div class="card">
-            <div class="card-title">4. 副業状況 (月別集計)</div>
+            <div class="card-title">副業状況 (月別集計)</div>
             <div class="grid-2col" id="dashboard-sidejob-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2px;"></div>
             <div class="chart-box" style="height: 196px;"><canvas id="sideJobBarChart"></canvas></div>
           </div>
           <div class="card">
             <div class="card-title">
-              5. 銀行預金
+              銀行預金
               <button onclick="toggleBankMask()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer;">非公開切替</button>
             </div>
             <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
@@ -1211,7 +1211,7 @@
           <!-- Firebase リアルタイム同期メモカード -->
           <div class="memo-card">
             <div class="card-title" style="color: #854d0e; border-bottom-color: rgba(217, 119, 6, 0.2);">
-              <span><i class="fa-solid fa-note-sticky" style="color: #d97706; margin-right: 4px;"></i> 6. メモ</span>
+              <span><i class="fa-solid fa-note-sticky" style="color: #d97706; margin-right: 4px;"></i>メモ</span>
               <div style="display: flex; gap: 4px;">
                 <button onclick="saveDashboardMemo()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; background:#f59e0b; color:#fff; border:none; border-radius:4px; font-weight:bold;">保存</button>
                 <button onclick="clearDashboardMemo()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; background:#ef4444; color:#fff; border:none; border-radius:4px; font-weight:bold;">削除</button>
