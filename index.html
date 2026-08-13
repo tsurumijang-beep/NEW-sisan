@@ -72,6 +72,15 @@
       margin-bottom: 6px;
     }
 
+    .nav-title {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      padding-left: 4px;
+    }
+
     /* ダッシュボード（パステルベージュ） */
     .nav-item.dashboard-item {
       padding: 7px 10px;
@@ -99,7 +108,7 @@
       border: none;
     }
 
-    /* 主要メニュー項目（薄い青色系、サイズ統一） */
+    /* メニュー項目（薄い青色系、サイズ統一） */
     .nav-item {
       padding: 7px 10px;
       margin-bottom: 3px;
@@ -128,7 +137,6 @@
       border: none;
     }
 
-    /* ★ 3, 4, 5のカテゴリ見出しを「全資産」等と同じnav-itemサイズ・デザインに変更 */
     .nav-section-header {
       padding: 7px 10px;
       margin-bottom: 3px;
@@ -151,7 +159,6 @@
       margin-top: 1px;
     }
 
-    /* サブメニュー項目 */
     .sub-item {
       padding: 4px 6px;
       font-size: 0.72rem;
@@ -183,7 +190,6 @@
       border-color: var(--primary-color);
     }
 
-    /* クイックリンク集スタイル (薄い青色系でサイズ統一) */
     .quick-links-group {
       margin-top: 8px;
       padding-top: 6px;
@@ -966,20 +972,28 @@
         height: auto;
         overflow-y: auto;
       }
-      .sidebar {
-        width: 100%;
-        max-height: 125px;
-        flex-shrink: 0;
-      }
+      
       .main-content {
+        order: 1;
         height: auto;
         overflow-y: visible;
-        padding: 4px 4px;
+        padding: 6px;
       }
+
+      .sidebar {
+        order: 2;
+        width: 100%;
+        max-height: none;
+        flex-shrink: 0;
+        margin-top: 12px;
+        border-right: none;
+        border-top: var(--panel-border);
+      }
+
       .header {
         flex-direction: column;
         gap: 6px;
-        padding: 10px 10px;
+        padding: 10px;
         text-align: center;
       }
       .header-title {
@@ -1044,6 +1058,13 @@
         width: 100%;
         justify-content: center;
       }
+
+      .memo-card {
+        min-height: 240px !important;
+      }
+      .memo-textarea {
+        min-height: 160px !important;
+      }
     }
   </style>
 </head>
@@ -1056,46 +1077,46 @@
       <span>資産管理システム</span>
     </div>
 
-    <!-- ダッシュボード (薄い青色系) -->
+    <!-- ダッシュボード (パステルベージュ色) -->
     <div class="nav-item dashboard-item active" id="menu-dashboard" onclick="switchNav('dashboard')">
       <span><i class="fa-solid fa-gauge-high"></i> ダッシュボード</span>
     </div>
 
-    <!-- 全資産、楽天証券株一覧、個別積立管理 (薄い青色系) -->
+    <!-- 1.全資産、楽天証券一覧、◆個別積立管理★ (薄い青色系) -->
     <div class="nav-item" id="menu-all-assets" onclick="switchNav('all-assets')">
-      <span><i class="fa-solid fa-chart-pie"></i> 全資産</span>
+      <span><i class="fa-solid fa-chart-pie"></i> 1.全資産</span>
     </div>
     <div class="nav-item" id="menu-rakuten-nisa-status" onclick="switchNav('rakuten-nisa-status')">
-      <span><i class="fa-solid fa-chart-line"></i> 楽天証券株一覧</span>
+      <span><i class="fa-solid fa-chart-line"></i> 楽天証券一覧</span>
     </div>
     <div class="nav-item" id="menu-realtime-tsumitate" onclick="window.open('https://tsurumijang-beep.github.io/DCA-Auto-Asset-Tracker/', '_blank')">
-      <span><i class="fa-solid fa-bolt"></i> 個別積立管理</span>
+      <span><i class="fa-solid fa-bolt"></i> ◆個別積立管理★</span>
     </div>
 
-    <!-- ★ 積立投資、副業状況、銀行預金のサイズ・デザインを統一拡大 -->
+    <!-- 3.積立投資、4.副業状況、5.銀行預金 (サイズ・デザインを統一し、パステルベージュ色へ変更) -->
     <div class="nav-group" style="margin-top: 6px;">
       <div class="nav-section-header">
-        <span>積立投資</span>
+        <span>3. 積立投資</span>
         <i class="fa-solid fa-plus" style="cursor:pointer;" onclick="openAddItemModal('積立投資')"></i>
       </div>
       <ul class="sub-menu" id="menu-group-積立投資"></ul>
     </div>
     <div class="nav-group">
       <div class="nav-section-header">
-        <span>副業状況</span>
+        <span>4. 副業状況</span>
         <i class="fa-solid fa-plus" style="cursor:pointer;" onclick="openAddItemModal('副業状況')"></i>
       </div>
       <ul class="sub-menu" id="menu-group-副業状況"></ul>
     </div>
     <div class="nav-group">
       <div class="nav-section-header">
-        <span>銀行預金</span>
+        <span>5. 銀行預金</span>
         <i class="fa-solid fa-plus" style="cursor:pointer;" onclick="openAddItemModal('銀行預金')"></i>
       </div>
       <ul class="sub-menu" id="menu-group-銀行預金"></ul>
     </div>
 
-    <!-- ★ ■クィックリンク■ (サイズ・デザインを統一拡大) -->
+    <!-- ■クィックリンク■ (サイズ・デザインを統一し、パステルベージュ色へ変更) -->
     <div class="quick-links-group">
       <div class="nav-section-header" onclick="openQuickLinkModal()" style="cursor: pointer;" title="クリックしてリンクを編集">
         <span>■クィックリンク■</span>
@@ -1137,14 +1158,14 @@
         <div class="dashboard-column">
           <div class="card" style="max-height: fit-content; flex-shrink: 0;">
             <div class="card-title">
-              <span>全資産 (サマリー)</span>
+              <span>1. 全資産 (サマリー)</span>
               <button onclick="toggleSummaryMask()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; border:1px solid #cbd5e1; background:#f8fafc; border-radius:4px; font-weight:bold; color:var(--text-sub);">非公開切替</button>
             </div>
             <div class="asset-list-mini" id="dashboard-asset-list"></div>
           </div>
           <div class="card" style="flex: 1; min-height: 250px;">
             <div class="card-title">
-              <span>全投資資産の推移</span>
+              <span>2. 全投資資産の推移</span>
               <div id="trend-filter-container" style="width: 140px;"></div>
             </div>
             <div class="chart-box" style="height: 100%; min-height: 180px;"><canvas id="trendChart"></canvas></div>
@@ -1164,7 +1185,7 @@
         <div class="dashboard-column" style="grid-row: span 1; height: 100%;">
           <div class="card" style="flex: 1; min-height: 0;">
             <div class="card-title">
-              <span>積立投資</span>
+              <span>3. 積立投資</span>
               <div id="tsumitate-filter-container" style="width: 140px;"></div>
             </div>
             <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
@@ -1175,13 +1196,13 @@
 
         <div class="dashboard-column">
           <div class="card">
-            <div class="card-title">副業状況 (月別集計)</div>
+            <div class="card-title">4. 副業状況 (月別集計)</div>
             <div class="grid-2col" id="dashboard-sidejob-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2px;"></div>
             <div class="chart-box" style="height: 196px;"><canvas id="sideJobBarChart"></canvas></div>
           </div>
           <div class="card">
             <div class="card-title">
-              銀行預金
+              5. 銀行預金
               <button onclick="toggleBankMask()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer;">非公開切替</button>
             </div>
             <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
@@ -1190,7 +1211,7 @@
           <!-- Firebase リアルタイム同期メモカード -->
           <div class="memo-card">
             <div class="card-title" style="color: #854d0e; border-bottom-color: rgba(217, 119, 6, 0.2);">
-              <span><i class="fa-solid fa-note-sticky" style="color: #d97706; margin-right: 4px;"></i>メモ</span>
+              <span><i class="fa-solid fa-note-sticky" style="color: #d97706; margin-right: 4px;"></i> 6. メモ</span>
               <div style="display: flex; gap: 4px;">
                 <button onclick="saveDashboardMemo()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; background:#f59e0b; color:#fff; border:none; border-radius:4px; font-weight:bold;">保存</button>
                 <button onclick="clearDashboardMemo()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; background:#ef4444; color:#fff; border:none; border-radius:4px; font-weight:bold;">削除</button>
@@ -1202,11 +1223,11 @@
       </div>
     </section>
 
-    <!-- 2. 「全資産」詳細比較ビュー -->
+    <!-- 2. 「1. 全資産」詳細比較ビュー -->
     <section id="view-all-assets" class="view-section">
       <div class="detail-container">
         <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
-          <span><i class="fa-solid fa-chart-pie"></i> 全資産 (前回比較一覧)</span>
+          <span><i class="fa-solid fa-chart-pie"></i> 1.全資産 (前回比較一覧)</span>
         </div>
         <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">設定された「区分」と項目名ごとに前回比較および損益額を一覧表示しています。</p>
         <div class="export-buttons">
@@ -1232,11 +1253,11 @@
       </div>
     </section>
 
-    <!-- 3. 「楽天証券株一覧」専用 保有銘柄詳細ページ -->
+    <!-- 3. 「楽天証券一覧」専用 保有銘柄詳細ページ -->
     <section id="view-rakuten-nisa-status" class="view-section">
       <div class="detail-container" style="display: flex; flex-direction: column; gap: 16px;">
         <div class="card-title" style="font-size: 1.1rem; color: var(--primary-color); flex-wrap: wrap; gap: 8px;">
-          <span><i class="fa-solid fa-chart-line"></i> 楽天証券株一覧 (保有銘柄詳細)</span>
+          <span><i class="fa-solid fa-chart-line"></i> 楽天証券一覧 (保有銘柄詳細)</span>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
             <button class="btn-export" onclick="exportAllNisaToCSV()" style="font-size:0.7rem; padding:6px 12px; background:#3498db;"><i class="fa-solid fa-download"></i> CSV batch export</button>
             <button class="btn-export" onclick="openImportModal()" style="font-size:0.7rem; padding:6px 12px; background:var(--accent-orange);"><i class="fa-solid fa-file-import"></i> データ取り込み</button>
@@ -2424,12 +2445,12 @@
       } else if (targetView === 'all-assets') {
         document.getElementById('view-all-assets').classList.add('active');
         document.getElementById('menu-all-assets').classList.add('active');
-        document.getElementById('header-view-title').textContent = '全資産 (前回比較一覧)';
+        document.getElementById('header-view-title').textContent = '1.全資産 (前回比較一覧)';
         renderAllAssetsTable();
       } else if (targetView === 'rakuten-nisa-status') {
         document.getElementById('view-rakuten-nisa-status').classList.add('active');
         document.getElementById('menu-rakuten-nisa-status').classList.add('active');
-        document.getElementById('header-view-title').textContent = '楽天証券株一覧 (保有銘柄詳細)';
+        document.getElementById('header-view-title').textContent = '楽天証券一覧 (保有銘柄詳細)';
         renderNisaTables();
       }
     };
