@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>資産管理システム - Firebase連携版</title>
+  <title>資産管理システム - Firebase Auth & Data</title>
   
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,16 +20,15 @@
       --primary-dark: #295bb1;
       --accent-green: #16a34a;
       --accent-red: #dc2626;
-      --accent-orange: #e67e22;
       --text-main: #1e293b;
       --text-sub: #475569;
       --border-color: #cbd5e1;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; }
     body { background: var(--bg-gradient); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-    /* --- 로그인 레이어 스타일 --- */
+    /* --- 🔑 로그인 레이어 스타일 --- */
     #login-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -49,111 +48,37 @@
       text-align: center;
       position: relative;
     }
-    .lang-selector-container {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-    }
-    .lang-select {
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      font-size: 0.75rem;
-      font-weight: bold;
-      color: var(--text-sub);
-      background: #f8fafc;
-      outline: none;
-      cursor: pointer;
-    }
-    .login-title {
-      font-size: 1.3rem;
-      font-weight: bold;
-      color: var(--primary-dark);
-      margin-top: 10px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
+    .lang-selector-container { position: absolute; top: 15px; right: 15px; }
+    .lang-select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.75rem; font-weight: bold; color: var(--text-sub); background: #f8fafc; outline: none; cursor: pointer; }
+    .login-title { font-size: 1.3rem; font-weight: bold; color: var(--primary-dark); margin-top: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .login-form-group { margin-bottom: 15px; text-align: left; }
     .login-form-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--text-sub); }
     .login-form-group input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.9rem; outline: none; }
-    .login-btn {
-      width: 100%; padding: 12px; border: none; border-radius: 8px;
-      background: linear-gradient(145deg, var(--primary-color), var(--primary-dark));
-      color: white; font-size: 0.95rem; font-weight: bold; cursor: pointer; margin-top: 10px;
-      box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3);
-    }
-    .google-login-btn {
-      width: 100%; padding: 11px; border: 1px solid #dadce0; border-radius: 8px;
-      background: #ffffff; color: #3c4043; font-size: 0.9rem; font-weight: bold; cursor: pointer; margin-top: 10px;
-      display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
+    .login-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(145deg, var(--primary-color), var(--primary-dark)); color: white; font-size: 0.95rem; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3); }
+    .google-login-btn { width: 100%; padding: 11px; border: 1px solid #dadce0; border-radius: 8px; background: #ffffff; color: #3c4043; font-size: 0.9rem; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
     .google-login-btn:hover { background-color: #f8fafc; }
     .divider { display: flex; align-items: center; margin: 15px 0; color: var(--text-sub); font-size: 0.75rem; }
     .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--border-color); }
     .divider span { padding: 0 10px; }
     .login-error { color: var(--accent-red); font-size: 0.8rem; margin-top: 10px; display: none; }
 
-    /* --- 기존 메인 레이아웃 스타일 --- */
-    .sidebar {
-      width: 230px; background: rgba(230, 238, 250, 0.95); backdrop-filter: blur(12px); border-right: var(--panel-border);
-      padding: 10px 6px; display: flex; flex-direction: column; box-shadow: 6px 0 15px rgba(0,0,0,0.06); overflow-y: auto; user-select: none; flex-shrink: 0;
-    }
-    .sidebar-header { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 10px; padding-left: 4px; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
-    .nav-group { margin-bottom: 6px; }
-    .nav-item.dashboard-item {
-      padding: 7px 10px; margin-bottom: 3px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.82rem; color: var(--text-main);
-      display: flex; align-items: center; justify-content: space-between; box-shadow: 2px 2px 5px #e3dbd0, -2px -2px 5px #ffffff; background: linear-gradient(145deg, #fdfbf7, #f2eee3); border: 1px solid rgba(255, 255, 255, 0.8);
-    }
-    .nav-item.dashboard-item.active, .nav-item.active { background: linear-gradient(145deg, var(--primary-color), var(--primary-dark)); color: #fff; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); border: none; }
-    .nav-item {
-      padding: 7px 10px; margin-bottom: 3px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.82rem; color: var(--text-main);
-      display: flex; align-items: center; justify-content: space-between; box-shadow: 2px 2px 4px #c5d0e0, -2px -2px 4px #ffffff; background: linear-gradient(145deg, #ffffff, #e6ebf5); border: 1px solid rgba(255, 255, 255, 0.8);
-    }
-    .nav-section-header {
-      padding: 7px 10px; margin-bottom: 3px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; color: var(--text-main);
-      display: flex; align-items: center; justify-content: space-between; box-shadow: 2px 2px 4px #c5d0e0, -2px -2px 4px #ffffff; background: linear-gradient(145deg, #ffffff, #e6ebf5); border: 1px solid rgba(255, 255, 255, 0.8); cursor: default;
-    }
-    .sub-menu { list-style: none; padding-left: 6px; margin-top: 1px; }
-    .sub-item {
-      padding: 4px 6px; font-size: 0.72rem; color: var(--text-main); font-weight: 700; cursor: pointer; border-radius: 6px; margin-bottom: 1px;
-      display: flex; align-items: center; justify-content: space-between; background: linear-gradient(145deg, #ffffff, #f0f5ff); box-shadow: 1px 1px 3px #d1d9e6, -1px -1px 3px #ffffff; border: 1px solid rgba(255,255,255,0.6);
-    }
-    .quick-links-group { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 3px; }
-    .quick-links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-    .quick-link-btn {
-      display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 6px; background: linear-gradient(145deg, #ffffff, #e6ebf5);
-      color: var(--text-main); text-decoration: none; font-size: 0.82rem; font-weight: 700; box-shadow: 1px 1px 3px #c5d0e0, -1px -1px 3px #ffffff; border: 1px solid rgba(255, 255, 255, 0.8);
-    }
-
+    /* --- 📊 메인 시스템 화면 레이아웃 --- */
+    .sidebar { width: 230px; background: rgba(230, 238, 250, 0.95); backdrop-filter: blur(12px); border-right: var(--panel-border); padding: 10px 6px; display: flex; flex-direction: column; box-shadow: 6px 0 15px rgba(0,0,0,0.06); overflow-y: auto; user-select: none; flex-shrink: 0; }
+    .sidebar-header { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 10px; padding-left: 4px; }
+    .nav-item { padding: 7px 10px; margin-bottom: 3px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.82rem; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(145deg, #ffffff, #e6ebf5); border: 1px solid rgba(255, 255, 255, 0.8); }
+    .nav-item.active { background: linear-gradient(145deg, var(--primary-color), var(--primary-dark)); color: #fff; }
     .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 8px 12px; }
     .header { display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); padding: 12px 20px; border-radius: 12px; box-shadow: var(--panel-shadow); border: var(--panel-border); margin-bottom: 8px; }
-    .header-title { font-size: 1.15rem; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-    .header-stats { display: flex; gap: 10px; font-size: 0.95rem; font-weight: bold; align-items: center; }
-    .stat-badge { background: rgba(255, 255, 255, 0.95); padding: 6px 14px; border-radius: 16px; box-shadow: inset 2px 2px 5px #b8c4d9, inset -2px -2px 5px #ffffff; display: flex; align-items: center; gap: 8px; }
-    .clock-badge { color: var(--primary-dark); font-size: 0.95rem; font-weight: 800; }
-    .diff-badge { font-size: 0.7rem; padding: 1px 4px; border-radius: 4px; font-weight: bold; }
-    .diff-badge.plus { background: #e8f8f0; color: var(--accent-green); }
-    .diff-badge.minus { background: #fdeaea; color: var(--accent-red); }
-    .diff-badge.zero { background: #f0f3f8; color: var(--text-sub); }
-
-    .view-section { display: none; width: 100%; height: calc(100vh - 76px); overflow: hidden; }
-    .view-section.active { display: flex; flex-direction: column; }
-    .dashboard-grid { display: grid; grid-template-columns: 1.3fr 1.3fr 1fr; gap: 8px; height: 100%; padding-bottom: 4px; }
-    .dashboard-column { display: flex; flex-direction: column; gap: 6px; height: 100%; overflow-y: auto; }
-    .card { background: var(--panel-bg); border-radius: 10px; padding: 8px 10px; box-shadow: var(--panel-shadow); border: var(--panel-border); display: flex; flex-direction: column; overflow: hidden; }
-    .card-title { font-size: 0.82rem; font-weight: bold; margin-bottom: 4px; color: var(--text-main); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 2px; display: flex; justify-content: space-between; align-items: center; }
+    .logout-btn { padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; font-size: 0.75rem; font-weight: bold; color: var(--accent-red); }
     
-    .memo-card { background: linear-gradient(145deg, #fffdfa, #fef3c7); border-radius: 10px; padding: 8px 10px; box-shadow: var(--panel-shadow); border: 1px solid #fde68a; display: flex; flex-direction: column; flex: 1; min-height: 120px; }
-    .memo-textarea { width: 100%; flex: 1; border: 1px solid #fcd34d; border-radius: 6px; padding: 6px 8px; font-size: 0.75rem; background: rgba(255, 255, 255, 0.85); resize: none; outline: none; margin-top: 4px; }
-    .logout-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; font-size: 0.75rem; font-weight: bold; color: var(--accent-red); }
+    .card { background: var(--panel-bg); border-radius: 10px; padding: 12px; box-shadow: var(--panel-shadow); border: var(--panel-border); margin-bottom: 10px; }
+    .card-title { font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--primary-dark); }
+    .asset-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7; font-size: 0.85rem; }
   </style>
 </head>
 <body>
 
-  <!-- 🔑 로그인 레이어 (성공 시 차단) -->
+  <!-- 🔑 로그인 레이어 -->
   <div id="login-overlay">
     <div class="login-box">
       <div class="lang-selector-container">
@@ -169,17 +94,13 @@
         <span data-i18n="app_title">資産管理システム</span>
       </div>
 
-      <!-- Google 로그인 버튼 -->
       <button type="button" class="google-login-btn" id="btn-google-login">
         <i class="fa-brands fa-google" style="color: #4285F4; font-size: 1.1rem;"></i>
         <span data-i18n="btn_google_login">Googleでログイン</span>
       </button>
 
-      <div class="divider">
-        <span data-i18n="text_or">または</span>
-      </div>
+      <div class="divider"><span data-i18n="text_or">または</span></div>
 
-      <!-- 이메일 로그인 폼 -->
       <form id="login-form">
         <div class="login-form-group">
           <label data-i18n="label_email">メールアドレス</label>
@@ -195,90 +116,44 @@
     </div>
   </div>
 
-  <!-- 📊 메인 시스템 (로그인 성공 후 정상 출력) -->
+  <!-- 📊 메인 시스템 화면 (로그인 시 데이터 표시) -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <i class="fa-solid fa-wallet"></i>
       <span data-i18n="app_title">資産管理システム</span>
     </div>
-
-    <div class="nav-item dashboard-item active" id="menu-dashboard" onclick="switchNav('dashboard')">
+    <div class="nav-item active">
       <span><i class="fa-solid fa-gauge-high"></i> <span data-i18n="nav_dashboard">ダッシュボード</span></span>
-    </div>
-
-    <div class="nav-item" id="menu-all-assets" onclick="switchNav('all-assets')">
-      <span><i class="fa-solid fa-chart-pie"></i> 全資産</span>
-    </div>
-    <div class="nav-item" id="menu-rakuten-nisa-status" onclick="switchNav('rakuten-nisa-status')">
-      <span><i class="fa-solid fa-chart-line"></i> 楽天証券一覧</span>
-    </div>
-    <div class="nav-item" id="menu-realtime-tsumitate" onclick="window.open('https://tsurumijang-beep.github.io/DCA-Auto-Asset-Tracker/', '_blank')">
-      <span><i class="fa-solid fa-bolt"></i> ◆個別積立管理★</span>
-    </div>
-
-    <div class="nav-group" style="margin-top: 6px;">
-      <div class="nav-section-header"><span>積立投資</span></div>
-      <ul class="sub-menu" id="menu-group-積立投資"></ul>
-    </div>
-    <div class="nav-group">
-      <div class="nav-section-header"><span>副業状況</span></div>
-      <ul class="sub-menu" id="menu-group-副業状況"></ul>
-    </div>
-    <div class="nav-group">
-      <div class="nav-section-header"><span>銀行預金</span></div>
-      <ul class="sub-menu" id="menu-group-銀行預金"></ul>
     </div>
   </aside>
 
   <main class="main-content">
     <header class="header">
-      <div class="header-title">
-        <i class="fa-solid fa-chart-simple" style="color: var(--primary-color);"></i>
-        <span id="header-view-title" data-i18n="header_dashboard">資産管理 Dashboard</span>
+      <div style="font-weight: bold; font-size: 1.1rem; color: var(--primary-dark);">
+        <i class="fa-solid fa-chart-simple"></i> <span data-i18n="header_dashboard">資産管理 Dashboard</span>
       </div>
-      <div class="header-stats">
-        <div class="stat-badge">
-          <i class="fa-regular fa-clock" style="color:var(--primary-color);"></i>
-          <strong id="header-clock" class="clock-badge">----年 --月 --日 (-) --:--:--</strong>
-        </div>
-        <div class="stat-badge">
-          <span style="color:var(--text-sub);">総資産:</span>
-          <strong id="header-total-assets">¥0</strong>
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center; margin-left: 10px;">
-          <span id="user-display-email" style="font-size:0.75rem; font-weight:bold; color:var(--text-sub);"></span>
-          <button class="logout-btn" onclick="handleLogout()" data-i18n="btn_logout">ログアウト</button>
-        </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span id="user-display-email" style="font-size:0.8rem; font-weight:bold; color:var(--text-sub);"></span>
+        <button class="logout-btn" onclick="handleLogout()" data-i18n="btn_logout">ログアウト</button>
       </div>
     </header>
 
-    <section id="view-dashboard" class="view-section active">
-      <div class="dashboard-grid">
-        <div class="dashboard-column">
-          <div class="card">
-            <div class="card-title"><span>全資産 (サマリー)</span></div>
-            <div class="asset-list-mini" id="dashboard-asset-list"></div>
-          </div>
-        </div>
-        <div class="dashboard-column">
-          <div class="card" style="flex: 1;">
-            <div class="card-title"><span>積立投資</span></div>
-            <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
-          </div>
-        </div>
-        <div class="dashboard-column">
-          <div class="memo-card">
-            <div class="card-title" style="color: #854d0e;">
-              <span><i class="fa-solid fa-note-sticky" style="color: #d97706; margin-right: 4px;"></i>メモ</span>
-              <button onclick="saveDashboardMemo()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; background:#f59e0b; color:#fff; border:none; border-radius:4px;">保存</button>
-            </div>
-            <textarea id="dashboard-memo-input" class="memo-textarea" placeholder="メモを入力してください..."></textarea>
-          </div>
+    <div style="overflow-y: auto; flex: 1;">
+      <div class="card">
+        <div class="card-title">💰 リアルタイム総資産 (실시간 총자산)</div>
+        <h2 id="display-total-assets" style="color: var(--primary-color);">¥0</h2>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 登録資産一覧 (기존 데이터 목록)</div>
+        <div id="asset-list-container">
+          <p style="color: var(--text-sub); font-size: 0.85rem;">データを読み込んでいます...</p>
         </div>
       </div>
-    </section>
+    </div>
   </main>
 
+  <!-- 다국어 대응 스크립트 -->
   <script>
     const translations = {
       ja: { app_title: "資産管理システム", btn_google_login: "Googleでログイン", text_or: "または", label_email: "メールアドレス", label_password: "パスワード", btn_login: "ログイン", error_login: "ログインに失敗しました。", nav_dashboard: "ダッシュボード", header_dashboard: "資産管理 Dashboard", btn_logout: "ログアウト" },
@@ -293,10 +168,11 @@
     }
   </script>
 
+  <!-- Firebase Auth & Firestore 연동 모듈 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyADKizjKvIsKTMiSS6cYnZQNIc3mlL80OM",
@@ -313,7 +189,7 @@
     const db = getFirestore(app);
     const googleProvider = new GoogleAuthProvider();
 
-    // 🔒 인증 상태 감지 및 Firestore 기존 데이터 불러오기
+    // 🔒 로그인 인증 상태 확인 및 데이터 불러오기
     onAuthStateChanged(auth, async (user) => {
       const loginOverlay = document.getElementById('login-overlay');
       const emailDisplay = document.getElementById('user-display-email');
@@ -321,28 +197,53 @@
       if (user) {
         loginOverlay.style.display = 'none';
         emailDisplay.textContent = user.displayName ? `${user.displayName}` : user.email;
-        await loadExistingData(); // 🔄 기존 자산 데이터 및 메모 로드
+        
+        // 🔄 로그인 성공 즉시 Firestore 데이터 가져오기
+        await fetchFirestoreData();
       } else {
         loginOverlay.style.display = 'flex';
       }
     });
 
-    // 📦 Firestore 데이터 복구 및 렌더링 함수
-    async function loadExistingData() {
+    // 📦 Firestore에서 데이터 읽어오는 핵심 함수
+    async function fetchFirestoreData() {
+      const listContainer = document.getElementById('asset-list-container');
+      const totalDisplay = document.getElementById('display-total-assets');
+      
       try {
         const docRef = doc(db, "assets", "mainData");
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
-          const appData = docSnap.data();
-          let totalAssets = 0;
-          for (let k in appData) { totalAssets += (appData[k].current || 0); }
-          document.getElementById('header-total-assets').textContent = `¥${totalAssets.toLocaleString()}`;
+          const data = docSnap.data();
+          let totalSum = 0;
+          let listHtml = '';
+
+          for (let key in data) {
+            const item = data[key];
+            const currentAmount = item.current || 0;
+            totalSum += currentAmount;
+
+            listHtml += `
+              <div class="asset-row">
+                <span><strong>${item.name || key}</strong> (${item.category || '未設定'})</span>
+                <span style="font-weight: bold; color: var(--primary-color);">¥${currentAmount.toLocaleString()}</span>
+              </div>
+            `;
+          }
+
+          totalDisplay.textContent = `¥${totalSum.toLocaleString()}`;
+          listContainer.innerHTML = listHtml || '<p>登録されたデータがありません。</p>';
+        } else {
+          listContainer.innerHTML = '<p>Firestoreにデータが存在しません。</p>';
         }
-      } catch (e) {
-        console.error("데이터 로드 오류:", e);
+      } catch (error) {
+        console.error("데이터 로드 실패:", error);
+        listContainer.innerHTML = '<p style="color:red;">データの読み込みに失敗しました。</p>';
       }
     }
 
+    // 로그인 및 로그아웃 버튼 이벤트
     document.getElementById('btn-google-login').addEventListener('click', () => signInWithPopup(auth, googleProvider));
     document.getElementById('login-form').addEventListener('submit', (e) => {
       e.preventDefault();
