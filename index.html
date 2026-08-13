@@ -128,7 +128,7 @@
       border: none;
     }
 
-    /* ★ 3, 4, 5のカテゴリ見出しを「1.全資産」等と同じnav-itemサイズ・デザインに変更 */
+    /* ★ 3, 4, 5のカテゴリ見出しを「全資産」等と同じnav-itemサイズ・デザインに変更 */
     .nav-section-header {
       padding: 7px 10px;
       margin-bottom: 3px;
@@ -1061,9 +1061,9 @@
       <span><i class="fa-solid fa-gauge-high"></i> ダッシュボード</span>
     </div>
 
-    <!-- 1.全資産、楽天証券株一覧、個別積立管理 (薄い青色系) -->
+    <!-- 全資産、楽天証券株一覧、個別積立管理 (薄い青色系) -->
     <div class="nav-item" id="menu-all-assets" onclick="switchNav('all-assets')">
-      <span><i class="fa-solid fa-chart-pie"></i> 1.全資産</span>
+      <span><i class="fa-solid fa-chart-pie"></i> 全資産</span>
     </div>
     <div class="nav-item" id="menu-rakuten-nisa-status" onclick="switchNav('rakuten-nisa-status')">
       <span><i class="fa-solid fa-chart-line"></i> 楽天証券株一覧</span>
@@ -1072,7 +1072,7 @@
       <span><i class="fa-solid fa-bolt"></i> 個別積立管理</span>
     </div>
 
-    <!-- ★ 3.積立投資、4.副業状況、5.銀行預金のサイズ・デザインを統一拡大 -->
+    <!-- ★ 積立投資、副業状況、銀行預金のサイズ・デザインを統一拡大 -->
     <div class="nav-group" style="margin-top: 6px;">
       <div class="nav-section-header">
         <span>積立投資</span>
@@ -1206,7 +1206,7 @@
     <section id="view-all-assets" class="view-section">
       <div class="detail-container">
         <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
-          <span><i class="fa-solid fa-chart-pie"></i> 1.全資産 (前回比較一覧)</span>
+          <span><i class="fa-solid fa-chart-pie"></i> 全資産 (前回比較一覧)</span>
         </div>
         <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">設定された「区分」と項目名ごとに前回比較および損益額を一覧表示しています。</p>
         <div class="export-buttons">
@@ -2424,7 +2424,7 @@
       } else if (targetView === 'all-assets') {
         document.getElementById('view-all-assets').classList.add('active');
         document.getElementById('menu-all-assets').classList.add('active');
-        document.getElementById('header-view-title').textContent = '1.全資産 (前回比較一覧)';
+        document.getElementById('header-view-title').textContent = '全資産 (前回比較一覧)';
         renderAllAssetsTable();
       } else if (targetView === 'rakuten-nisa-status') {
         document.getElementById('view-rakuten-nisa-status').classList.add('active');
