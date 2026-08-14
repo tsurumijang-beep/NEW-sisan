@@ -575,31 +575,33 @@
       border-color: #cbd5e1;
     }
 
+    /* 메모장 카드: 세로 길이 축소 (min-height 제거 및 패ڈنگ 조정) */
     .memo-card {
       background: linear-gradient(145deg, #fffdfa, #fef3c7);
       border-radius: 10px;
-      padding: 8px 10px;
+      padding: 6px 8px;
       box-shadow: var(--panel-shadow);
       border: 1px solid #fde68a;
       display: flex;
       flex-direction: column;
-      flex: 1;
-      min-height: 120px;
+      flex-shrink: 0;
     }
 
+    /* 메모장 텍스트 영역: 세로 크기 축소 (height 및 min-height 축소) */
     .memo-textarea {
       width: 100%;
-      flex: 1;
+      height: 55px;
+      min-height: 55px;
       border: 1px solid #fcd34d;
       border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 0.75rem;
-      line-height: 1.4;
+      padding: 4px 6px;
+      font-size: 0.72rem;
+      line-height: 1.3;
       background: rgba(255, 255, 255, 0.85);
       color: #451a03;
       resize: none;
       outline: none;
-      margin-top: 4px;
+      margin-top: 3px;
     }
 
     .memo-textarea:focus {
@@ -607,6 +609,31 @@
       border-color: #f59e0b;
       box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
     }
+
+    /* 백업(추출/삽입) 버튼 영역 스타일 */
+    .backup-buttons-container {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .btn-backup {
+      flex: 1;
+      padding: 6px 4px;
+      border: none;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: opacity 0.2s;
+    }
+    .btn-backup:hover { opacity: 0.9; }
 
     .private-mask {
       filter: blur(5px);
@@ -1139,10 +1166,11 @@
       }
 
       .memo-card {
-        min-height: 240px !important;
+        min-height: auto !important;
       }
       .memo-textarea {
-        min-height: 160px !important;
+        height: 50px !important;
+        min-height: 50px !important;
       }
     }
   </style>
@@ -1329,9 +1357,9 @@
             <div class="grid-2col" id="dashboard-bank-grid" style="grid-template-columns: 1fr;"></div>
           </div>
 
-          <!-- Firebase リアルタイム同期メモカード -->
+          <!-- Firebase リアルタイム同期メモカード (세로 길이 축소) -->
           <div class="memo-card">
-            <div class="card-title" style="color: #854d0e; border-bottom-color: rgba(217, 119, 6, 0.2);">
+            <div class="card-title" style="color: #854d0e; border-bottom-color: rgba(217, 119, 6, 0.2); margin-bottom: 2px;">
               <span><i class="fa-solid fa-note-sticky" style="color: #d97706; margin-right: 4px;"></i>メモ</span>
               <div style="display: flex; gap: 4px;">
                 <button onclick="saveDashboardMemo()" style="font-size:0.65rem; padding:2px 6px; cursor:pointer; background:#f59e0b; color:#fff; border:none; border-radius:4px; font-weight:bold;">保存</button>
@@ -1339,6 +1367,13 @@
               </div>
             </div>
             <textarea id="dashboard-memo-input" class="memo-textarea" placeholder="メモを入力してください..."></textarea>
+            
+            <!-- 메모장 바로 아래 추가된 데이터 백업(추출/삽입) 버튼 -->
+            <div class="backup-buttons-container">
+              <button class="btn-backup" onclick="exportData()" style="background-color: #718096;" title="모든 데이터를 JSON 파일로 백업"><i class="fa-solid fa-download"></i> データ抽出</button>
+              <button class="btn-backup" onclick="document.getElementById('fileInput').click()" style="background-color: #38a169;" title="JSON 파일로부터 데이터 복원"><i class="fa-solid fa-file-import"></i> データ挿入</button>
+              <input type="file" id="fileInput" style="display:none" onchange="importData(event)" accept=".json">
+            </div>
           </div>
         </div>
       </div>
@@ -1913,6 +1948,49 @@
         });
       }
     }
+
+    // 📥 데이터 백업(추출) 및 복원(삽입) 함수
+    window.exportData = function() {
+      const backupData = {
+        appData: appData,
+        nisaHoldingsOriginal: nisaHoldingsOriginal,
+        exportedAt: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_asset_system_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('데이터를 JSON 파일로 추출(백업)했습니다!');
+    };
+
+    window.importData = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (confirm("현재 데이터를 백업 파일 내용으로 덮어쓰고 복원하시겠습니까?")) {
+            if (imported.appData) appData = imported.appData;
+            if (imported.nisaHoldingsOriginal) {
+              nisaHoldingsOriginal = imported.nisaHoldingsOriginal;
+              nisaHoldings = JSON.parse(JSON.stringify(nisaHoldingsOriginal));
+            }
+            saveData();
+            showToast('데이터 복원이 완료되었습니다.');
+            setTimeout(() => location.reload(), 1000);
+          }
+        } catch (err) {
+          alert('파일 형식이 올바르지 않습니다.');
+        }
+      };
+      reader.readAsText(file);
+    };
 
     function renderSidebarQuickLinks() {
       const container = document.getElementById('sidebar-quick-links-container');
