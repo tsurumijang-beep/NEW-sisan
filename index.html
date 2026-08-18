@@ -1031,7 +1031,7 @@
       </div>
     </section>
 
-    <!-- 2. 「全資産」詳細比較ビュー (前日比項目・前日比増減額を追加) -->
+    <!-- 2. 「全資産」詳細比較ビュー -->
     <section id="view-all-assets" class="view-section">
       <div class="detail-container">
         <div class="card-title" style="font-size: 1rem; color: var(--primary-color);">
@@ -1048,9 +1048,9 @@
               <tr>
                 <th>区分</th>
                 <th>項目名</th>
-                <th id="th-cur-amount">今回金額</th>
-                <th id="th-prev-amount">前回金額</th>
-                <th>前回比 増減額 (%)</th>
+                <th id="th-cur-amount">最新金額</th>
+                <th id="th-prev-amount">先週金額</th>
+                <th>先週比 増減額 (%)</th>
                 <th id="th-daily-amount">前日比金額</th>
                 <th>前日比増減額(％)</th>
                 <th>累積投資額</th>
@@ -2273,7 +2273,6 @@
       return { diffVal, diffPct, prev, curDate, prevDate };
     }
 
-    // 🌟 前日比計算ロジック
     function calcDailyDiff(item, targetDailyDate = null) {
       if (!item.history || item.history.length === 0) {
         return { diffVal: 0, diffPct: 0, dailyAmt: item.current, dailyDate: '' };
@@ -2392,7 +2391,6 @@
       }
     };
 
-    // 🌟 全資産テーブルの描画関数 (更新版: 前日比・列順指定対応)
     function renderAllAssetsTable() {
       const tbody = document.getElementById('all-assets-table-body');
       tbody.innerHTML = '';
@@ -2410,7 +2408,6 @@
       let targetTargetDateStr = '';
       let targetDailyDateStr = '';
       if (maxCurDateStr) {
-        // 前回比較基準 (7日前)
         const maxD = new Date(maxCurDateStr);
         maxD.setDate(maxD.getDate() - 7);
         const yyyy = maxD.getFullYear();
@@ -2418,7 +2415,6 @@
         const dd = String(maxD.getDate()).padStart(2, '0');
         targetTargetDateStr = `${yyyy}-${mm}-${dd}`;
 
-        // 前日比基準 (1日前)
         const dailyD = new Date(maxCurDateStr);
         dailyD.setDate(dailyD.getDate() - 1);
         const d_yyyy = dailyD.getFullYear();
@@ -2433,9 +2429,7 @@
       sortedKeys.forEach(key => {
         const item = appData[key];
         
-        // 前回比較
         const { diffVal, diffPct, prev } = calcDiff(item, targetTargetDateStr);
-        // 前日比比較
         const { diffVal: dailyDiffVal, diffPct: dailyDiffPct, dailyAmt } = calcDailyDiff(item, targetDailyDateStr);
 
         const cumulativeInv = item.cumulativeInvestment || 0;
@@ -2460,7 +2454,6 @@
 
         const hideProfitPct = (item.category === '副業状況' || item.category === '銀行預金');
         
-        // 指定された順序: 区分、項目名、今回金額、前回金額、前回比 増減額、前日比金額、前日比増減額、累積投資額、損益額
         tr.innerHTML = `
           <td><span style="font-size:0.75rem; background:#e0e8f5; padding:3px 8px; border-radius:10px; font-weight:bold;">${division}</span></td>
           <td style="font-weight:600;">${item.name}</td>
@@ -2479,8 +2472,8 @@
       const prevDateLabel = targetTargetDateStr ? ` <span style="font-size:0.72rem; color:var(--text-sub); font-weight:normal;">${formatMMDD(targetTargetDateStr)}</span>` : '';
       const dailyDateLabel = targetDailyDateStr ? ` <span style="font-size:0.72rem; color:var(--text-sub); font-weight:normal;">${formatMMDD(targetDailyDateStr)}</span>` : '';
 
-      document.getElementById('th-cur-amount').innerHTML = `今回金額${curDateLabel}`;
-      document.getElementById('th-prev-amount').innerHTML = `前回金額${prevDateLabel}`;
+      document.getElementById('th-cur-amount').innerHTML = `最新金額${curDateLabel}`;
+      document.getElementById('th-prev-amount').innerHTML = `先週金額${prevDateLabel}`;
       document.getElementById('th-daily-amount').innerHTML = `前日比金額${dailyDateLabel}`;
 
       const sumPct = sumPrev !== 0 ? (sumDiff / sumPrev) * 100 : 0;
