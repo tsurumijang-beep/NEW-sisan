@@ -1051,7 +1051,7 @@
                 <th id="th-cur-amount">最新金額</th>
                 <th id="th-prev-amount">先週金額</th>
                 <th>先週比 増減額 (%)</th>
-                <th id="th-daily-amount">前日比金額</th>
+                <th id="th-daily-amount">前日金額</th>
                 <th>前日比増減額(％)</th>
                 <th>累積投資額</th>
                 <th>損益額 (%)</th>
@@ -2474,7 +2474,7 @@
 
       document.getElementById('th-cur-amount').innerHTML = `最新金額${curDateLabel}`;
       document.getElementById('th-prev-amount').innerHTML = `先週金額${prevDateLabel}`;
-      document.getElementById('th-daily-amount').innerHTML = `前日比金額${dailyDateLabel}`;
+      document.getElementById('th-daily-amount').innerHTML = `前日金額${dailyDateLabel}`;
 
       const sumPct = sumPrev !== 0 ? (sumDiff / sumPrev) * 100 : 0;
       const sumDailyPct = sumDailyAmt !== 0 ? (sumDailyDiff / sumDailyAmt) * 100 : 0;
