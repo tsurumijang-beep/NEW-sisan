@@ -41,7 +41,7 @@
       overflow: hidden;
     }
 
-    /* --- 🔑 ログイン レイヤースタイル --- */
+    /* --- 🔑 ログイン / 新規登録 レイヤースタイル --- */
     #login-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -96,18 +96,21 @@
       background: linear-gradient(145deg, var(--primary-color), var(--primary-dark));
       color: white; font-size: 0.95rem; font-weight: bold; cursor: pointer; margin-top: 10px;
       box-shadow: 0 4px 10px rgba(58, 123, 213, 0.3);
+      transition: all 0.2s ease;
     }
-    .google-login-btn {
-      width: 100%; padding: 11px; border: 1px solid #dadce0; border-radius: 8px;
-      background: #ffffff; color: #3c4043; font-size: 0.9rem; font-weight: bold; cursor: pointer; margin-top: 10px;
-      display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      transition: background-color 0.2s;
+    .login-btn:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
     }
-    .google-login-btn:hover { background-color: #f8fafc; }
-    .divider { display: flex; align-items: center; margin: 15px 0; color: var(--text-sub); font-size: 0.75rem; }
-    .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--border-color); }
-    .divider span { padding: 0 10px; }
-    .login-error { color: var(--accent-red); font-size: 0.8rem; margin-top: 10px; display: none; }
+    .auth-toggle-link {
+      margin-top: 15px;
+      font-size: 0.8rem;
+      color: var(--primary-dark);
+      cursor: pointer;
+      text-decoration: underline;
+      display: inline-block;
+    }
+    .login-error { color: var(--accent-red); font-size: 0.8rem; margin-top: 10px; display: none; line-height: 1.4; }
 
     /* --- サイドバー (左メニュー) --- */
     .sidebar {
@@ -838,7 +841,7 @@
 </head>
 <body>
 
-  <!-- 🔑 ログイン レイヤー -->
+  <!-- 🔑 ログイン / 新規登録 レイヤー -->
   <div id="login-overlay">
     <div class="login-box">
       <div class="lang-selector-container">
@@ -851,28 +854,25 @@
 
       <div class="login-title">
         <i class="fa-solid fa-wallet"></i>
-        <span data-i18n="app_title">資産管理システム</span>
+        <span id="auth-title-text" data-i18n="app_title">資産管理システム</span>
       </div>
 
-      <button type="button" class="google-login-btn" id="btn-google-login">
-        <i class="fa-brands fa-google" style="color: #4285F4; font-size: 1.1rem;"></i>
-        <span data-i18n="btn_google_login">Googleでログイン</span>
-      </button>
-
-      <div class="divider"><span data-i18n="text_or">または</span></div>
-
-      <form id="login-form">
+      <form id="auth-form">
         <div class="login-form-group">
           <label data-i18n="label_email">メールアドレス</label>
-          <input type="email" id="login-email" placeholder="example@email.com" required>
+          <input type="email" id="auth-email" placeholder="example@email.com" required autocomplete="email">
         </div>
         <div class="login-form-group">
           <label data-i18n="label_password">パスワード</label>
-          <input type="password" id="login-password" placeholder="••••••••" required>
+          <input type="password" id="auth-password" placeholder="•••••••• (6文字以上)" required minlength="6" autocomplete="current-password">
         </div>
-        <button type="submit" class="login-btn" data-i18n="btn_login">ログイン</button>
-        <div id="login-error" class="login-error" data-i18n="error_login">ログインに失敗しました。</div>
+        <button type="submit" class="login-btn" id="btn-auth-submit" data-i18n="btn_login">ログイン</button>
+        <div id="login-error" class="login-error"></div>
       </form>
+
+      <div>
+        <a class="auth-toggle-link" id="auth-toggle-btn" onclick="toggleAuthMode()">新規アカウント登録はこちら</a>
+      </div>
     </div>
   </div>
 
@@ -1400,23 +1400,68 @@
 
   <!-- 多言語辞書スクリプト -->
   <script>
+    let currentLang = 'ja';
     const translations = {
-      ja: { app_title: "資産管理システム", btn_google_login: "Googleでログイン", text_or: "または", label_email: "メールアドレス", label_password: "パスワード", btn_login: "ログイン", error_login: "ログインに失敗しました。", nav_dashboard: "ダッシュボード", header_dashboard: "資産管理 Dashboard", btn_logout: "ログアウト" },
-      ko: { app_title: "자산 관리 시스템", btn_google_login: "Google로 로그인", text_or: "또는", label_email: "이메일 주소", label_password: "비밀번호", btn_login: "로그인", error_login: "로그인 실패", nav_dashboard: "대시보드", header_dashboard: "자산 관리 대시보드", btn_logout: "로그아웃" },
-      en: { app_title: "Asset Management System", btn_google_login: "Sign in with Google", text_or: "OR", label_email: "Email Address", label_password: "Password", btn_login: "Log In", error_login: "Login Failed", nav_dashboard: "Dashboard", header_dashboard: "Asset Dashboard", btn_logout: "Log Out" }
+      ja: { 
+        app_title: "資産管理システム", 
+        label_email: "メールアドレス", 
+        label_password: "パスワード", 
+        btn_login: "ログイン", 
+        btn_register: "新規登録",
+        toggle_to_register: "新規アカウント登録はこちら",
+        toggle_to_login: "既にアカウントをお持ちの方はこちら (ログイン)",
+        error_login: "ログインに失敗しました。", 
+        error_register: "アカウント作成に失敗しました。",
+        nav_dashboard: "ダッシュボード", 
+        header_dashboard: "資産管理 Dashboard", 
+        btn_logout: "ログアウト" 
+      },
+      ko: { 
+        app_title: "자산 관리 시스템", 
+        label_email: "이메일 주소", 
+        label_password: "비밀번호", 
+        btn_login: "로그인", 
+        btn_register: "회원가입",
+        toggle_to_register: "계정이 없으신가요? 신규 회원가입",
+        toggle_to_login: "이미 계정이 있으신가요? 로그인하기",
+        error_login: "로그인에 실패했습니다.", 
+        error_register: "계정 생성에 실패했습니다.",
+        nav_dashboard: "대시보드", 
+        header_dashboard: "자산 관리 대시보드", 
+        btn_logout: "로그아웃" 
+      },
+      en: { 
+        app_title: "Asset Management System", 
+        label_email: "Email Address", 
+        label_password: "Password", 
+        btn_login: "Log In", 
+        btn_register: "Register",
+        toggle_to_register: "Need an account? Register here",
+        toggle_to_login: "Already have an account? Log In",
+        error_login: "Login Failed.", 
+        error_register: "Registration Failed.",
+        nav_dashboard: "Dashboard", 
+        header_dashboard: "Asset Dashboard", 
+        btn_logout: "Log Out" 
+      }
     };
+
     function changeLanguage(lang) {
+      currentLang = lang;
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang] && translations[lang][key]) el.textContent = translations[lang][key];
       });
+      if (typeof window.updateAuthToggleText === 'function') {
+        window.updateAuthToggleText();
+      }
     }
   </script>
 
   <!-- Firebase SDK & メインスクリプト -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1432,7 +1477,31 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const googleProvider = new GoogleAuthProvider();
+
+    let isRegisterMode = false;
+
+    window.toggleAuthMode = function() {
+      isRegisterMode = !isRegisterMode;
+      const submitBtn = document.getElementById('btn-auth-submit');
+      const errEl = document.getElementById('login-error');
+      errEl.style.display = 'none';
+
+      window.updateAuthToggleText();
+    };
+
+    window.updateAuthToggleText = function() {
+      const submitBtn = document.getElementById('btn-auth-submit');
+      const toggleLink = document.getElementById('auth-toggle-btn');
+      const dict = translations[currentLang] || translations['ja'];
+
+      if (isRegisterMode) {
+        submitBtn.textContent = dict.btn_register;
+        toggleLink.textContent = dict.toggle_to_login;
+      } else {
+        submitBtn.textContent = dict.btn_login;
+        toggleLink.textContent = dict.toggle_to_register;
+      }
+    };
 
     const defaultData = {
       nisa: { name: '① 楽天NISA', category: '積立投資', assetDivision: '株式/投資信託', current: 3309521, cumulativeInvestment: 3000000, dailyInvestment: 1000, monthlyInvestment: 30000, issueNote: '・イラン・アメリカ戦争の長期化\n・入金 3万円反映', history: [{date: '2026-05-01', amount: 3200000, investment: 3000000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 3309521, investment: 100000, reasonType: '入金', note: '8月'}] },
@@ -1513,22 +1582,25 @@
       }
     });
 
-    document.getElementById('btn-google-login').addEventListener('click', async () => {
-      try {
-        await signInWithPopup(auth, googleProvider);
-      } catch (err) {
-        console.error("Google ログイン失敗:", err);
-        document.getElementById('login-error').style.display = 'block';
-      }
-    });
-
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+      const errEl = document.getElementById('login-error');
+      errEl.style.display = 'none';
+
       try {
-        await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value);
+        if (isRegisterMode) {
+          await createUserWithEmailAndPassword(auth, email, password);
+          showToast('アカウント登録が完了しました！');
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
       } catch (err) {
-        console.error("メールログイン失敗:", err);
-        document.getElementById('login-error').style.display = 'block';
+        console.error("Auth error:", err);
+        const dict = translations[currentLang] || translations['ja'];
+        errEl.textContent = isRegisterMode ? (dict.error_register + ` (${err.message})`) : (dict.error_login + ` (${err.message})`);
+        errEl.style.display = 'block';
       }
     });
 
