@@ -1463,17 +1463,7 @@
       { name: 'MOOMOO', url: 'https://www.moomoo.com/ja/community/profile/%E5%89%AF%E6%A5%AD%E3%83%A1%E3%82%A4%E3%83%B3%E5%90%9B-181356335?chain_id=y3RRJAqyy9SO-H.1l695lp&global_content=%7B%22promote_id%22%3A%2213126%22,%22sub_promote_id%22%3A%2213%22,%22invite%22%3A%22181356335%22,%22promote_content%22%3A%22mm%3Afeed%3A116926540611590%22,%22f%22%3A%22mm%2Fja%2Fcommunity%2Ffeed%2Fthis-month-s-investment-plan-27-000-this-month-s-116926540611590%22%7D', icon: 'fa-solid fa-chart-line', color: '#3a7bd5', fullWidth: true }
     ];
 
-    let quickLinksData = [];
-    let appData = {};
-    let activeItemKey = null;
-    let isBankPrivate = true;
-    let isHeaderPrivate = false;
-    let isSummaryPrivate = false;
-    let selectedTrendFilter = '全体';
-    let selectedTsumitateFilter = '全体';
-    let trendChart, sideJobBarChart;
-
-    let nisaHoldingsOriginal = {
+    const defaultNisaHoldings = {
       trust: [
         { name: 'eMAXIS Slim 新興国株式インデックス', qty: '128,055 口', price: '26,842 円', eval: '343,725 円', rate: '+29.7%' },
         { name: '日経平均高配当利回り株ファンド', qty: '24,139 口', price: '25,008 円', eval: '60,367 円', rate: '+8.7%' }
@@ -1489,6 +1479,17 @@
       cn: []
     };
 
+    let quickLinksData = [];
+    let appData = {};
+    let activeItemKey = null;
+    let isBankPrivate = true;
+    let isHeaderPrivate = false;
+    let isSummaryPrivate = false;
+    let selectedTrendFilter = '全体';
+    let selectedTsumitateFilter = '全体';
+    let trendChart, sideJobBarChart;
+
+    let nisaHoldingsOriginal = JSON.parse(JSON.stringify(defaultNisaHoldings));
     let nisaHoldings = JSON.parse(JSON.stringify(nisaHoldingsOriginal));
     let currentNisaSortKey = 'default';
     let currentNisaSortOrder = 'asc';
@@ -1555,11 +1556,15 @@
           await setDoc(docRef, appData);
         }
 
-        const savedNisa = localStorage.getItem('rakuten_nisa_holdings_data');
-        if (savedNisa) {
-          nisaHoldingsOriginal = JSON.parse(savedNisa);
-          nisaHoldings = JSON.parse(JSON.stringify(nisaHoldingsOriginal));
+        const nisaDocRef = doc(db, "assets", "rakutenNisa");
+        const nisaDocSnap = await getDoc(nisaDocRef);
+        if (nisaDocSnap.exists()) {
+          nisaHoldingsOriginal = nisaDocSnap.data();
+        } else {
+          nisaHoldingsOriginal = JSON.parse(JSON.stringify(defaultNisaHoldings));
+          await setDoc(nisaDocRef, nisaHoldingsOriginal);
         }
+        nisaHoldings = JSON.parse(JSON.stringify(nisaHoldingsOriginal));
       } catch (e) {
         console.error("Firebase 読み込みエラー、ローカルストレージを使用:", e);
         const saved = localStorage.getItem('asset_mgmt_data_firebase');
@@ -1910,6 +1915,9 @@
       try {
         const docRef = doc(db, "assets", "mainData");
         await setDoc(docRef, appData);
+
+        const nisaDocRef = doc(db, "assets", "rakutenNisa");
+        await setDoc(nisaDocRef, nisaHoldingsOriginal);
       } catch (e) {
         console.error("Firebase保存エラー: ", e);
       }
