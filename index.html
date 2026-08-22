@@ -371,7 +371,7 @@
     }
     .asset-row:nth-child(odd) { background: #ffffff; }
     .asset-row:nth-child(even) { background: #f0f7ff; }
-    .asset-row-left { display: flex; align-items: center; gap: 4px; overflow: hidden; }
+    .asset-row-left { display: flex align-items: center; gap: 4px; overflow: hidden; }
     .asset-row-right { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
     .grid-large-tsumitate {
@@ -1489,6 +1489,15 @@
 
     let isRegisterMode = false;
 
+    // 오늘 날짜(YYYY-MM-DD)를 가져오는 공통 유틸 함수
+    function getTodayDateStr() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
     window.toggleAuthMode = function() {
       isRegisterMode = !isRegisterMode;
       const submitBtn = document.getElementById('btn-auth-submit');
@@ -1675,7 +1684,7 @@
       updateDatalists();
       initAmountInputs();
       setupMemoListener();
-      document.getElementById('input-date').valueAsDate = new Date();
+      document.getElementById('input-date').value = getTodayDateStr();
 
       const issueInput = document.getElementById('input-issue-note');
       if (issueInput) {
@@ -2734,6 +2743,9 @@
       updateDatalists();
       resetHistoryForm();
 
+      // ★ [추가] 項目編集 화면 전환 시 기본 등록일을 오늘 날짜로 세팅
+      document.getElementById('input-date').value = getTodayDateStr();
+
       document.getElementById('input-item-category').value = item.assetDivision || '';
       document.getElementById('input-item-name').value = item.name;
       document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
@@ -2807,7 +2819,7 @@
       renderHistoryTable();
       renderItemCardPreview();
       updateDiffCalcDisplay();
-    }
+    };
 
     function renderItemCardPreview() {
       const container = document.getElementById('edit-item-card-preview');
@@ -2932,7 +2944,7 @@
       document.getElementById('input-amount').value = '';
       document.getElementById('input-investment').value = '0';
       document.getElementById('input-reason-type').value = '収益';
-      document.getElementById('input-date').valueAsDate = new Date();
+      document.getElementById('input-date').value = getTodayDateStr();
       document.getElementById('input-note').value = '';
       document.getElementById('btn-cancel-edit').style.display = 'none';
       updateDiffCalcDisplay();
@@ -3018,7 +3030,7 @@
         dailyInvestment: 0,
         monthlyInvestment: 0,
         issueNote: '',
-        history: [{ date: new Date().toISOString().split('T')[0], amount: 0, investment: 0, reasonType: '収益', note: '初回' }]
+        history: [{ date: getTodayDateStr(), amount: 0, investment: 0, reasonType: '収益', note: '初回' }]
       };
       saveData();
       renderSidebarMenu();
