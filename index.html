@@ -41,7 +41,6 @@
       overflow: hidden;
     }
 
-    /* --- 🔑 ログイン / 新規登録 レイヤースタイル --- */
     #login-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -112,7 +111,6 @@
     }
     .login-error { color: var(--accent-red); font-size: 0.8rem; margin-top: 10px; display: none; line-height: 1.4; }
 
-    /* --- サイドバー (左メニュー) --- */
     .sidebar {
       width: 230px;
       background: rgba(230, 238, 250, 0.95);
@@ -278,7 +276,6 @@
     }
     .quick-link-btn i { font-size: 0.85rem; width: 14px; text-align: center; flex-shrink: 0; }
 
-    /* --- メインコンテンツ --- */
     .main-content {
       flex: 1;
       display: flex;
@@ -318,7 +315,6 @@
     .view-section { display: none; width: 100%; height: calc(100vh - 76px); overflow: hidden; }
     .view-section.active { display: flex; flex-direction: column; }
 
-    /* --- ダッシュボードグリッド --- */
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1.3fr 1.3fr 1fr;
@@ -1193,14 +1189,21 @@
               <datalist id="name-list"></datalist>
             </div>
             
-            <div class="form-group" id="group-cumulative-inv" style="display: none;">
-              <label for="input-cumulative-inv">累積投資額</label>
-              <input type="text" inputmode="numeric" id="input-cumulative-inv" class="form-control amount-input" value="0">
-            </div>
-
             <div class="form-group" id="group-cumulative-income">
               <label for="input-cumulative-income" id="label-cumulative-income">累積投資額</label>
               <input type="text" inputmode="numeric" id="input-cumulative-income" class="form-control amount-input" required>
+            </div>
+
+            <!-- 副業状況用: 累積収益 閲覧/保存欄 -->
+            <div class="form-group" id="group-sidejob-profit-display" style="display: none;">
+              <label for="input-sidejob-profit-display" style="color: var(--accent-orange); font-weight: bold;">累積収益 (現在評価額 - 元本)</label>
+              <input type="text" id="input-sidejob-profit-display" class="form-control" style="background: #fff7ed; font-weight: bold; color: var(--accent-orange);" readonly placeholder="¥0">
+            </div>
+
+            <!-- 副業状況用: 年間累積損益 設定欄 -->
+            <div class="form-group" id="group-annual-profit" style="display: none;">
+              <label for="input-annual-profit" style="color: var(--primary-dark); font-weight: bold;">年間累積損益 (累積収益に合算されます)</label>
+              <input type="text" inputmode="numeric" id="input-annual-profit" class="form-control amount-input" value="0" placeholder="0">
             </div>
 
             <div class="form-group" id="group-daily-inv">
@@ -1281,9 +1284,15 @@
               </select>
             </div>
 
+            <!-- 自動計算: 増減額 & 累積収益 -->
             <div class="form-group" id="group-diff-calc" style="display: none;">
               <label for="input-diff-calc" style="color: var(--primary-dark); font-weight: bold;">増減額 (自動計算)</label>
               <input type="text" id="input-diff-calc" class="form-control" style="background: #f1f5f9; font-weight: bold; color: var(--primary-dark);" readonly placeholder="¥0 (前回比)">
+            </div>
+
+            <div class="form-group" id="group-sidejob-calc-profit" style="display: none;">
+              <label for="input-sidejob-calc-profit" style="color: var(--accent-orange); font-weight: bold;">累積収益 (自動計算: 評価額 - 元本)</label>
+              <input type="text" id="input-sidejob-calc-profit" class="form-control" style="background: #fff7ed; font-weight: bold; color: var(--accent-orange);" readonly placeholder="¥0">
             </div>
 
             <div class="form-group">
@@ -1513,10 +1522,10 @@
       gold: { name: '⑦ GOLD投資', category: '積立投資', assetDivision: 'コモディティ', current: 500000, cumulativeInvestment: 500000, dailyInvestment: 0, monthlyInvestment: 10000, issueNote: '', history: [{date: '2026-05-01', amount: 500000, investment: 500000, reasonType: '入金', note: '初回'}, {date: '2026-08-01', amount: 500000, investment: 500000, reasonType: '入金', note: '8月'}] },
       paypay_pt: { name: '⑧ PAYPAYポイント', category: '積立投資', assetDivision: 'ポイント', current: 18400, cumulativeInvestment: 0, dailyInvestment: 0, monthlyInvestment: 0, issueNote: '', history: [{date: '2026-07-01', amount: 16200, investment: 0, reasonType: '収益', note: '初回'}] },
       rakuten_pt: { name: '⑨ 楽天ポイント', category: '積立投資', assetDivision: 'ポイント', current: 24500, cumulativeInvestment: 0, dailyInvestment: 0, monthlyInvestment: 0, issueNote: '', history: [{date: '2026-07-01', amount: 28000, investment: 0, reasonType: '収益', note: '初回'}] },
-      mercari: { name: '① メルカリ売上', category: '副業状況', assetDivision: '物販', current: 85000, cumulativeInvestment: 50000, incomeSum: 85000, issueNote: '', history: [{date: '2026-05-01', amount: 80000, investment: 80000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 85000, investment: 5000, reasonType: '収益', note: '8月'}] },
-      fx: { name: '② FX売買', category: '副業状況', assetDivision: 'FX', current: 47797, cumulativeInvestment: 100000, incomeSum: 47797, issueNote: '', history: [{date: '2026-01-05', amount: 100000, investment: 100000, reasonType: '収益', note: ''}, {date: '2026-07-30', amount: 48000, investment: -52000, reasonType: '損失', note: ''}, {date: '2026-08-08', amount: 47797, investment: -203, reasonType: '損失', note: ''}] },
-      content: { name: '③ 各種コンテンツ', category: '副業状況', assetDivision: 'コンテンツ', current: 30000, cumulativeInvestment: 10000, incomeSum: 30000, issueNote: '', history: [{date: '2026-05-01', amount: 28000, investment: 28000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 30000, investment: 2000, reasonType: '収益', note: '8月'}] },
-      other: { name: '④ その他', category: '副業状況', assetDivision: 'その他', current: 12000, cumulativeInvestment: 0, incomeSum: 12000, issueNote: '', history: [{date: '2026-05-01', amount: 15000, investment: 15000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 12000, investment: -3000, reasonType: '損失', note: '8月'}] },
+      mercari: { name: '① メルカリ売上', category: '副業状況', assetDivision: '物販', current: 85000, cumulativeInvestment: 50000, annualProfitLoss: 0, issueNote: '', history: [{date: '2026-05-01', amount: 80000, investment: 80000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 85000, investment: 5000, reasonType: '収益', note: '8月'}] },
+      fx: { name: '② FX売買', category: '副業状況', assetDivision: 'FX', current: 47797, cumulativeInvestment: 100000, annualProfitLoss: 0, issueNote: '', history: [{date: '2026-01-05', amount: 100000, investment: 100000, reasonType: '収益', note: ''}, {date: '2026-07-30', amount: 48000, investment: -52000, reasonType: '損失', note: ''}, {date: '2026-08-08', amount: 47797, investment: -203, reasonType: '損失', note: ''}] },
+      content: { name: '③ 各種コンテンツ', category: '副業状況', assetDivision: 'コンテンツ', current: 30000, cumulativeInvestment: 10000, annualProfitLoss: 0, issueNote: '', history: [{date: '2026-05-01', amount: 28000, investment: 28000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 30000, investment: 2000, reasonType: '収益', note: '8月'}] },
+      other: { name: '④ その他', category: '副業状況', assetDivision: 'その他', current: 12000, cumulativeInvestment: 0, annualProfitLoss: 0, issueNote: '', history: [{date: '2026-05-01', amount: 15000, investment: 15000, reasonType: '収益', note: '5月'}, {date: '2026-08-01', amount: 12000, investment: -3000, reasonType: '損失', note: '8月'}] },
       bank_rakuten: { name: '① 楽天銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 2500000, cumulativeInvestment: 2400000, issueNote: '', history: [{date: '2026-06-01', amount: 2300000, investment: 0, reasonType: '入金', note: '6月'}, {date: '2026-08-01', amount: 2500000, investment: 0, reasonType: '入金', note: '8月'}] },
       bank_paypay: { name: '② PAYPAY銀行 ※非公開※', category: '銀行預金', assetDivision: 'ネット銀行', current: 1200000, cumulativeInvestment: 1200000, issueNote: '', history: [{date: '2026-06-01', amount: 1100000, investment: 0, reasonType: '入金', note: '6月'}, {date: '2026-08-01', amount: 1200000, investment: 0, reasonType: '入金', note: '8月'}] },
       bank_resona: { name: '③ その他銀行 ※非公開※', category: '銀行預金', assetDivision: 'メガバンク', current: 486139, cumulativeInvestment: 500000, issueNote: '', history: [{date: '2026-06-01', amount: 500000, investment: 0, reasonType: '入金', note: '6月'}, {date: '2026-08-01', amount: 486139, investment: 0, reasonType: '出金', note: '8月'}] }
@@ -1614,8 +1623,19 @@
       updateHeaderClock();
       setInterval(updateHeaderClock, 1000);
 
-      const savedLinks = localStorage.getItem('custom_quick_links_data');
-      quickLinksData = savedLinks ? JSON.parse(savedLinks) : JSON.parse(JSON.stringify(defaultQuickLinks));
+      try {
+        const qlDocRef = doc(db, "assets", "quickLinks");
+        const qlDocSnap = await getDoc(qlDocRef);
+        if (qlDocSnap.exists()) {
+          quickLinksData = qlDocSnap.data().links || defaultQuickLinks;
+        } else {
+          quickLinksData = JSON.parse(JSON.stringify(defaultQuickLinks));
+          await setDoc(qlDocRef, { links: quickLinksData });
+        }
+      } catch (e) {
+        const savedLinks = localStorage.getItem('custom_quick_links_data');
+        quickLinksData = savedLinks ? JSON.parse(savedLinks) : JSON.parse(JSON.stringify(defaultQuickLinks));
+      }
       renderSidebarQuickLinks();
 
       try {
@@ -1672,6 +1692,7 @@
       const backupData = {
         appData: appData,
         nisaHoldingsOriginal: nisaHoldingsOriginal,
+        quickLinksData: quickLinksData,
         exportedAt: new Date().toISOString()
       };
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -1698,6 +1719,9 @@
             if (imported.nisaHoldingsOriginal) {
               nisaHoldingsOriginal = imported.nisaHoldingsOriginal;
               nisaHoldings = JSON.parse(JSON.stringify(nisaHoldingsOriginal));
+            }
+            if (imported.quickLinksData) {
+              quickLinksData = imported.quickLinksData;
             }
             saveData();
             showToast('データの復元が完了しました。');
@@ -1769,7 +1793,7 @@
       btn.closest('.quick-link-edit-row').remove();
     };
 
-    window.saveQuickLinks = function() {
+    window.saveQuickLinks = async function() {
       const rows = document.querySelectorAll('#quick-link-edit-list .quick-link-edit-row');
       const newLinks = [];
 
@@ -1787,9 +1811,17 @@
 
       quickLinksData = newLinks;
       localStorage.setItem('custom_quick_links_data', JSON.stringify(quickLinksData));
+
+      try {
+        const qlDocRef = doc(db, "assets", "quickLinks");
+        await setDoc(qlDocRef, { links: quickLinksData });
+      } catch (e) {
+        console.error("Firebase クイックリンク保存エラー: ", e);
+      }
+
       renderSidebarQuickLinks();
       closeQuickLinkModal();
-      showToast('クイックリンクを更新しました！');
+      showToast('クイックリンクをFirebaseに保存しました！');
     };
 
     function sortKeysByMenuOrder(keys) {
@@ -1822,7 +1854,7 @@
 
     function parseFormattedNumber(value) {
       if (!value) return 0;
-      const cleanVal = String(value).replace(/[^0-9.]/g, '');
+      const cleanVal = String(value).replace(/[^0-9.-]/g, '');
       const num = Number(cleanVal);
       return isNaN(num) ? 0 : num;
     }
@@ -1842,33 +1874,82 @@
       const reasonType = document.getElementById('input-reason-type').value;
 
       let prevAmt = 0;
+      let prevReasonType = '';
       if (item.history && item.history.length > 0) {
         if (editIndex >= 0) {
-          prevAmt = item.history[editIndex + 1] ? item.history[editIndex + 1].amount : 0;
+          const prevHist = item.history[editIndex + 1];
+          if (prevHist) {
+            prevAmt = prevHist.amount;
+            prevReasonType = prevHist.reasonType || '';
+          }
         } else {
-          prevAmt = item.history[0] ? item.history[0].amount : 0;
+          const prevHist = item.history[0];
+          if (prevHist) {
+            prevAmt = prevHist.amount;
+            prevReasonType = prevHist.reasonType || '';
+          }
         }
       }
 
       let diff = 0;
-      if (reasonType === '入金' || reasonType === '出金') {
+      if (reasonType === '入金') {
+        diff = newAmt;
+      } else if (reasonType === '出金') {
+        diff = -Math.abs(newAmt);
+      } else if (prevReasonType === '出金') {
         diff = newAmt;
       } else {
         diff = newAmt - prevAmt;
       }
 
-      const sign = (diff > 0 && reasonType !== '入金' && reasonType !== '出金') ? '+' : '';
       const diffEl = document.getElementById('input-diff-calc');
       if (diffEl) {
-        if (reasonType === '入金' || reasonType === '出金') {
-          diffEl.value = `¥${diff.toLocaleString()} (${reasonType}金額)`;
+        if (reasonType === '入金') {
+          diffEl.value = `+¥${Math.abs(diff).toLocaleString()} (入金金額)`;
           diffEl.style.color = 'var(--primary-dark)';
+        } else if (reasonType === '出金') {
+          diffEl.value = `-¥${Math.abs(diff).toLocaleString()} (出金・減額)`;
+          diffEl.style.color = '#dc2626';
+        } else if (prevReasonType === '出金') {
+          diffEl.value = `+¥${diff.toLocaleString()} (0から再スタート)`;
+          diffEl.style.color = '#16a34a';
         } else {
+          const sign = diff > 0 ? '+' : '';
           diffEl.value = `${sign}¥${diff.toLocaleString()} (前回比)`;
           if (diff > 0) diffEl.style.color = '#16a34a';
           else if (diff < 0) diffEl.style.color = '#dc2626';
           else diffEl.style.color = '#475569';
         }
+      }
+
+      // 累積収益の自動計算
+      const cumInv = item.cumulativeInvestment || 0;
+      const annualProfit = item.annualProfitLoss || 0;
+      let targetEval = 0;
+      if (reasonType === '出金') {
+        targetEval = Math.max(0, prevAmt - newAmt);
+      } else if (reasonType === '入金') {
+        targetEval = prevAmt + newAmt;
+      } else {
+        targetEval = newAmt;
+      }
+
+      let calcProfit = 0;
+      if (reasonType === '出金') {
+        calcProfit = 0;
+      } else if (prevReasonType === '出金') {
+        calcProfit = annualProfit + diff;
+      } else {
+        calcProfit = (targetEval === 0 ? 0 : (targetEval - cumInv));
+      }
+
+      const calcProfitSign = calcProfit > 0 ? '+' : '';
+      const profitEl = document.getElementById('input-sidejob-calc-profit');
+      if (profitEl) {
+        profitEl.value = `${calcProfitSign}¥${calcProfit.toLocaleString()}`;
+        if (calcProfit > 0) profitEl.style.color = '#16a34a';
+        else if (calcProfit < 0) profitEl.style.color = '#dc2626';
+        else profitEl.style.color = 'var(--accent-orange)';
       }
     }
 
@@ -1882,13 +1963,14 @@
           const cursorPosition = this.selectionStart;
           const originalLength = this.value.length;
 
+          let isNegative = this.value.startsWith('-');
           let val = this.value.replace(/[^0-9]/g, '');
           if (val === '') {
-            this.value = '';
+            this.value = isNegative ? '-' : '';
             updateDiffCalcDisplay();
             return;
           }
-          this.value = formatNumberWithCommas(val);
+          this.value = (isNegative ? '-' : '') + formatNumberWithCommas(val);
 
           const newLength = this.value.length;
           const diff = newLength - originalLength;
@@ -1984,12 +2066,16 @@
     async function saveData() {
       localStorage.setItem('asset_mgmt_data_firebase', JSON.stringify(appData));
       localStorage.setItem('rakuten_nisa_holdings_data', JSON.stringify(nisaHoldingsOriginal));
+      localStorage.setItem('custom_quick_links_data', JSON.stringify(quickLinksData));
       try {
         const docRef = doc(db, "assets", "mainData");
         await setDoc(docRef, appData);
 
         const nisaDocRef = doc(db, "assets", "rakutenNisa");
         await setDoc(nisaDocRef, nisaHoldingsOriginal);
+
+        const qlDocRef = doc(db, "assets", "quickLinks");
+        await setDoc(qlDocRef, { links: quickLinksData });
       } catch (e) {
         console.error("Firebase保存エラー: ", e);
       }
@@ -2390,29 +2476,21 @@
       return { diffVal, diffPct, dailyAmt, dailyDate };
     }
 
+    // 【副業状況用】年間累積＝(現在評価金額 - 元本) + 年間累積損益[cite: 1]
     function calcSideJobProfitLoss(item) {
-      if (!item.history || item.history.length === 0) {
-        return { diffVal: 0, diffPct: 0 };
-      }
-      
-      let totalWithdrawals = 0;
-      let latestProfit = 0;
-
-      const sortedHistory = [...item.history].sort((a, b) => new Date(a.date) - new Date(b.date));
-      
-      sortedHistory.forEach(h => {
-        const inv = h.investment || 0;
-        const rType = h.reasonType;
-        
-        if (rType === '出金') {
-          totalWithdrawals += Math.abs(inv);
-        }
-      });
-
+      const current = item.current || 0;
       const cumulativeInv = item.cumulativeInvestment || 0;
-      latestProfit = item.current - cumulativeInv;
+      const annualProfit = item.annualProfitLoss || 0;
+      
+      let baseProfit = 0;
+      const lastReason = item.history?.[0]?.reasonType || '';
+      if (current === 0 || lastReason === '出金') {
+        baseProfit = 0;
+      } else {
+        baseProfit = current - cumulativeInv;
+      }
 
-      const diffVal = totalWithdrawals + latestProfit;
+      const diffVal = baseProfit + annualProfit;
       const diffPct = cumulativeInv !== 0 ? (diffVal / cumulativeInv) * 100 : 0;
       return { diffVal, diffPct };
     }
@@ -2658,7 +2736,6 @@
 
       document.getElementById('input-item-category').value = item.assetDivision || '';
       document.getElementById('input-item-name').value = item.name;
-      document.getElementById('input-cumulative-inv').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
       document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
       document.getElementById('input-daily-inv').value = formatNumberWithCommas(item.dailyInvestment !== undefined ? item.dailyInvestment : 0);
       document.getElementById('input-monthly-inv').value = formatNumberWithCommas(item.monthlyInvestment !== undefined ? item.monthlyInvestment : 0);
@@ -2668,7 +2745,6 @@
       document.getElementById('edit-item-current-amount').textContent = `¥${item.current.toLocaleString()}`;
       document.getElementById('edit-item-last-update').textContent = `最終更新: ${item.history?.[0]?.date || '未登録'}`;
 
-      const groupCumulativeInv = document.getElementById('group-cumulative-inv');
       const groupDaily = document.getElementById('group-daily-inv');
       const groupMonthly = document.getElementById('group-monthly-inv');
 
@@ -2677,12 +2753,34 @@
       const groupReasonType = document.getElementById('group-reason-type');
       const groupDiffCalc = document.getElementById('group-diff-calc');
       const groupCumulativeIncome = document.getElementById('group-cumulative-income');
+      const groupSideJobProfitDisplay = document.getElementById('group-sidejob-profit-display');
+      const groupSideJobCalcProfit = document.getElementById('group-sidejob-calc-profit');
+      const groupAnnualProfit = document.getElementById('group-annual-profit');
 
       if (item.category === '副業状況') {
-        if (groupCumulativeInv) groupCumulativeInv.style.display = 'flex';
         if (groupCumulativeIncome) groupCumulativeIncome.style.display = 'flex';
-        document.getElementById('label-cumulative-income').textContent = '累積収益';
-        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current !== undefined ? item.current : 0);
+        document.getElementById('label-cumulative-income').textContent = '累積投資額 (元本)';
+        
+        // 累積収益欄を表示 (左側設定パネル: 出金等で評価額が0の場合は0にする)[cite: 1]
+        if (groupSideJobProfitDisplay) {
+          groupSideJobProfitDisplay.style.display = 'flex';
+          let cumProfit = 0;
+          const lastReason = item.history?.[0]?.reasonType || '';
+          if (item.current === 0 || lastReason === '出金') {
+            cumProfit = 0;
+          } else {
+            cumProfit = (item.current || 0) - (item.cumulativeInvestment || 0);
+          }
+          const sign = cumProfit > 0 ? '+' : '';
+          document.getElementById('input-sidejob-profit-display').value = `${sign}¥${cumProfit.toLocaleString()}`;
+        }
+
+        // 年間累積損益設定欄を表示
+        if (groupAnnualProfit) {
+          groupAnnualProfit.style.display = 'flex';
+          document.getElementById('input-annual-profit').value = formatNumberWithCommas(item.annualProfitLoss !== undefined ? item.annualProfitLoss : 0);
+        }
+        
         if (groupDaily) groupDaily.style.display = 'none';
         if (groupMonthly) groupMonthly.style.display = 'none';
 
@@ -2690,11 +2788,12 @@
         if (groupInputInvestment) groupInputInvestment.style.display = 'none';
         if (groupReasonType) groupReasonType.style.display = 'flex';
         if (groupDiffCalc) groupDiffCalc.style.display = 'flex';
+        if (groupSideJobCalcProfit) groupSideJobCalcProfit.style.display = 'flex';
       } else {
-        if (groupCumulativeInv) groupCumulativeInv.style.display = 'none';
         if (groupCumulativeIncome) groupCumulativeIncome.style.display = 'flex';
         document.getElementById('label-cumulative-income').textContent = '累積投資額';
-        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment !== undefined ? item.cumulativeInvestment : 0);
+        if (groupSideJobProfitDisplay) groupSideJobProfitDisplay.style.display = 'none';
+        if (groupAnnualProfit) groupAnnualProfit.style.display = 'none';
         if (groupDaily) groupDaily.style.display = 'flex';
         if (groupMonthly) groupMonthly.style.display = 'flex';
 
@@ -2702,6 +2801,7 @@
         if (groupInputInvestment) groupInputInvestment.style.display = 'flex';
         if (groupReasonType) groupReasonType.style.display = 'none';
         if (groupDiffCalc) groupDiffCalc.style.display = 'none';
+        if (groupSideJobCalcProfit) groupSideJobCalcProfit.style.display = 'none';
       }
 
       renderHistoryTable();
@@ -2853,11 +2953,7 @@
       }
 
       item.current = item.history[0].amount;
-      if (item.category === '副業状況') {
-        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current);
-      } else {
-        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment || 0);
-      }
+      document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment || 0);
 
       saveData();
       renderHistoryTable();
@@ -2875,15 +2971,21 @@
       const newDaily = parseFormattedNumber(document.getElementById('input-daily-inv').value);
       const newMonthly = parseFormattedNumber(document.getElementById('input-monthly-inv').value);
       const newIssueNote = document.getElementById('input-issue-note').value;
-      if (!newName || isNaN(newCumulativeVal)) return;
+      if (!newName) return;
 
       appData[activeItemKey].assetDivision = newDivision;
       appData[activeItemKey].name = newName;
+      // 累積投資額（元本）を保存
+      appData[activeItemKey].cumulativeInvestment = newCumulativeVal;
+      
+      // 年間累積損益を保存 (副業状況のみ)
       if (appData[activeItemKey].category === '副業状況') {
-        appData[activeItemKey].current = newCumulativeVal;
-      } else {
-        appData[activeItemKey].cumulativeInvestment = newCumulativeVal;
+        const annualProfitInput = document.getElementById('input-annual-profit');
+        if (annualProfitInput) {
+          appData[activeItemKey].annualProfitLoss = parseFormattedNumber(annualProfitInput.value);
+        }
       }
+
       appData[activeItemKey].dailyInvestment = newDaily;
       appData[activeItemKey].monthlyInvestment = newMonthly;
       appData[activeItemKey].issueNote = newIssueNote;
@@ -2898,13 +3000,21 @@
     window.openAddItemModal = function(category) {
       const name = prompt(`${category} に追加する項目名:`, '新項目');
       if (!name) return;
+      
+      let initCumulative = 0;
+      if (category === '副業状況') {
+        const inputCum = prompt(`【${name}】の累積投資額（元本）を入力してください:`, '0');
+        initCumulative = parseFormattedNumber(inputCum);
+      }
+
       const newKey = 'item_' + Date.now();
       appData[newKey] = {
         name: name,
         category: category,
         assetDivision: '未設定',
         current: 0,
-        cumulativeInvestment: 0,
+        cumulativeInvestment: initCumulative,
+        annualProfitLoss: 0,
         dailyInvestment: 0,
         monthlyInvestment: 0,
         issueNote: '',
@@ -2943,20 +3053,48 @@
       if (!item.history) item.history = [];
 
       let prevAmount = 0;
+      let prevReasonType = '';
       if (item.history.length > 0) {
         if (editIndex >= 0) {
-          prevAmount = item.history[editIndex + 1] ? item.history[editIndex + 1].amount : 0;
+          const prevHist = item.history[editIndex + 1];
+          if (prevHist) {
+            prevAmount = prevHist.amount;
+            prevReasonType = prevHist.reasonType || '';
+          }
         } else {
-          prevAmount = item.history[0].amount;
+          const prevHist = item.history[0];
+          if (prevHist) {
+            prevAmount = prevHist.amount;
+            prevReasonType = prevHist.reasonType || '';
+          }
         }
       }
 
       let calcDiffVal = 0;
-      if (newReasonType === '入金' || newReasonType === '出金') {
-        calcDiffVal = newAmount;
+      let calculatedCurrentAmount = newAmount;
+
+      if (item.category === '副業状況') {
+        if (newReasonType === '入金') {
+          calcDiffVal = newAmount;
+          calculatedCurrentAmount = prevAmount + newAmount;
+        } else if (newReasonType === '出金') {
+          calcDiffVal = -Math.abs(newAmount);
+          calculatedCurrentAmount = Math.max(0, prevAmount - newAmount);
+        } else if (prevReasonType === '出金') {
+          calcDiffVal = newAmount;
+          calculatedCurrentAmount = newAmount;
+        } else {
+          calcDiffVal = newAmount - prevAmount;
+          calculatedCurrentAmount = newAmount;
+        }
       } else {
-        calcDiffVal = newAmount - prevAmount;
+        calcDiffVal = (newReasonType === '入金' || newReasonType === '出金') ? newAmount : (newAmount - prevAmount);
+        calculatedCurrentAmount = newAmount;
       }
+
+      const historyAmountToStore = (item.category === '副業状況' && (newReasonType === '入金' || newReasonType === '出金')) 
+        ? calculatedCurrentAmount 
+        : newAmount;
 
       if (editIndex >= 0) {
         if (item.category !== '副業状況') {
@@ -2967,8 +3105,8 @@
 
         item.history[editIndex] = { 
           date: newDate, 
-          amount: newAmount, 
-          investment: item.category === '副業状況' ? (newReasonType === '入金' || newReasonType === '出金' ? newAmount : calcDiffVal) : newInvestment, 
+          amount: historyAmountToStore, 
+          investment: item.category === '副業状況' ? calcDiffVal : newInvestment, 
           reasonType: newReasonType, 
           note: newNote 
         };
@@ -2980,8 +3118,8 @@
 
         item.history.unshift({ 
           date: newDate, 
-          amount: newAmount, 
-          investment: item.category === '副業状況' ? (newReasonType === '入金' || newReasonType === '出金' ? newAmount : calcDiffVal) : newInvestment, 
+          amount: historyAmountToStore, 
+          investment: item.category === '副業状況' ? calcDiffVal : newInvestment, 
           reasonType: newReasonType, 
           note: newNote 
         });
@@ -2990,18 +3128,9 @@
 
       item.history.sort((a, b) => new Date(b.date) - new Date(a.date));
       
-      if (item.category === '副業状況') {
-        if (newReasonType === '入金' || newReasonType === '出金') {
-          item.current = newAmount;
-        } else {
-          item.current = (item.current || 0) + calcDiffVal;
-          item.history[0].amount = item.current;
-        }
-        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.current);
-      } else {
-        item.current = item.history[0].amount;
-        document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment || 0);
-      }
+      // 最新の現在評価金額を反映
+      item.current = item.history[0].amount;
+      document.getElementById('input-cumulative-income').value = formatNumberWithCommas(item.cumulativeInvestment || 0);
 
       saveData();
       openItemEdit(activeItemKey);
@@ -3152,7 +3281,7 @@
         sumCumulative += cumulative;
 
         if (item.category === '副業状況') {
-          const netProfit = curAmt - cumulative;
+          const netProfit = (curAmt === 0 ? 0 : (curAmt - cumulative)) + (item.annualProfitLoss || 0);
           if (netProfit > 0) {
             sideJobTotal += netProfit;
           }
@@ -3669,58 +3798,74 @@
       }
     }
 
+    // 【副業状況】最近3ヶ月の評価金額(残高)推移グラフ
     function updateSideJobMonthlyChart() {
-      const monthlyData = {};
-      const datasetsMap = {};
+      const monthMap = {};
+      const sideJobKeys = [];
 
       for (let key in appData) {
         const item = appData[key];
         if (item.category === '副業状況') {
-          datasetsMap[item.name] = {};
+          sideJobKeys.push(key);
           item.history?.forEach(h => {
             if (h.date) {
-              const monthKey = h.date.substring(0, 7);
-              monthlyData[monthKey] = true;
-              datasetsMap[item.name][monthKey] = (datasetsMap[item.name][monthKey] || 0) + h.amount;
+              monthMap[h.date.substring(0, 7)] = true;
             }
           });
         }
       }
 
-      let sortedMonths = Object.keys(monthlyData).sort();
+      sideJobKeys.sort((a, b) => {
+        const nameA = appData[a].name || '';
+        const nameB = appData[b].name || '';
+        const numA = getSortNum(nameA);
+        const numB = getSortNum(nameB);
+        if (numA !== numB) return numA - numB;
+        return nameA.localeCompare(nameB);
+      });
+
+      let sortedMonths = Object.keys(monthMap).sort();
       if (sortedMonths.length > 3) {
         sortedMonths = sortedMonths.slice(sortedMonths.length - 3);
       }
 
       const labels = sortedMonths.map(m => m.replace('-', '年') + '月');
 
-      let colorIdx = 0;
+      const palette = [
+        ['#fed7aa', '#ea580c'],
+        ['#bae6fd', '#0284c7'],
+        ['#bbf7d0', '#16a34a'],
+        ['#e9d5ff', '#9333ea'],
+        ['#fef08a', '#ca8a04']
+      ];
+
       const datasets = [];
+      const ctx = document.getElementById('sideJobBarChart').getContext('2d');
 
-      for (let itemName in datasetsMap) {
-        const dataArr = sortedMonths.map(m => datasetsMap[itemName][m] || 0);
+      sideJobKeys.forEach((key, idx) => {
+        const item = appData[key];
+        const dataArr = sortedMonths.map(m => {
+          const amt = getItemAmountAtMonth(item, m);
+          return amt !== null ? amt : 0;
+        });
 
-        const ctx = document.getElementById('sideJobBarChart').getContext('2d');
+        const colorPair = palette[idx % palette.length];
         const gradient = ctx.createLinearGradient(0, 0, 0, 196);
-
-        if (colorIdx === 0) { gradient.addColorStop(0, '#fed7aa'); gradient.addColorStop(1, '#ea580c'); }
-        else if (colorIdx === 1) { gradient.addColorStop(0, '#bae6fd'); gradient.addColorStop(1, '#0284c7'); }
-        else if (colorIdx === 2) { gradient.addColorStop(0, '#bbf7d0'); gradient.addColorStop(1, '#16a34a'); }
-        else { gradient.addColorStop(0, '#e9d5ff'); gradient.addColorStop(1, '#9333ea'); }
+        gradient.addColorStop(0, colorPair[0]);
+        gradient.addColorStop(1, colorPair[1]);
 
         datasets.push({
-          label: itemName,
+          label: item.name,
           data: dataArr,
           backgroundColor: gradient,
           borderRadius: 6,
           borderSkipped: false
         });
-        colorIdx++;
-      }
+      });
 
       if (sideJobBarChart) {
         sideJobBarChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
-        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業売上', data: [0,0,0], backgroundColor: '#fed7aa' }];
+        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業評価額', data: [0,0,0], backgroundColor: '#fed7aa' }];
         sideJobBarChart.update();
       }
     }
