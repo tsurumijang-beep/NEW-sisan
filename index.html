@@ -371,7 +371,7 @@
     }
     .asset-row:nth-child(odd) { background: #ffffff; }
     .asset-row:nth-child(even) { background: #f0f7ff; }
-    .asset-row-left { display: flex align-items: center; gap: 4px; overflow: hidden; }
+    .asset-row-left { display: flex; align-items: center; gap: 4px; overflow: hidden; }
     .asset-row-right { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
     .grid-large-tsumitate {
@@ -967,13 +967,13 @@
           </div>
           <div class="card" style="flex: 1; min-height: 250px;">
             <div class="card-title">
-              <span>全投資資産の推移</span>
+              <span>全資産の推移 (総資産)</span>
               <div id="trend-filter-container" style="width: 140px;"></div>
             </div>
             <div class="chart-box" style="height: 100%; min-height: 180px;"><canvas id="trendChart"></canvas></div>
             <div class="trend-metrics-container">
               <div class="metric-3d-box">
-                <div class="metric-3d-label" id="metric-label-title">全投資資産</div>
+                <div class="metric-3d-label" id="metric-label-title">総資産</div>
                 <div class="metric-3d-value" id="metric-total-asset">¥0</div>
               </div>
               <div class="metric-3d-box">
@@ -2743,7 +2743,7 @@
       updateDatalists();
       resetHistoryForm();
 
-      // ★ [추가] 項目編集 화면 전환 시 기본 등록일을 오늘 날짜로 세팅
+      // 項目編集画面遷移時に基本登録日を本日の日付に設定
       document.getElementById('input-date').value = getTodayDateStr();
 
       document.getElementById('input-item-category').value = item.assetDivision || '';
@@ -3070,7 +3070,7 @@
         if (editIndex >= 0) {
           const prevHist = item.history[editIndex + 1];
           if (prevHist) {
-            prevAmount = prevHist.amount;
+            prevAmt = prevHist.amount;
             prevReasonType = prevHist.reasonType || '';
           }
         } else {
@@ -3358,21 +3358,12 @@
 
       const optAll = document.createElement('option');
       optAll.value = '全体';
-      optAll.textContent = '全体';
+      optAll.textContent = '全体 (総資産)';
       if (selectedTrendFilter === '全体') optAll.selected = true;
       select.appendChild(optAll);
 
-      const sortedKeys = Object.keys(appData).filter(key => {
-        const item = appData[key];
-        return item.category === '積立投資';
-      }).sort((a, b) => {
-        const itemA = appData[a];
-        const itemB = appData[b];
-        const numA = getSortNum(itemA.name);
-        const numB = getSortNum(itemB.name);
-        if (numA !== numB) return numA - numB;
-        return (itemA.name || '').localeCompare(itemB.name || '');
-      });
+      // 積立投資だけでなく、全資産カテゴリ（副業状況・銀行預金を含む）を選択可能に追加
+      const sortedKeys = sortKeysByMenuOrder(Object.keys(appData));
 
       sortedKeys.forEach(key => {
         const item = appData[key];
@@ -3695,7 +3686,7 @@
       if (selectedTrendFilter === '全体') {
         for (let key in appData) {
           const item = appData[key];
-          if (item.category === '副業状況' || item.category === '銀行預金') continue;
+          // 全資産(総資産) 計算のためカテゴリ除外を行わず全項目を集計
           item.history?.forEach(h => {
             if (h.date) monthMap[h.date.substring(0, 7)] = true;
           });
@@ -3725,8 +3716,7 @@
         if (selectedTrendFilter === '全体') {
           for (let key in appData) {
             const item = appData[key];
-            if (item.category === '副業状況' || item.category === '銀行預金') continue;
-
+            // 全資産(総資産) 計算のため全項目を合算
             const amt = getItemAmountAtMonth(item, m);
             if (amt !== null) {
               monthTotalAsset += amt;
@@ -3771,7 +3761,7 @@
         trendChart.options.scales.y.max = dynamicMaxY > 0 ? dynamicMaxY : 20000000;
         trendChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
 
-        let datasetLabel = '全投資資産';
+        let datasetLabel = '総資産';
         if (selectedTrendFilter !== '全体' && appData[selectedTrendFilter]) {
           datasetLabel = appData[selectedTrendFilter].name;
         }
@@ -3800,7 +3790,7 @@
         trendChart.update();
       }
 
-      document.getElementById('metric-label-title').textContent = (selectedTrendFilter === '全体') ? '全投資資産' : (appData[selectedTrendFilter]?.name || '選択項目');
+      document.getElementById('metric-label-title').textContent = (selectedTrendFilter === '全体') ? '総資産' : (appData[selectedTrendFilter]?.name || '選択項目');
       const assetEl = document.getElementById('metric-total-asset');
       const rateEl = document.getElementById('metric-profit-rate');
       if (assetEl) assetEl.textContent = `¥${latestTotalAsset.toLocaleString()}`;
