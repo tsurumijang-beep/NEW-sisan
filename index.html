@@ -139,7 +139,6 @@
 
     .nav-group { margin-bottom: 6px; }
 
-    /* 기본 nav-item 공통 */
     .nav-item {
       padding: 7px 10px;
       margin-bottom: 4px;
@@ -160,7 +159,7 @@
       transform: translateY(-1px);
     }
 
-    /* 🎨 파스텔톤 메뉴별 테마 정의 */
+    /* 🎨 파스텔톤 메뉴별 테마 */
     #menu-dashboard {
       background: linear-gradient(145deg, #ffffff, #e0f2fe);
       border-color: #bae6fd;
@@ -203,7 +202,6 @@
     }
     #menu-mercari i { color: #c026d3; }
 
-    /* 활성화 시 강조 */
     .nav-item.active {
       background: linear-gradient(145deg, var(--primary-color), var(--primary-dark)) !important;
       color: #fff !important;
@@ -214,7 +212,6 @@
       color: #fff !important;
     }
 
-    /* 아코디언 헤더 파스텔 색상 */
     .nav-section-header {
       padding: 7px 10px;
       margin-bottom: 3px;
@@ -259,7 +256,6 @@
       transform: rotate(90deg);
     }
 
-    /* 서브 메뉴 파스텔 조화 스타일 */
     .sub-menu { list-style: none; padding-left: 6px; margin-top: 2px; }
     .sub-item {
       padding: 5px 8px;
@@ -290,7 +286,6 @@
       border-color: var(--primary-color);
     }
 
-    /* 그룹별 서브 아이템 미세 파스텔 배경 */
     #menu-group-積立投資 .sub-item { background: linear-gradient(145deg, #ffffff, #f0fdfa); }
     #menu-group-副業状況 .sub-item { background: linear-gradient(145deg, #ffffff, #fff1f2); }
     #menu-group-銀行預金 .sub-item { background: linear-gradient(145deg, #ffffff, #f8fafc); }
@@ -659,7 +654,6 @@
       border-bottom: 2px solid #b8c4d9;
     }
 
-    /* 余力資産計算専用テーブルスタイル */
     .surplus-table {
       width: 100%;
       border-collapse: collapse;
@@ -962,42 +956,42 @@
       <span data-i18n="app_title">資産管理システム</span>
     </div>
 
-    <!-- 1. ダッシュボード (파스텔 스카이블루) -->
+    <!-- 1. ダッシュボード -->
     <div class="nav-item active" id="menu-dashboard" onclick="switchNav('dashboard')">
       <span><i class="fa-solid fa-gauge-high"></i> <span data-i18n="nav_dashboard">ダッシュボード</span></span>
     </div>
 
-    <!-- 2. 全資産 (파스텔 라벤더/바이올렛) -->
+    <!-- 2. 全資産 -->
     <div class="nav-item" id="menu-all-assets" onclick="switchNav('all-assets')">
       <span><i class="fa-solid fa-chart-pie"></i> 全資産</span>
     </div>
 
-    <!-- 3. 余力資産計算 (파스텔 옐로우/앰버) -->
+    <!-- 3. 余力資産計算 -->
     <div class="nav-item" id="menu-surplus-calc" onclick="switchNav('surplus-calc')">
       <span><i class="fa-solid fa-calculator"></i> 余力資産計算</span>
     </div>
 
-    <!-- 4. 楽天証券一覧 (파스텔 로즈/핑크) -->
+    <!-- 4. 楽天証券一覧 -->
     <div class="nav-item" id="menu-rakuten-nisa-status" onclick="switchNav('rakuten-nisa-status')">
       <span><i class="fa-solid fa-chart-line"></i> 楽天証券一覧</span>
     </div>
 
-    <!-- 5. 個別積立管理 (파스텔 에메랄드/그린) -->
-    <div class="nav-item" id="menu-realtime-tsumitate" onclick="window.open('https://tsurumijang-beep.github.io/DCA-Auto-Asset-Tracker/', '_blank')">
+    <!-- 5. 個別積立管理 (페이지 내 표시) -->
+    <div class="nav-item" id="menu-realtime-tsumitate" onclick="switchNav('realtime-tsumitate')">
       <span><i class="fa-solid fa-bolt"></i> ◆個別積立管理★</span>
     </div>
 
-    <!-- 6. レバレッジ計算 (파스텔 오렌지) -->
+    <!-- 6. レバレッジ計算 -->
     <div class="nav-item" id="menu-leverage-calc" onclick="window.open('https://tsurumijang-beep.github.io/lever/', '_blank')">
       <span><i class="fa-solid fa-arrow-trend-up"></i> レバレッジ計算</span>
     </div>
 
-    <!-- 7. メルカリ (파스텔 퍼플/마젠타) -->
+    <!-- 7. メルカリ -->
     <div class="nav-item" id="menu-mercari" onclick="window.open('https://tsurumijang-beep.github.io/merukari/', '_blank')">
       <span><i class="fa-solid fa-store"></i> メルカリ</span>
     </div>
 
-    <!-- 積立投資 그룹 (파스텔 민트/티얼) -->
+    <!-- 積立投資 그룹 -->
     <div class="nav-group" style="margin-top: 6px;">
       <div class="nav-section-header collapsible" id="header-group-積立投資" onclick="toggleNavAccordion('積立投資')">
         <span style="display:flex; align-items:center; gap:6px;">
@@ -1009,7 +1003,7 @@
       <ul class="sub-menu" id="menu-group-積立投資" style="display: none;"></ul>
     </div>
 
-    <!-- 副業状況 그룹 (파스텔 코랄/레드) -->
+    <!-- 副業状況 그룹 -->
     <div class="nav-group">
       <div class="nav-section-header collapsible" id="header-group-副業状況" onclick="toggleNavAccordion('副業状況')">
         <span style="display:flex; align-items:center; gap:6px;">
@@ -1021,7 +1015,7 @@
       <ul class="sub-menu" id="menu-group-副業状況" style="display: none;"></ul>
     </div>
 
-    <!-- 銀行預金 그룹 (파스텔 슬레이트/그레이) -->
+    <!-- 銀行預金 그룹 -->
     <div class="nav-group">
       <div class="nav-section-header" id="header-group-銀行預金">
         <span>銀行預金</span>
@@ -1558,6 +1552,21 @@
       </div>
     </section>
 
+    <!-- 3-2. 「個別積立管理 (積立管理システム)」 ページ内表示ビュー (iframe) -->
+    <section id="view-realtime-tsumitate" class="view-section">
+      <div class="detail-container" style="padding: 6px; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 6px;">
+          <button class="btn-export" onclick="document.getElementById('tsumitate-iframe').src += ''" style="font-size:0.7rem; padding:4px 10px; background:#3498db;">
+            <i class="fa-solid fa-rotate-right"></i> 更新
+          </button>
+          <button class="btn-export" onclick="window.open('https://tsurumijang-beep.github.io/DCA-Auto-Asset-Tracker/', '_blank')" style="font-size:0.7rem; padding:4px 10px; background:var(--accent-green);">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> 別タブで開く
+          </button>
+        </div>
+        <iframe id="tsumitate-iframe" src="https://tsurumijang-beep.github.io/DCA-Auto-Asset-Tracker/" style="width: 100%; height: 100%; border: none; border-radius: 8px; background: #ffffff;"></iframe>
+      </div>
+    </section>
+
     <!-- 4. 項目編集ビュー -->
     <section id="view-edit-item" class="view-section">
       <div class="edit-split-container">
@@ -1583,13 +1592,11 @@
               <input type="text" inputmode="numeric" id="input-cumulative-income" class="form-control amount-input" required>
             </div>
 
-            <!-- 副業状況用: 累積収益 閲覧/保存欄 -->
             <div class="form-group" id="group-sidejob-profit-display" style="display: none;">
               <label for="input-sidejob-profit-display" style="color: var(--accent-orange); font-weight: bold;">累積収益 (現在評価額 - 元本)</label>
               <input type="text" id="input-sidejob-profit-display" class="form-control" style="background: #fff7ed; font-weight: bold; color: var(--accent-orange);" readonly placeholder="¥0">
             </div>
 
-            <!-- 副業状況用: 年間累積損益 設定欄 -->
             <div class="form-group" id="group-annual-profit" style="display: none;">
               <label for="input-annual-profit" style="color: var(--primary-dark); font-weight: bold;">年間累積損益 (累積収益に合算されます)</label>
               <input type="text" inputmode="numeric" id="input-annual-profit" class="form-control amount-input" value="0" placeholder="0">
@@ -1640,7 +1647,6 @@
           </div>
         </div>
 
-        <!-- 右側: 新規データ追加・更新 -->
         <div class="panel-box">
           <div class="current-val-card">
             <div class="label" id="edit-item-display-name">項目名</div>
@@ -1673,7 +1679,6 @@
               </select>
             </div>
 
-            <!-- 自動計算: 増減額 & 累積収益 -->
             <div class="form-group" id="group-diff-calc" style="display: none;">
               <label for="input-diff-calc" style="color: var(--primary-dark); font-weight: bold;">増減額 (自動計算)</label>
               <input type="text" id="input-diff-calc" class="form-control" style="background: #f1f5f9; font-weight: bold; color: var(--primary-dark);" readonly placeholder="¥0 (前回比)">
@@ -1796,7 +1801,6 @@
     <span id="toast-message">更新しました！</span>
   </div>
 
-  <!-- 多言語辞書スクリプト -->
   <script>
     let currentLang = 'ja';
     const translations = {
@@ -1855,7 +1859,6 @@
       }
     }
 
-    // 아코디언 토글 전역 함수
     window.toggleNavAccordion = function(cat) {
       const menuEl = document.getElementById(`menu-group-${cat}`);
       const headerEl = document.getElementById(`header-group-${cat}`);
@@ -1872,7 +1875,6 @@
     };
   </script>
 
-  <!-- Firebase SDK & メインスクリプト -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -2961,6 +2963,10 @@
         document.getElementById('menu-rakuten-nisa-status').classList.add('active');
         document.getElementById('header-view-title').textContent = '楽天証券一覧 (保有銘柄詳細)';
         renderNisaTables();
+      } else if (targetView === 'realtime-tsumitate') {
+        document.getElementById('view-realtime-tsumitate').classList.add('active');
+        document.getElementById('menu-realtime-tsumitate').classList.add('active');
+        document.getElementById('header-view-title').textContent = '個別積立管理 (積立管理システム)';
       }
     };
 
