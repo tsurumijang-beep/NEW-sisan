@@ -596,7 +596,7 @@
       border-bottom: 2px solid #b8c4d9;
     }
 
-    /* 🎨 余力資産計算 70% (좌측) : 30% (우측) 분할 레이아웃 */
+    /* 余力資産計算 70% (좌측) : 30% (우측) 분할 레이아웃 */
     .surplus-split-layout {
       display: grid;
       grid-template-columns: 1fr 280px;
@@ -623,7 +623,7 @@
       height: 100%;
     }
 
-    /* 🧮 파스텔 미니 계산기 스타일 */
+    /* 미니 계산기 스타일 */
     .mini-calc-box {
       background: linear-gradient(145deg, #ffffff, #f0fdf4);
       border-radius: 12px;
@@ -670,7 +670,7 @@
     .calc-btn.op { background: #fef3c7; color: #b45309; }
     .calc-btn.eq { background: #22c55e; color: #ffffff; font-weight: 900; }
 
-    /* 📝 계산기 밑 메모장 */
+    /* 계산기 밑 메모장 */
     .calc-memo-box {
       background: linear-gradient(145deg, #fffdfa, #fef9c3);
       border-radius: 12px;
@@ -697,7 +697,7 @@
       margin-top: 4px;
     }
 
-    /* 🎨 엑셀형 余力資産計算 파스텔 스타일 */
+    /* 엑셀형 余力資産計算 스타일 */
     .surplus-table {
       width: 100%;
       border-collapse: collapse;
@@ -1055,7 +1055,7 @@
 </head>
 <body>
 
-  <!-- 🔑 ログイン / 新規登録 レイヤー -->
+  <!-- ログイン / 新規登録 レイヤー -->
   <div id="login-overlay">
     <div class="login-box">
       <div class="lang-selector-container">
@@ -1299,13 +1299,11 @@
       </div>
     </section>
 
-    <!-- 2-2. 「余力資産計算」ビュー (좌측 70%: 엑셀시트 & 하단요약 / 우측 30%: 계산기+메모) -->
+    <!-- 2-2. 「余力資産計算」ビュー -->
     <section id="view-surplus-calc" class="view-section">
       <div class="detail-container" style="padding: 10px;">
-        
         <div class="surplus-split-layout">
-          
-          <!-- 📊 [좌측 영역 (약 70%)]: 엑셀형 테이블 + 하단 요약 카드 -->
+          <!-- 좌측 영역: 엑셀형 테이블 + 하단 요약 카드 -->
           <div class="surplus-main-panel">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
               <div>
@@ -1322,14 +1320,12 @@
             
             <div style="overflow-x: auto; border: 1px solid #cbd5e1; border-radius: 8px;">
               <table class="surplus-table" id="surplus-calc-table">
-                <thead id="surplus-calc-table-head">
-                  <!-- JS에서 편집 가능한 헤더로 동적 렌더링 -->
-                </thead>
+                <thead id="surplus-calc-table-head"></thead>
                 <tbody id="surplus-calc-table-body"></tbody>
               </table>
             </div>
 
-            <!-- 📊 하단 자동 요약 위젯 -->
+            <!-- 하단 자동 요약 위젯 -->
             <div class="surplus-summary-grid">
               <div class="summary-pastel-card">
                 <div class="summary-card-header">
@@ -1389,13 +1385,10 @@
                 </div>
               </div>
             </div>
-
           </div>
 
-          <!-- 🧮 [우측 사이드 영역 (약 30%)]: 미니계산기 + 메모장 -->
+          <!-- 우측 사이드 영역: 미니계산기 + 메모장 -->
           <div class="surplus-side-panel">
-            
-            <!-- 미니 계산기 -->
             <div class="mini-calc-box">
               <div class="card-title" style="margin-bottom: 2px; font-size: 0.78rem; color: #0f766e;">
                 <span><i class="fa-solid fa-calculator"></i> 電卓 (Mini Calc)</span>
@@ -1432,7 +1425,6 @@
               </div>
             </div>
 
-            <!-- 미니 계산기 밑 메모장 -->
             <div class="calc-memo-box">
               <div class="card-title" style="margin-bottom: 2px; font-size: 0.78rem; color: #854d0e;">
                 <span><i class="fa-solid fa-note-sticky" style="color: #eab308;"></i> 計算メモ</span>
@@ -1443,11 +1435,8 @@
               </div>
               <textarea id="surplus-calc-memo" class="calc-memo-textarea" placeholder="計算のメモや一時メモを入力..."></textarea>
             </div>
-
           </div>
-
         </div>
-
       </div>
     </section>
 
@@ -1602,7 +1591,7 @@
 
             <div class="form-group" id="group-sidejob-profit-display" style="display: none;">
               <label for="input-sidejob-profit-display" style="color: var(--accent-orange); font-weight: bold;">累積収益 (現在評価額 - 元本)</label>
-              <input type="text" id="input-sidejob-profit-display" class="form-control" style="background: #fff7ed; font-weight: bold; color: var(--accent-orange);" readonly placeholder="¥0">
+              <input type="text" id="sidejob-profit-display" class="form-control" style="background: #fff7ed; font-weight: bold; color: var(--accent-orange);" readonly placeholder="¥0">
             </div>
 
             <div class="form-group" id="group-annual-profit" style="display: none;">
@@ -1881,7 +1870,7 @@
       }
     };
 
-    /* 🧮 미니 계산기 로직 */
+    /* 미니 계산기 로직 */
     let calcCurrent = '0';
     let calcExpression = '';
     let calcJustEvaluated = false;
@@ -1938,7 +1927,7 @@
       });
     };
 
-    /* 📝 余力計算専用メモ장 로직 (저장 시 타임스탬프 자동 추가) */
+    /* 余力計算専用メモ장 로직 */
     window.saveSurplusMemo = function() {
       const memoEl = document.getElementById('surplus-calc-memo');
       let memoText = memoEl.value;
@@ -2066,7 +2055,7 @@
       cn: []
     };
 
-    /* 📊 余力資産計算 初期ヘッダー設定（편집 가능） */
+    /* 余力資産計算 初期ヘッダー設定 */
     const initialSurplusHeaders = {
       yearTitle: '2026年',
       row1: {
@@ -2110,7 +2099,7 @@
     let quickLinksData = [];
     let appData = {};
     let activeItemKey = null;
-    let isBankPrivate = true;
+    let isBankPrivate = false; // 기본 은행계좌 표시 상태: 표시(공개)
     let isHeaderPrivate = false;
     let isSummaryPrivate = false;
     let selectedTrendFilter = '全体';
@@ -2171,7 +2160,7 @@
       updateHeaderClock();
       setInterval(updateHeaderClock, 1000);
 
-      // 余力資産計算ローカルデータロード (헤더 + 데이터)
+      // 余力資産計算ローカルデータロード
       const savedSurplusHeaders = localStorage.getItem('surplus_calc_table_headers_data');
       if (savedSurplusHeaders) {
         try { surplusHeaders = JSON.parse(savedSurplusHeaders); } catch(e) { surplusHeaders = JSON.parse(JSON.stringify(initialSurplusHeaders)); }
@@ -2256,7 +2245,7 @@
       }
     }
 
-    /* 📊 엑셀형 余力資産計算 렌더링 (헤더 직접 수정 가능 & 데이터 연동) */
+    /* 엑셀형 余力資産計算 렌더링 */
     function renderSurplusExcelTable() {
       const thead = document.getElementById('surplus-calc-table-head');
       const tbody = document.getElementById('surplus-calc-table-body');
@@ -2264,7 +2253,6 @@
 
       const h = surplusHeaders;
 
-      // 1. 헤더 렌더링 (인라인 수정 가능)
       thead.innerHTML = `
         <tr>
           <th rowspan="3" class="th-pastel-header" style="width: 80px;">
@@ -2313,7 +2301,6 @@
         </tr>
       `;
 
-      // 2. 바디 렌더링
       tbody.innerHTML = '';
       surplusTableData.forEach((row, idx) => {
         const isLatest = row.id === 'latest';
@@ -2348,7 +2335,6 @@
       updateSurplusSummaryCards();
     }
 
-    /* 헤더 항목명 실시간 입력 처리 */
     window.handleHeaderInput = function(section, key, value) {
       if (section === 'yearTitle') {
         surplusHeaders.yearTitle = value;
@@ -3313,7 +3299,7 @@
       } else if (targetView === 'surplus-calc') {
         document.getElementById('view-surplus-calc').classList.add('active');
         document.getElementById('menu-surplus-calc').classList.add('active');
-        document.getElementById('header-view-title').textContent = '余力資産計算';
+        document.getElementById('header-view-title').textContent = '余力資産計算 (Excel型・手動計算)';
         renderSurplusExcelTable();
       } else if (targetView === 'rakuten-nisa-status') {
         document.getElementById('view-rakuten-nisa-status').classList.add('active');
@@ -3559,7 +3545,7 @@
             cumProfit = (item.current || 0) - (item.cumulativeInvestment || 0);
           }
           const sign = cumProfit > 0 ? '+' : '';
-          document.getElementById('input-sidejob-profit-display').value = `${sign}¥${cumProfit.toLocaleString()}`;
+          document.getElementById('sidejob-profit-display').value = `${sign}¥${cumProfit.toLocaleString()}`;
         }
 
         if (groupAnnualProfit) {
@@ -4371,14 +4357,24 @@
       bankGrid.innerHTML = '';
       bankKeys.forEach(key => {
         const item = appData[key];
-        const { diffVal, diffPct } = calcDiff(item);
         const tile = document.createElement('div');
         tile.className = 'info-tile';
         tile.onclick = () => openItemEdit(key);
+        
         const amtStr = isBankPrivate ? '¥*,***,***' : `¥${item.current.toLocaleString()}`;
         const maskClass = isBankPrivate ? 'private-mask' : '';
-        const diffHtml = isBankPrivate ? '<span class="diff-badge zero">***</span>' : renderDiffHtml(diffVal, diffPct, true);
-        tile.innerHTML = `<div class="tile-label"><i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#2c3e50; margin-right:2px;"></i>${item.name}</div><div class="tile-value ${maskClass}" style="color:var(--text-main);">${amtStr}</div><div class="tile-diff">${diffHtml}</div>`;
+        
+        // 잔액만 간결하게 표시
+        tile.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="tile-label">
+              <i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#2c3e50; margin-right:4px;"></i>${item.name}
+            </div>
+            <div class="tile-value ${maskClass}" style="color:var(--text-main); font-size: 0.85rem; font-weight: bold;">
+              ${amtStr}
+            </div>
+          </div>
+        `;
         bankGrid.appendChild(tile);
       });
     }
