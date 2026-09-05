@@ -362,7 +362,7 @@
     }
     .asset-row:nth-child(odd) { background: #ffffff; }
     .asset-row:nth-child(even) { background: #f0f7ff; }
-    .asset-row-left { display: flex; align-items: center; gap: 4px; overflow: hidden; }
+    .asset-row-left { display: flex align-items: center; gap: 4px; overflow: hidden; }
     .asset-row-right { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
     .grid-large-tsumitate {
@@ -1360,27 +1360,28 @@
                 </div>
               </div>
 
+              <!-- 수정된 総費用(개인용/사업용 비용 집계) 카드 -->
               <div class="summary-pastel-card">
                 <div class="summary-card-header">
-                  <span><i class="fa-solid fa-credit-card" style="color:#16a34a;"></i> カード利用明細内訳</span>
+                  <span><i class="fa-solid fa-receipt" style="color:#e11d48;"></i> 総費用</span>
                   <span style="font-size:0.68rem; color:var(--text-sub);">自動集計</span>
                 </div>
                 <div class="summary-stat-row bg-card-priv">
                   <div>
-                    <span id="summary-card-priv-title">個人用カード合計</span>
-                    <div id="summary-card-priv-sub" style="font-size:0.62rem; color:#166534;">楽天 + Paypay</div>
+                    <span id="summary-card-priv-title">個人用費用 合計</span>
+                    <div id="summary-card-priv-sub" style="font-size:0.62rem; color:#166534;">楽天カード + Paypay + ローン + 家賃</div>
                   </div>
                   <strong id="card-display-private">¥0</strong>
                 </div>
                 <div class="summary-stat-row bg-card-biz">
                   <div>
-                    <span id="summary-card-biz-title">事業用カード合計</span>
-                    <div id="summary-card-biz-sub" style="font-size:0.62rem; color:#9a3412;">アマゾンカード</div>
+                    <span id="summary-card-biz-title">事業用費用 合計</span>
+                    <div id="summary-card-biz-sub" style="font-size:0.62rem; color:#9a3412;">アマゾンカード (経費)</div>
                   </div>
                   <strong id="card-display-business">¥0</strong>
                 </div>
                 <div class="summary-stat-row" style="background:#f8fafc; border:1px solid #e2e8f0; color:#334155;">
-                  <span>カード決済 総計</span>
+                  <span>総費用 合計</span>
                   <strong id="card-display-total-cards">¥0</strong>
                 </div>
               </div>
@@ -2099,7 +2100,7 @@
     let quickLinksData = [];
     let appData = {};
     let activeItemKey = null;
-    let isBankPrivate = false; // 기본 은행계좌 표시 상태: 표시(공개)
+    let isBankPrivate = false; // 기본 은행계좌 표시 상태: 공개
     let isHeaderPrivate = false;
     let isSummaryPrivate = false;
     let selectedTrendFilter = '全体';
@@ -2160,7 +2161,7 @@
       updateHeaderClock();
       setInterval(updateHeaderClock, 1000);
 
-      // 余力資産計算ローカルデータロード
+      // 余力資産計算 ローカルデータロード
       const savedSurplusHeaders = localStorage.getItem('surplus_calc_table_headers_data');
       if (savedSurplusHeaders) {
         try { surplusHeaders = JSON.parse(savedSurplusHeaders); } catch(e) { surplusHeaders = JSON.parse(JSON.stringify(initialSurplusHeaders)); }
@@ -2402,14 +2403,15 @@
       const privSubEl = document.getElementById('summary-card-priv-sub');
       const bizSubEl = document.getElementById('summary-card-biz-sub');
       
-      const privName1 = h.row2?.col7 || '楽天';
-      const privName2 = h.row2?.col8 || 'Paypay';
+      const privName1 = h.row2?.col7 || '楽天カード';
+      const privName2 = h.row2?.col8 || 'Paypayカード';
       const bizName = h.row2?.col9 || 'アマゾンカード';
 
-      if (privSubEl) privSubEl.textContent = `${privName1} + ${privName2}`;
-      if (bizSubEl) bizSubEl.textContent = `${bizName}`;
+      if (privSubEl) privSubEl.textContent = `${privName1} + ${privName2} + ローン + 家賃`;
+      if (bizSubEl) bizSubEl.textContent = `${bizName} (経費)`;
     }
 
+    /* 개인용 비용 및 사업용 비용 합계 자동 계산 로직 적용 */
     function updateSurplusSummaryCards(selectedMonth = null) {
       if (!selectedMonth) {
         const selectEl = document.getElementById('select-summary-month');
@@ -2423,9 +2425,12 @@
       const expTotal = (row.cardRakuten || 0) + (row.cardPaypay || 0) + (row.cardAmazon || 0) + (row.loan || 0) + (row.rent || 0);
       const surplus = incTotal - expTotal;
 
-      const privateCards = (row.cardRakuten || 0) + (row.cardPaypay || 0);
-      const bizCards = (row.cardAmazon || 0);
-      const totalCards = privateCards + bizCards;
+      // 개인용 비용: 楽天カード + Paypayカード + カードローン + 家賃
+      const privateExpenses = (row.cardRakuten || 0) + (row.cardPaypay || 0) + (row.loan || 0) + (row.rent || 0);
+      // 사업용 비용: アマゾンカード (経費)
+      const bizExpenses = (row.cardAmazon || 0);
+      // 총비용
+      const totalExpenses = privateExpenses + bizExpenses;
 
       const titleEl = document.getElementById('summary-target-month-title');
       if (titleEl) titleEl.textContent = `${row.label} の総収支`;
@@ -2434,9 +2439,10 @@
       document.getElementById('card-display-total-exp').textContent = `¥${expTotal.toLocaleString()}`;
       document.getElementById('card-display-surplus').textContent = `¥${surplus.toLocaleString()}`;
 
-      document.getElementById('card-display-private').textContent = `¥${privateCards.toLocaleString()}`;
-      document.getElementById('card-display-business').textContent = `¥${bizCards.toLocaleString()}`;
-      document.getElementById('card-display-total-cards').textContent = `¥${totalCards.toLocaleString()}`;
+      // 개인용비용, 사업용비용, 총비용 각각 자동계산 표시
+      document.getElementById('card-display-private').textContent = `¥${privateExpenses.toLocaleString()}`;
+      document.getElementById('card-display-business').textContent = `¥${bizExpenses.toLocaleString()}`;
+      document.getElementById('card-display-total-cards').textContent = `¥${totalExpenses.toLocaleString()}`;
 
       updateSummaryCardLabels();
     }
@@ -4364,7 +4370,6 @@
         const amtStr = isBankPrivate ? '¥*,***,***' : `¥${item.current.toLocaleString()}`;
         const maskClass = isBankPrivate ? 'private-mask' : '';
         
-        // 잔액만 간결하게 표시
         tile.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div class="tile-label">
