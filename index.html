@@ -7,6 +7,8 @@
   
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js Datalabels Plugin (그래프 숫자 표시용) -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -4324,9 +4326,16 @@
 
       const sidejobGrid = document.getElementById('dashboard-sidejob-grid');
       sidejobGrid.innerHTML = '';
+      const currentMonthKey = new Date().toISOString().substring(0, 7);
+
       sidejobKeys.forEach(key => {
         const item = appData[key];
         const { diffVal, diffPct } = calcSideJobProfitLoss(item);
+
+        const thisMonthEntries = (item.history || [])
+          .filter(h => h.date && h.date.substring(0, 7) === currentMonthKey)
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        const displayAmount = thisMonthEntries.length > 0 ? thisMonthEntries[0].amount : item.current;
         
         const tile = document.createElement('div');
         tile.className = 'info-tile';
@@ -4336,7 +4345,7 @@
           <div class="tile-label">
             <i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}
           </div>
-          <div class="tile-value" style="color:var(--accent-orange)">¥${item.current.toLocaleString()}</div>
+          <div class="tile-value" style="color:var(--accent-orange)">¥${displayAmount.toLocaleString()}</div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
             <span class="badge-year-cumulative">年間累積</span>
             <div class="tile-diff">${renderDiffHtml(diffVal, diffPct, false)}</div>
@@ -4421,7 +4430,27 @@
       sideJobBarChart = new Chart(document.getElementById('sideJobBarChart').getContext('2d'), {
         type: 'bar',
         data: { labels: [], datasets: [] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        plugins: (typeof ChartDataLabels !== 'undefined') ? [ChartDataLabels] : [],
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#4b5563',
+              font: { size: 10, weight: 'bold' },
+              formatter: function(value) {
+                if (!value) return '';
+                return '¥' + Number(value).toLocaleString();
+              }
+            }
+          },
+          scales: {
+            y: { grace: '15%' }
+          }
+        }
       });
     }
 
@@ -4576,7 +4605,7 @@
       });
 
       let sortedMonths = Object.keys(monthMap).sort();
-      if (sortedMonths.length > 3) sortedMonths = sortedMonths.slice(sortedMonths.length - 3);
+      if (sortedMonths.length > 2) sortedMonths = sortedMonths.slice(sortedMonths.length - 2);
 
       const labels = sortedMonths.map(m => m.replace('-', '年') + '月');
 
@@ -4613,8 +4642,8 @@
       });
 
       if (sideJobBarChart) {
-        sideJobBarChart.data.labels = labels.length > 0 ? labels : ['6月', '7月', '8月'];
-        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業評価額', data: [0,0,0], backgroundColor: '#fed7aa' }];
+        sideJobBarChart.data.labels = labels.length > 0 ? labels : ['7月', '8月'];
+        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業評価額', data: [0,0], backgroundColor: '#fed7aa' }];
         sideJobBarChart.update();
       }
     }
