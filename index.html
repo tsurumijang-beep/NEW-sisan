@@ -4335,7 +4335,15 @@
         const thisMonthEntries = (item.history || [])
           .filter(h => h.date && h.date.substring(0, 7) === currentMonthKey)
           .sort((a, b) => new Date(b.date) - new Date(a.date));
-        const displayAmount = thisMonthEntries.length > 0 ? thisMonthEntries[0].amount : item.current;
+
+        const prevMonthDate = new Date(currentMonthKey + '-01');
+        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+        const prevMonthKey = prevMonthDate.toISOString().substring(0, 7);
+        const prevMonthAmount = getItemAmountAtMonth(item, prevMonthKey) || 0;
+
+        const monthlyChange = thisMonthEntries.length > 0 ? (thisMonthEntries[0].amount - prevMonthAmount) : 0;
+        const changeSign = monthlyChange >= 0 ? '+' : '-';
+        const displayAmount = `${changeSign}¥${Math.abs(monthlyChange).toLocaleString()}`;
         
         const tile = document.createElement('div');
         tile.className = 'info-tile';
@@ -4345,7 +4353,7 @@
           <div class="tile-label">
             <i class="fa-solid fa-hand-pointer" style="font-size:0.65rem; color:#e67e22; margin-right:2px;"></i>${item.name}
           </div>
-          <div class="tile-value" style="color:var(--accent-orange)">¥${displayAmount.toLocaleString()}</div>
+          <div class="tile-value" style="color:var(--accent-orange)">${displayAmount}</div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
             <span class="badge-year-cumulative">年間累積</span>
             <div class="tile-diff">${renderDiffHtml(diffVal, diffPct, false)}</div>
