@@ -1240,7 +1240,7 @@
 
         <div class="dashboard-column">
           <div class="card">
-            <div class="card-title">副業状況 (今月の損益)</div>
+            <div class="card-title">副業状況 (今月の評価残高)</div>
             <div class="grid-2col" id="dashboard-sidejob-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2px;"></div>
             <div class="chart-box" style="height: 196px;"><canvas id="sideJobBarChart"></canvas></div>
           </div>
@@ -4446,12 +4446,16 @@
             legend: { display: false },
             datalabels: {
               anchor: 'end',
-              align: 'top',
+              align: function(ctx) {
+                const v = ctx.dataset.data[ctx.dataIndex];
+                return v < 0 ? 'bottom' : 'top';
+              },
               color: '#4b5563',
               font: { size: 10, weight: 'bold' },
               formatter: function(value) {
                 if (!value) return '';
-                return '¥' + Number(value).toLocaleString();
+                const n = Number(value);
+                return (n < 0 ? '-¥' : '¥') + Math.abs(n).toLocaleString();
               }
             }
           },
@@ -4589,6 +4593,17 @@
       }
     }
 
+    function calcMonthlySideJobProfitLoss(item, monthStr) {
+      if (!item.history) return 0;
+      let sum = 0;
+      item.history.forEach(h => {
+        if (h.date && h.date.substring(0, 7) === monthStr && (h.reasonType === '収益' || h.reasonType === '損失')) {
+          sum += (h.investment || 0);
+        }
+      });
+      return sum;
+    }
+
     function updateSideJobMonthlyChart() {
       const monthMap = {};
       const sideJobKeys = [];
@@ -4628,22 +4643,25 @@
       const datasets = [];
       const ctx = document.getElementById('sideJobBarChart').getContext('2d');
 
+      const lossGradient = ctx.createLinearGradient(0, 0, 0, 196);
+      lossGradient.addColorStop(0, '#fecaca');
+      lossGradient.addColorStop(1, '#dc2626');
+
       sideJobKeys.forEach((key, idx) => {
         const item = appData[key];
-        const dataArr = sortedMonths.map(m => {
-          const amt = getItemAmountAtMonth(item, m);
-          return amt !== null ? amt : 0;
-        });
+        const dataArr = sortedMonths.map(m => calcMonthlySideJobProfitLoss(item, m));
 
         const colorPair = palette[idx % palette.length];
-        const gradient = ctx.createLinearGradient(0, 0, 0, 196);
-        gradient.addColorStop(0, colorPair[0]);
-        gradient.addColorStop(1, colorPair[1]);
+        const gainGradient = ctx.createLinearGradient(0, 0, 0, 196);
+        gainGradient.addColorStop(0, colorPair[0]);
+        gainGradient.addColorStop(1, colorPair[1]);
+
+        const backgroundColors = dataArr.map(v => v < 0 ? lossGradient : gainGradient);
 
         datasets.push({
           label: item.name,
           data: dataArr,
-          backgroundColor: gradient,
+          backgroundColor: backgroundColors,
           borderRadius: 6,
           borderSkipped: false
         });
@@ -4651,7 +4669,7 @@
 
       if (sideJobBarChart) {
         sideJobBarChart.data.labels = labels.length > 0 ? labels : ['7月', '8月'];
-        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業評価額', data: [0,0], backgroundColor: '#fed7aa' }];
+        sideJobBarChart.data.datasets = datasets.length > 0 ? datasets : [{ label: '副業損益', data: [0,0], backgroundColor: '#fed7aa' }];
         sideJobBarChart.update();
       }
     }
