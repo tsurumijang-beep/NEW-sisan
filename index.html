@@ -2660,11 +2660,10 @@
         }
       }
 
+      // 「金額」欄は常に現在評価金額そのものとして扱い、増減額は前回評価額との差分から自動計算する
       let diff = 0;
-      if (reasonType === '入金') {
-        diff = newAmt;
-      } else if (reasonType === '出金') {
-        diff = -Math.abs(newAmt);
+      if (reasonType === '入金' || reasonType === '出金') {
+        diff = newAmt - prevAmt;
       } else if (prevReasonType === '出金') {
         diff = newAmt;
       } else {
@@ -2673,12 +2672,13 @@
 
       const diffEl = document.getElementById('input-diff-calc');
       if (diffEl) {
-        if (reasonType === '入金') {
-          diffEl.value = `+¥${Math.abs(diff).toLocaleString()} (入金金額)`;
-          diffEl.style.color = 'var(--primary-dark)';
-        } else if (reasonType === '出金') {
-          diffEl.value = `-¥${Math.abs(diff).toLocaleString()} (出金・減額)`;
-          diffEl.style.color = '#dc2626';
+        if (reasonType === '入金' || reasonType === '出金') {
+          const sign = diff > 0 ? '+' : (diff < 0 ? '-' : '');
+          const tag = reasonType === '入金' ? '入金' : '出金';
+          diffEl.value = `${sign}¥${Math.abs(diff).toLocaleString()} (${tag}・前回比)`;
+          if (diff > 0) diffEl.style.color = '#16a34a';
+          else if (diff < 0) diffEl.style.color = '#dc2626';
+          else diffEl.style.color = '#475569';
         } else if (prevReasonType === '出金') {
           diffEl.value = `+¥${diff.toLocaleString()} (0から再スタート)`;
           diffEl.style.color = '#16a34a';
@@ -2693,18 +2693,12 @@
 
       const cumInv = item.cumulativeInvestment || 0;
       const annualProfit = item.annualProfitLoss || 0;
-      let targetEval = 0;
-      if (reasonType === '出金') {
-        targetEval = Math.max(0, prevAmt - newAmt);
-      } else if (reasonType === '入金') {
-        targetEval = prevAmt + newAmt;
-      } else {
-        targetEval = newAmt;
-      }
+      let targetEval = newAmt;
 
       let calcProfit = 0;
-      if (reasonType === '出金') {
-        calcProfit = 0;
+      if (reasonType === '入金' || reasonType === '出金') {
+        // 入出金は元本も同額調整されるため、累積収益(収益増減)は変動しない
+        calcProfit = calcSideJobProfitLoss(item).diffVal;
       } else if (prevReasonType === '出金') {
         calcProfit = annualProfit + diff;
       } else {
@@ -3852,12 +3846,22 @@
       let calculatedCurrentAmount = newAmount;
 
       if (item.category === '副業状況') {
-        if (newReasonType === '入金') {
-          calcDiffVal = newAmount;
-          calculatedCurrentAmount = prevAmount + newAmount;
-        } else if (newReasonType === '出金') {
-          calcDiffVal = -Math.abs(newAmount);
-          calculatedCurrentAmount = Math.max(0, prevAmount - newAmount);
+        // 「金額」欄は常に文字通り現在評価金額(その時点の評価額そのもの)として扱う。
+        // 増減額は前回評価額との差分から自動計算する(入金・出金でも入力値を差分扱いにしない)。
+        if (newReasonType === '入金' || newReasonType === '出金') {
+          calcDiffVal = newAmount - prevAmount;
+          calculatedCurrentAmount = newAmount;
+
+          // 入金・出金の場合は増減分だけ元本(累積投資額)も同額調整する。
+          // こうすることで 累積収益(評価額-元本) と 年間累積損益 は変動せず、評価金額だけが変わる。
+          let oldPrincipalAdj = 0;
+          if (editIndex >= 0 && item.history[editIndex]) {
+            const oldEntry = item.history[editIndex];
+            if (oldEntry.reasonType === '入金' || oldEntry.reasonType === '出金') {
+              oldPrincipalAdj = oldEntry.investment || 0;
+            }
+          }
+          item.cumulativeInvestment = Math.max(0, (item.cumulativeInvestment || 0) - oldPrincipalAdj + calcDiffVal);
         } else if (prevReasonType === '出金') {
           calcDiffVal = newAmount;
           calculatedCurrentAmount = newAmount;
@@ -4332,16 +4336,8 @@
         const item = appData[key];
         const { diffVal, diffPct } = calcSideJobProfitLoss(item);
 
-        const thisMonthEntries = (item.history || [])
-          .filter(h => h.date && h.date.substring(0, 7) === currentMonthKey)
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        const prevMonthDate = new Date(currentMonthKey + '-01');
-        prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
-        const prevMonthKey = prevMonthDate.toISOString().substring(0, 7);
-        const prevMonthAmount = getItemAmountAtMonth(item, prevMonthKey) || 0;
-
-        const monthlyChange = thisMonthEntries.length > 0 ? (thisMonthEntries[0].amount - prevMonthAmount) : 0;
+        // 月間変動額は「収益・損失」区分の履歴のみを合算し、入金・出金による評価額の増減は含めない
+        const monthlyChange = calcMonthlySideJobProfitLoss(item, currentMonthKey);
         const changeSign = monthlyChange >= 0 ? '+' : '-';
         const displayAmount = `${changeSign}¥${Math.abs(monthlyChange).toLocaleString()}`;
         
