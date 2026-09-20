@@ -783,6 +783,43 @@
       gap: 8px;
       margin-top: 6px;
     }
+    /* 左列: 総収支 → 総費用 (縦積み) / 右列: 今月の定期積立一覧 (2行分) */
+    .surplus-summary-grid > .summary-pastel-card { grid-column: 1; }
+    .surplus-summary-grid > .surplus-plan-card { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; }
+    .surplus-plan-card .monthly-plan-row { gap: 8px; }
+    .surplus-plan-card .plan-edit-row { gap: 6px; flex-wrap: wrap; padding: 3px 6px; }
+    .plan-name-input, .plan-amount-input {
+      border: 1px solid transparent;
+      background: transparent;
+      font-size: 0.74rem;
+      font-family: inherit;
+      color: inherit;
+      outline: none;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+    .plan-name-input { flex: 1 1 110px; min-width: 0; font-weight: 600; }
+    .plan-amount-wrap { display: inline-flex; align-items: center; gap: 2px; color: var(--primary-dark); font-weight: bold; }
+    .plan-amount-input { width: 84px; text-align: right; font-weight: bold; color: var(--primary-dark); }
+    .plan-name-input:hover, .plan-amount-input:hover { border-color: #94a3b8; background: rgba(255,255,255,0.7); }
+    .plan-name-input:focus, .plan-amount-input:focus {
+      background: #ffffff; border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.25); color: #000;
+    }
+    .plan-note { font-size: 0.65rem; color: var(--text-sub); white-space: nowrap; }
+    .plan-del-btn {
+      border: none; background: #fee2e2; color: #b91c1c; border-radius: 4px;
+      width: 20px; height: 20px; cursor: pointer; font-weight: bold; line-height: 1; flex-shrink: 0;
+    }
+    .plan-del-btn:hover { background: #fecaca; }
+    .plan-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+    .plan-actions button {
+      font-size: 0.68rem; padding: 3px 8px; border-radius: 5px; border: none;
+      cursor: pointer; font-weight: bold; color: #ffffff;
+    }
+    .plan-status { font-size: 0.64rem; color: var(--text-sub); margin-left: auto; }
+    .plan-status.dirty { color: #dc2626; font-weight: bold; }
     .summary-pastel-card {
       background: linear-gradient(145deg, #ffffff, #f8fafc);
       border-radius: 10px;
@@ -1027,6 +1064,8 @@
       .surplus-side-panel { height: auto; order: 2; }
       .surplus-main-panel { height: auto; order: 1; }
       .surplus-summary-grid { grid-template-columns: 1fr; }
+      .surplus-summary-grid > .summary-pastel-card,
+      .surplus-summary-grid > .surplus-plan-card { grid-column: 1; grid-row: auto; }
     }
 
     @media screen and (max-width: 768px) {
@@ -1234,8 +1273,6 @@
             </div>
             <div class="grid-large-tsumitate" id="dashboard-tsumitate-grid"></div>
           </div>
-          
-          <div class="monthly-plan-card" id="dashboard-monthly-plan-card"></div>
         </div>
 
         <div class="dashboard-column">
@@ -1333,7 +1370,7 @@
                 <div class="summary-card-header">
                   <span><i class="fa-solid fa-coins" style="color:#0284c7;"></i> <span id="summary-target-month-title">今月の総収支</span></span>
                   <select id="select-summary-month" class="lang-select" onchange="changeSummaryMonth(this.value)">
-                    <option value="latest">最新</option>
+                    <option value="latest" selected>最新</option>
                     <option value="1">2026年1月</option>
                     <option value="2">2026年2月</option>
                     <option value="3">2026年3月</option>
@@ -1341,7 +1378,7 @@
                     <option value="5">2026年5月</option>
                     <option value="6">2026年6月</option>
                     <option value="7">2026年7月</option>
-                    <option value="8" selected>2026年8月</option>
+                    <option value="8">2026年8月</option>
                     <option value="9">2026年9月</option>
                     <option value="10">2026年10月</option>
                     <option value="11">2026年11月</option>
@@ -1387,6 +1424,9 @@
                   <strong id="card-display-total-cards">¥0</strong>
                 </div>
               </div>
+
+              <!-- 今月の定期積立一覧 (ダッシュボードから移動) -->
+              <div class="monthly-plan-card surplus-plan-card" id="surplus-monthly-plan-card"></div>
             </div>
           </div>
 
@@ -1930,35 +1970,6 @@
       });
     };
 
-    /* 余力計算専用メモ장 로직 */
-    window.saveSurplusMemo = function() {
-      const memoEl = document.getElementById('surplus-calc-memo');
-      let memoText = memoEl.value;
-
-      memoText = memoText.replace(/\n*\[\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}\]$/g, '').trimEnd();
-
-      if (memoText !== '') {
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const min = String(now.getMinutes()).padStart(2, '0');
-        const timestamp = `[${yyyy}/${mm}/${dd} ${hh}:${min}]`;
-        memoText = `${memoText}\n${timestamp}`;
-      }
-
-      memoEl.value = memoText;
-      localStorage.setItem('surplus_calc_memo_data', memoText);
-      showToast('タイムスタンプを付与して計算メモを保存しました！');
-    };
-
-    window.clearSurplusMemo = function() {
-      if (!confirm('計算メモを削除しますか？')) return;
-      document.getElementById('surplus-calc-memo').value = '';
-      localStorage.removeItem('surplus_calc_memo_data');
-      showToast('メモを削除しました。');
-    };
   </script>
 
   <!-- Firebase SDK & メインスクリプト -->
@@ -2163,24 +2174,8 @@
       updateHeaderClock();
       setInterval(updateHeaderClock, 1000);
 
-      // 余力資産計算 ローカルデータロード
-      const savedSurplusHeaders = localStorage.getItem('surplus_calc_table_headers_data');
-      if (savedSurplusHeaders) {
-        try { surplusHeaders = JSON.parse(savedSurplusHeaders); } catch(e) { surplusHeaders = JSON.parse(JSON.stringify(initialSurplusHeaders)); }
-      } else {
-        surplusHeaders = JSON.parse(JSON.stringify(initialSurplusHeaders));
-      }
-
-      const savedSurplus = localStorage.getItem('surplus_calc_table_excel_data');
-      if (savedSurplus) {
-        try { surplusTableData = JSON.parse(savedSurplus); } catch(e) { surplusTableData = JSON.parse(JSON.stringify(initialSurplusRows)); }
-      } else {
-        surplusTableData = JSON.parse(JSON.stringify(initialSurplusRows));
-      }
-
-      const savedCalcMemo = localStorage.getItem('surplus_calc_memo_data');
-      const memoEl = document.getElementById('surplus-calc-memo');
-      if (memoEl && savedCalcMemo) memoEl.value = savedCalcMemo;
+      // 余力資産計算 データロード (Firebase優先 → ローカル → 初期値)
+      await loadSurplusData();
 
       try {
         const qlDocRef = doc(db, "assets", "quickLinks");
@@ -2380,21 +2375,137 @@
       updateSurplusSummaryCards();
     };
 
-    window.saveSurplusTableData = function() {
+    /* ===== 余力資産計算: Firebase(Firestore assets/surplusCalc) 保存・読み込み ===== */
+    function readLocalJSON(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function cacheSurplusLocal() {
       localStorage.setItem('surplus_calc_table_headers_data', JSON.stringify(surplusHeaders));
       localStorage.setItem('surplus_calc_table_excel_data', JSON.stringify(surplusTableData));
-      showToast('項目名と余力資産計算のデータを保存しました！');
+    }
+
+    // headers / rows / memo のうち渡したものだけを merge で保存 (他の項目は上書きしない)
+    async function persistSurplusData(partial) {
+      try {
+        const payload = JSON.parse(JSON.stringify(partial));
+        payload.updatedAt = new Date().toISOString();
+        await setDoc(doc(db, "assets", "surplusCalc"), payload, { merge: true });
+        return true;
+      } catch (e) {
+        console.error("Firebase 余力資産計算 保存エラー:", e);
+        return false;
+      }
+    }
+
+    async function loadSurplusData() {
+      const localHeaders = readLocalJSON('surplus_calc_table_headers_data');
+      const localRows = readLocalJSON('surplus_calc_table_excel_data');
+      const localMemo = localStorage.getItem('surplus_calc_memo_data') || '';
+      const localPlan = readLocalJSON('surplus_monthly_plan_data');
+      const initHeaders = () => JSON.parse(JSON.stringify(initialSurplusHeaders));
+      const initRows = () => JSON.parse(JSON.stringify(initialSurplusRows));
+
+      let memoText = localMemo;
+      try {
+        const snap = await getDoc(doc(db, "assets", "surplusCalc"));
+        if (snap.exists()) {
+          const d = snap.data();
+          surplusHeaders = (d.headers && d.headers.row1) ? d.headers : (localHeaders || initHeaders());
+          surplusTableData = (Array.isArray(d.rows) && d.rows.length) ? d.rows : (localRows || initRows());
+          memoText = (typeof d.memo === 'string') ? d.memo : localMemo;
+          monthlyPlanManual = Array.isArray(d.monthlyPlan) ? sanitizePlanRows(d.monthlyPlan) : null;
+        } else {
+          // 初回: ブラウザに保存済みのデータがあればFirebaseへ移行、無ければ初期値で作成
+          surplusHeaders = localHeaders || initHeaders();
+          surplusTableData = localRows || initRows();
+          monthlyPlanManual = Array.isArray(localPlan) ? sanitizePlanRows(localPlan) : null;
+          await persistSurplusData({ headers: surplusHeaders, rows: surplusTableData, memo: localMemo, monthlyPlan: monthlyPlanManual });
+        }
+      } catch (e) {
+        console.error("Firebase 余力資産計算 読み込みエラー、ローカルデータを使用:", e);
+        surplusHeaders = localHeaders || initHeaders();
+        surplusTableData = localRows || initRows();
+        monthlyPlanManual = Array.isArray(localPlan) ? sanitizePlanRows(localPlan) : null;
+      }
+
+      monthlyPlanDirty = false;
+      if (monthlyPlanManual) localStorage.setItem('surplus_monthly_plan_data', JSON.stringify(monthlyPlanManual));
+      else localStorage.removeItem('surplus_monthly_plan_data');
+      cacheSurplusLocal();
+      localStorage.setItem('surplus_calc_memo_data', memoText);
+      const memoEl = document.getElementById('surplus-calc-memo');
+      if (memoEl) memoEl.value = memoText;
+      setSummaryMonthToCurrent();
+    }
+
+    window.saveSurplusTableData = async function() {
+      cacheSurplusLocal();
+      const ok = await persistSurplusData({ headers: surplusHeaders, rows: surplusTableData });
+      showToast(ok
+        ? '項目名と余力資産計算のデータをFirebaseに保存しました！'
+        : 'Firebaseへの保存に失敗しました。このブラウザ内にのみ保存されています。');
     };
 
-    window.resetSurplusTableData = function() {
+    window.resetSurplusTableData = async function() {
       if (!confirm('項目名および入力内容を初期データに戻しますか？')) return;
       surplusHeaders = JSON.parse(JSON.stringify(initialSurplusHeaders));
       surplusTableData = JSON.parse(JSON.stringify(initialSurplusRows));
-      localStorage.setItem('surplus_calc_table_headers_data', JSON.stringify(surplusHeaders));
-      localStorage.setItem('surplus_calc_table_excel_data', JSON.stringify(surplusTableData));
+      cacheSurplusLocal();
       renderSurplusExcelTable();
-      showToast('初期値にリセットしました。');
+      const ok = await persistSurplusData({ headers: surplusHeaders, rows: surplusTableData });
+      showToast(ok ? '初期値にリセットしました。' : '初期値にリセットしましたが、Firebaseへの保存に失敗しました。');
     };
+
+    /* 余力計算専用メモ장 로직 (Firebase対応) */
+    window.saveSurplusMemo = async function() {
+      const memoEl = document.getElementById('surplus-calc-memo');
+      let memoText = memoEl.value;
+
+      memoText = memoText.replace(/\n*\[\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}\]$/g, '').trimEnd();
+
+      if (memoText !== '') {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const timestamp = `[${yyyy}/${mm}/${dd} ${hh}:${min}]`;
+        memoText = `${memoText}\n${timestamp}`;
+      }
+
+      memoEl.value = memoText;
+      localStorage.setItem('surplus_calc_memo_data', memoText);
+      const ok = await persistSurplusData({ memo: memoText });
+      showToast(ok
+        ? 'タイムスタンプを付与して計算メモをFirebaseに保存しました！'
+        : 'Firebaseへの保存に失敗しました。このブラウザ内にのみ保存されています。');
+    };
+
+    window.clearSurplusMemo = async function() {
+      if (!confirm('計算メモを削除しますか？')) return;
+      document.getElementById('surplus-calc-memo').value = '';
+      localStorage.removeItem('surplus_calc_memo_data');
+      const ok = await persistSurplusData({ memo: '' });
+      showToast(ok ? 'メモを削除しました。' : 'メモを削除しましたが、Firebaseへの反映に失敗しました。');
+    };
+
+    /* 今日の月に対応する行ID('1'〜'12')。該当行が無ければ 'latest' */
+    function getCurrentMonthRowId() {
+      const id = String(new Date().getMonth() + 1);
+      return surplusTableData.some(r => r.id === id) ? id : 'latest';
+    }
+
+    function setSummaryMonthToCurrent() {
+      const selectEl = document.getElementById('select-summary-month');
+      if (selectEl) selectEl.value = getCurrentMonthRowId();
+    }
 
     window.changeSummaryMonth = function(monthVal) {
       updateSurplusSummaryCards(monthVal);
@@ -2417,7 +2528,7 @@
     function updateSurplusSummaryCards(selectedMonth = null) {
       if (!selectedMonth) {
         const selectEl = document.getElementById('select-summary-month');
-        selectedMonth = selectEl ? selectEl.value : '8';
+        selectedMonth = selectEl ? selectEl.value : getCurrentMonthRowId();
       }
 
       const row = surplusTableData.find(r => r.id === selectedMonth) || surplusTableData[0];
@@ -2476,6 +2587,7 @@
         quickLinksData: quickLinksData,
         surplusHeaders: surplusHeaders,
         surplusTableData: surplusTableData,
+        surplusMonthlyPlan: monthlyPlanManual,
         exportedAt: new Date().toISOString()
       };
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -2504,13 +2616,23 @@
               nisaHoldings = JSON.parse(JSON.stringify(nisaHoldingsOriginal));
             }
             if (imported.quickLinksData) quickLinksData = imported.quickLinksData;
+            const surplusRestore = {};
             if (imported.surplusHeaders) {
               surplusHeaders = imported.surplusHeaders;
-              localStorage.setItem('surplus_calc_table_headers_data', JSON.stringify(surplusHeaders));
+              surplusRestore.headers = surplusHeaders;
             }
             if (imported.surplusTableData) {
               surplusTableData = imported.surplusTableData;
-              localStorage.setItem('surplus_calc_table_excel_data', JSON.stringify(surplusTableData));
+              surplusRestore.rows = surplusTableData;
+            }
+            if (Array.isArray(imported.surplusMonthlyPlan)) {
+              monthlyPlanManual = sanitizePlanRows(imported.surplusMonthlyPlan);
+              localStorage.setItem('surplus_monthly_plan_data', JSON.stringify(monthlyPlanManual));
+              surplusRestore.monthlyPlan = monthlyPlanManual;
+            }
+            if (Object.keys(surplusRestore).length) {
+              cacheSurplusLocal();
+              persistSurplusData(surplusRestore);
             }
             saveData();
             showToast('データの復元が完了しました。');
@@ -3302,7 +3424,9 @@
         document.getElementById('view-surplus-calc').classList.add('active');
         document.getElementById('menu-surplus-calc').classList.add('active');
         document.getElementById('header-view-title').textContent = '余力資産計算';
+        setSummaryMonthToCurrent();
         renderSurplusExcelTable();
+        renderMonthlyPlanCard();
       } else if (targetView === 'rakuten-nisa-status') {
         document.getElementById('view-rakuten-nisa-status').classList.add('active');
         document.getElementById('menu-rakuten-nisa-status').classList.add('active');
@@ -4086,6 +4210,22 @@
       updateCharts();
     }
 
+    /* 曜日名なら 月=0 … 日=6 を返し、曜日でなければ -1 を返す (日本語/韓国語/英語の表記に対応) */
+    function getWeekdayOrder(label) {
+      const str = String(label || '').trim();
+      const ja = '月火水木金土日';
+      const ko = '월화수목금토일';
+      let m = str.match(/^(?:毎週)?([月火水木金土日])曜/);
+      if (m) return ja.indexOf(m[1]);
+      m = str.match(/^(?:毎週)?([月火水木金土日])(?:[・,、\/･\s]*[月火水木金土日])*$/);
+      if (m) return ja.indexOf(m[1]);
+      m = str.match(/^(?:매주)?\s*([월화수목금토일])(?:요일)?$/);
+      if (m) return ko.indexOf(m[1]);
+      m = str.match(/^(mon|tue|wed|thu|fri|sat|sun)(?:day|sday|nesday|rsday|urday)?\.?$/i);
+      if (m) return ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].indexOf(m[1].toLowerCase());
+      return -1;
+    }
+
     function renderFilterBars() {
       const tsumitateDivisions = new Set();
       for (let key in appData) {
@@ -4100,7 +4240,11 @@
       const tsumitateSelect = document.createElement('select');
       tsumitateSelect.className = 'filter-select';
 
-      const tsumitateOptions = ['全体', ...Array.from(tsumitateDivisions)];
+      // 曜日名の区分は 月→火→水→木→金→土→日 の順、それ以外は従来の順で曜日の後ろに並べる
+      const divisionList = Array.from(tsumitateDivisions).map((name, index) => ({ name, index, wd: getWeekdayOrder(name) }));
+      const weekdayDivisions = divisionList.filter(x => x.wd >= 0).sort((a, b) => (a.wd - b.wd) || (a.index - b.index)).map(x => x.name);
+      const otherDivisions = divisionList.filter(x => x.wd < 0).map(x => x.name);
+      const tsumitateOptions = ['全体', ...weekdayDivisions, ...otherDivisions];
       tsumitateOptions.forEach(opt => {
         const option = document.createElement('option');
         option.value = opt;
@@ -4253,8 +4397,6 @@
       ];
 
       let colorIndex = 0;
-      let totalMonthlyExpected = 0;
-      let monthlyPlanRowsHtml = '';
 
       tsumitateKeys.forEach(key => {
         const item = appData[key];
@@ -4263,16 +4405,6 @@
 
         const daily = item.dailyInvestment || 0;
         const monthly = item.monthlyInvestment || 0;
-        const itemExpected = (daily * 31) + monthly;
-        if (itemExpected > 0) {
-          totalMonthlyExpected += itemExpected;
-          monthlyPlanRowsHtml += `
-            <div class="monthly-plan-row">
-              <span style="font-weight:600;">${item.name}</span>
-              <span style="color:var(--primary-dark); font-weight:bold;">¥${itemExpected.toLocaleString()} <span style="font-size:0.65rem; color:var(--text-sub);">(日¥${daily.toLocaleString()}+月¥${monthly.toLocaleString()})</span></span>
-            </div>
-          `;
-        }
 
         const tile = document.createElement('div');
         tile.className = 'info-tile-large';
@@ -4300,23 +4432,7 @@
         tsumitateGrid.appendChild(tile);
       });
 
-      const monthlyCard = document.getElementById('dashboard-monthly-plan-card');
-      if (monthlyCard) {
-        if (monthlyPlanRowsHtml !== '') {
-          monthlyCard.style.display = 'flex';
-          monthlyCard.innerHTML = `
-            <div class="monthly-plan-header">
-              <span><i class="fa-solid fa-calendar-days" style="color:var(--primary-color); margin-right:4px;"></i> 今月の定期積立一覧 (8月)</span>
-              <span style="color:var(--accent-green); font-size:0.85rem;">合計: ¥${totalMonthlyExpected.toLocaleString()}</span>
-            </div>
-            <div class="monthly-plan-list">
-              ${monthlyPlanRowsHtml}
-            </div>
-          `;
-        } else {
-          monthlyCard.style.display = 'none';
-        }
-      }
+      renderMonthlyPlanCard();
 
       const sidejobKeys = Object.keys(appData).filter(key => appData[key].category === '副業状況');
       sidejobKeys.sort((a, b) => {
@@ -4360,6 +4476,173 @@
 
       renderBankGrid();
     }
+
+    /* ===== 今月の定期積立一覧 (余力資産計算ビュー / 手動編集対応 / Firebase保存) =====
+       monthlyPlanManual: null = 積立投資の設定から自動計算 / 配列 = 手動編集した一覧 */
+    let monthlyPlanManual = null;
+    let monthlyPlanDirty = false;
+
+    function escapeAttr(v) {
+      return String(v === undefined || v === null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function sanitizePlanRows(rows) {
+      return (Array.isArray(rows) ? rows : []).map(r => ({
+        name: String((r && r.name) || ''),
+        amount: Number(r && r.amount) || 0,
+        note: String((r && r.note) || '')
+      }));
+    }
+
+    function getAutoMonthlyPlan() {
+      const keys = Object.keys(appData).filter(key => appData[key].category === '積立投資');
+      keys.sort((a, b) => {
+        const nameA = appData[a].name || '';
+        const nameB = appData[b].name || '';
+        const numA = getSortNum(nameA);
+        const numB = getSortNum(nameB);
+        if (numA !== numB) return numA - numB;
+        return nameA.localeCompare(nameB);
+      });
+
+      const rows = [];
+      keys.forEach(key => {
+        const item = appData[key];
+        const daily = item.dailyInvestment || 0;
+        const monthly = item.monthlyInvestment || 0;
+        const amount = (daily * 31) + monthly;
+        if (amount > 0) {
+          rows.push({ name: item.name || '', amount: amount, note: `日¥${daily.toLocaleString()}+月¥${monthly.toLocaleString()}` });
+        }
+      });
+      return rows;
+    }
+
+    function ensureManualPlan() {
+      if (!monthlyPlanManual) monthlyPlanManual = getAutoMonthlyPlan();
+    }
+
+    function updatePlanTotal() {
+      const rows = monthlyPlanManual || getAutoMonthlyPlan();
+      const total = rows.reduce((sum, r) => sum + (r.amount || 0), 0);
+      const el = document.getElementById('plan-total-display');
+      if (el) el.textContent = `合計: ¥${total.toLocaleString()}`;
+    }
+
+    function updatePlanStatus() {
+      const el = document.getElementById('plan-status');
+      if (!el) return;
+      el.classList.toggle('dirty', monthlyPlanDirty);
+      el.textContent = monthlyPlanDirty ? '未保存の編集あり' : (monthlyPlanManual ? '手動編集(保存済み)' : '自動計算');
+    }
+
+    function renderMonthlyPlanCard() {
+      const card = document.getElementById('surplus-monthly-plan-card');
+      if (!card) return;
+
+      const rows = monthlyPlanManual || getAutoMonthlyPlan();
+      const total = rows.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+      const rowsHtml = rows.map((r, i) => `
+        <div class="monthly-plan-row plan-edit-row">
+          <input type="text" class="plan-name-input" value="${escapeAttr(r.name)}" placeholder="項目名" oninput="planEditName(${i}, this.value)">
+          <span class="plan-amount-wrap">¥<input type="text" inputmode="numeric" class="plan-amount-input" value="${(r.amount || 0).toLocaleString()}" onfocus="this.select()" oninput="planEditAmount(${i}, this.value)" onblur="planFormatAmount(this)"></span>
+          ${r.note ? `<span class="plan-note" id="plan-note-${i}">(${escapeAttr(r.note)})</span>` : ''}
+          <button type="button" class="plan-del-btn" onclick="removePlanRow(${i})" title="この行を削除">×</button>
+        </div>
+      `).join('');
+
+      card.style.display = 'flex';
+      card.innerHTML = `
+        <div class="monthly-plan-header">
+          <span><i class="fa-solid fa-calendar-days" style="color:var(--primary-color); margin-right:4px;"></i> 今月の定期積立一覧 (8月)</span>
+          <span id="plan-total-display" style="color:var(--accent-green); font-size:0.85rem;">合計: ¥${total.toLocaleString()}</span>
+        </div>
+        <div class="monthly-plan-list">
+          ${rowsHtml || '<div style="font-size:0.72rem; color:var(--text-sub); padding:4px 6px;">項目がありません。「＋ 行追加」で追加できます。</div>'}
+        </div>
+        <div class="plan-actions">
+          <button type="button" style="background:#3a7bd5;" onclick="addPlanRow()">＋ 行追加</button>
+          <button type="button" style="background:#0284c7;" onclick="saveMonthlyPlan()"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button type="button" style="background:#94a3b8;" onclick="resetMonthlyPlan()">自動計算に戻す</button>
+          <span class="plan-status" id="plan-status"></span>
+        </div>
+      `;
+      updatePlanStatus();
+    }
+
+    function markPlanDirty() {
+      monthlyPlanDirty = true;
+      updatePlanStatus();
+    }
+
+    window.planEditName = function(i, value) {
+      ensureManualPlan();
+      if (!monthlyPlanManual[i]) return;
+      monthlyPlanManual[i].name = value;
+      markPlanDirty();
+    };
+
+    window.planEditAmount = function(i, value) {
+      ensureManualPlan();
+      const row = monthlyPlanManual[i];
+      if (!row) return;
+      row.amount = parseFormattedNumber(value);
+      if (row.note) {
+        row.note = '';
+        const noteEl = document.getElementById(`plan-note-${i}`);
+        if (noteEl) noteEl.remove();
+      }
+      markPlanDirty();
+      updatePlanTotal();
+    };
+
+    window.planFormatAmount = function(el) {
+      el.value = parseFormattedNumber(el.value).toLocaleString();
+    };
+
+    window.addPlanRow = function() {
+      ensureManualPlan();
+      monthlyPlanManual.push({ name: '', amount: 0, note: '' });
+      markPlanDirty();
+      renderMonthlyPlanCard();
+      const inputs = document.querySelectorAll('#surplus-monthly-plan-card .plan-name-input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    };
+
+    window.removePlanRow = function(i) {
+      ensureManualPlan();
+      monthlyPlanManual.splice(i, 1);
+      markPlanDirty();
+      renderMonthlyPlanCard();
+    };
+
+    window.saveMonthlyPlan = async function() {
+      if (!monthlyPlanManual) {
+        showToast('編集内容がありません。金額の変更や行の追加をしてから保存してください。');
+        return;
+      }
+      // 項目名が空で金額も0の行は保存対象から除外
+      monthlyPlanManual = monthlyPlanManual.filter(r => String(r.name).trim() !== '' || r.amount !== 0);
+      localStorage.setItem('surplus_monthly_plan_data', JSON.stringify(monthlyPlanManual));
+      const ok = await persistSurplusData({ monthlyPlan: monthlyPlanManual });
+      if (ok) monthlyPlanDirty = false;
+      renderMonthlyPlanCard();
+      showToast(ok
+        ? '今月の定期積立一覧をFirebaseに保存しました！'
+        : 'Firebaseへの保存に失敗しました。このブラウザ内にのみ保存されています。');
+    };
+
+    window.resetMonthlyPlan = async function() {
+      if (!confirm('手動編集した内容を破棄し、積立投資の設定から自動計算した一覧に戻しますか？')) return;
+      monthlyPlanManual = null;
+      monthlyPlanDirty = false;
+      localStorage.removeItem('surplus_monthly_plan_data');
+      renderMonthlyPlanCard();
+      const ok = await persistSurplusData({ monthlyPlan: null });
+      showToast(ok ? '自動計算の一覧に戻しました。' : '自動計算に戻しましたが、Firebaseへの反映に失敗しました。');
+    };
 
     function renderBankGrid() {
       const bankKeys = Object.keys(appData).filter(key => appData[key].category === '銀行預金');
