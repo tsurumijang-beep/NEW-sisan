@@ -4182,10 +4182,8 @@
         sumCumulative += cumulative;
 
         if (item.category === '副業状況') {
-          const netProfit = (curAmt === 0 ? 0 : (curAmt - cumulative)) + (item.annualProfitLoss || 0);
-          if (netProfit > 0) {
-            sideJobTotal += netProfit;
-          }
+          // 各項目の「年間累積」損益(タイルに表示される値)をすべて合算する
+          sideJobTotal += calcSideJobProfitLoss(item).diffVal;
         }
       }
 
@@ -4193,7 +4191,8 @@
       const totalProfitPct = sumCumulative !== 0 ? (totalProfitVal / sumCumulative) * 100 : 0;
 
       const totalAssetsStr = isHeaderPrivate ? '¥*,***,***' : `¥${sumCurrent.toLocaleString()}`;
-      const sideIncomeStr = isHeaderPrivate ? '+¥*,***,***' : `+¥${sideJobTotal.toLocaleString()}`;
+      const sideIncomeSign = sideJobTotal < 0 ? '-' : '+';
+      const sideIncomeStr = isHeaderPrivate ? '+¥*,***,***' : `${sideIncomeSign}¥${Math.abs(sideJobTotal).toLocaleString()}`;
       const maskClass = isHeaderPrivate ? 'private-mask' : '';
 
       document.getElementById('header-total-assets').textContent = totalAssetsStr;
@@ -4204,6 +4203,7 @@
 
       document.getElementById('header-side-income').textContent = sideIncomeStr;
       document.getElementById('header-side-income').className = maskClass;
+      document.getElementById('header-side-income').style.color = sideJobTotal < 0 ? 'var(--accent-red, #dc2626)' : 'var(--accent-green)';
 
       renderFilterBars();
       renderDashboardGrids();
@@ -4556,7 +4556,7 @@
       card.style.display = 'flex';
       card.innerHTML = `
         <div class="monthly-plan-header">
-          <span><i class="fa-solid fa-calendar-days" style="color:var(--primary-color); margin-right:4px;"></i> 今月の定期積立一覧</span>
+          <span><i class="fa-solid fa-calendar-days" style="color:var(--primary-color); margin-right:4px;"></i> 今月の定期積立一覧 (8月)</span>
           <span id="plan-total-display" style="color:var(--accent-green); font-size:0.85rem;">合計: ¥${total.toLocaleString()}</span>
         </div>
         <div class="monthly-plan-list">
