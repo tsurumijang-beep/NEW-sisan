@@ -3439,6 +3439,45 @@
       }
     };
 
+    // メルカリ売上: 「最新金額」欄を現在残高ではなく年間累積額(ダッシュボードの「年間累積」表示と同じ計算)で表示する
+    // ※キー名(item_xxxxx等)ではなく項目名で判定するため、UIから追加・再作成した項目でも正しく反映される
+    function isAnnualCumulativeDisplayItem(item) {
+      return item.category === '副業状況' && (item.name || '').includes('メルカリ');
+    }
+    // PAYPAY銀行 / 楽天銀行 / りそな銀行: 累積投資額を常に最新金額と同額に自動同期し、損益額(%)を常に±0にする
+    // ※キー名ではなく項目名で判定するため、UIから追加・再作成した項目でも正しく反映される
+    function isAutoSyncBankItem(item) {
+      if (item.category !== '銀行預金') return false;
+      const name = item.name || '';
+      return name.includes('PAYPAY銀行') || name.includes('楽天銀行') || name.includes('りそな銀行');
+    }
+    // 項目1件分の「累積投資額」と「損益額」を、全資産表の損益額(%)列と同じルールで算出する
+    // (銀行預金の一部は最新金額に自動同期、副業状況はannualProfitLoss込みのcalcSideJobProfitLossを使用)
+    function calcItemCumulativeAndProfit(item) {
+      const cumulativeInv = isAutoSyncBankItem(item)
+        ? (item.current || 0)
+        : (item.cumulativeInvestment || 0);
+      let profitVal;
+      if (item.category === '副業状況') {
+        profitVal = calcSideJobProfitLoss(item).diffVal;
+      } else {
+        profitVal = (item.current || 0) - cumulativeInv;
+      }
+      return { cumulativeInv, profitVal };
+    }
+    // 全資産(前回比較一覧)の合計行と同じ計算式で、現在時点の全体の累積投資額・損益額・損益率(%)を算出する
+    // ダッシュボードの「全資産の推移」グラフの損益率をこの数値と一致させるために使用
+    function calcOverallProfitSummary() {
+      let sumCumulative = 0, sumProfit = 0;
+      for (let key in appData) {
+        const { cumulativeInv, profitVal } = calcItemCumulativeAndProfit(appData[key]);
+        sumCumulative += cumulativeInv;
+        sumProfit += profitVal;
+      }
+      const sumProfitPct = sumCumulative !== 0 ? (sumProfit / sumCumulative) * 100 : 0;
+      return { sumCumulative, sumProfit, sumProfitPct };
+    }
+
     function renderAllAssetsTable() {
       const tbody = document.getElementById('all-assets-table-body');
       tbody.innerHTML = '';
@@ -3471,39 +3510,14 @@
 
       let sumCurrent = 0, sumPrev = 0, sumDiff = 0, sumDailyAmt = 0, sumDailyDiff = 0, sumCumulative = 0, sumProfit = 0;
 
-      // メルカリ売上: 「最新金額」欄を現在残高ではなく年間累積額(ダッシュボードの「年間累積」表示と同じ計算)で表示する
-      // ※キー名(item_xxxxx等)ではなく項目名で判定するため、UIから追加・再作成した項目でも正しく反映される
-      const isAnnualCumulativeDisplayItem = (item) => {
-        return item.category === '副業状況' && (item.name || '').includes('メルカリ');
-      };
-      // PAYPAY銀行 / 楽天銀行 / りそな銀行: 累積投資額を常に最新金額と同額に自動同期し、損益額(%)を常に±0にする
-      // ※キー名ではなく項目名で判定するため、UIから追加・再作成した項目でも正しく反映される
-      const isAutoSyncBankItem = (item) => {
-        if (item.category !== '銀行預金') return false;
-        const name = item.name || '';
-        return name.includes('PAYPAY銀行') || name.includes('楽天銀行') || name.includes('りそな銀行');
-      };
-
       const sortedKeys = sortKeysByMenuOrder(Object.keys(appData));
       sortedKeys.forEach(key => {
         const item = appData[key];
         const { diffVal, diffPct, prev } = calcDiff(item, targetTargetDateStr);
         const { diffVal: dailyDiffVal, diffPct: dailyDiffPct, dailyAmt } = calcDailyDiff(item, targetDailyDateStr);
 
-        const cumulativeInv = isAutoSyncBankItem(item)
-          ? item.current
-          : (item.cumulativeInvestment || 0);
-
-        // 副業状況カテゴリの損益額(%)は、ダッシュボードの「年間累積」表示と同じ計算(annualProfitLoss込み)にして一致させる
-        let profitVal, profitPct;
-        if (item.category === '副業状況') {
-          const sideJobProfit = calcSideJobProfitLoss(item);
-          profitVal = sideJobProfit.diffVal;
-          profitPct = sideJobProfit.diffPct;
-        } else {
-          profitVal = item.current - cumulativeInv;
-          profitPct = cumulativeInv !== 0 ? (profitVal / cumulativeInv) * 100 : 0;
-        }
+        const { cumulativeInv, profitVal } = calcItemCumulativeAndProfit(item);
+        const profitPct = cumulativeInv !== 0 ? (profitVal / cumulativeInv) * 100 : 0;
 
         sumCurrent += item.current;
         sumPrev += prev;
@@ -4853,6 +4867,16 @@
 
         latestTotalAsset = monthTotalAsset;
       });
+
+      // 「全資産の推移(総資産)」表示時は、最新時点の損益率を全資産(前回比較一覧)の合計行と同じ計算式に揃える
+      // (銀行預金の一部の自動同期・副業状況のannualProfitLoss込み計算を反映)
+      if (selectedTrendFilter === '全体') {
+        const overallSummary = calcOverallProfitSummary();
+        latestProfitRate = overallSummary.sumProfitPct;
+        if (profitRatePerMonth.length > 0 && profitRatePerMonth[profitRatePerMonth.length - 1] !== null) {
+          profitRatePerMonth[profitRatePerMonth.length - 1] = parseFloat(overallSummary.sumProfitPct.toFixed(1));
+        }
+      }
 
       if (trendChart) {
         let dynamicMaxY = latestTotalAsset > 0 ? latestTotalAsset / 0.7 : 20000000;
