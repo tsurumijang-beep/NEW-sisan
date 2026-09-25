@@ -3471,15 +3471,39 @@
 
       let sumCurrent = 0, sumPrev = 0, sumDiff = 0, sumDailyAmt = 0, sumDailyDiff = 0, sumCumulative = 0, sumProfit = 0;
 
+      // メルカリ売上: 「最新金額」欄を現在残高ではなく年間累積額(ダッシュボードの「年間累積」表示と同じ計算)で表示する
+      // ※キー名(item_xxxxx等)ではなく項目名で判定するため、UIから追加・再作成した項目でも正しく反映される
+      const isAnnualCumulativeDisplayItem = (item) => {
+        return item.category === '副業状況' && (item.name || '').includes('メルカリ');
+      };
+      // PAYPAY銀行 / 楽天銀行 / りそな銀行: 累積投資額を常に最新金額と同額に自動同期し、損益額(%)を常に±0にする
+      // ※キー名ではなく項目名で判定するため、UIから追加・再作成した項目でも正しく反映される
+      const isAutoSyncBankItem = (item) => {
+        if (item.category !== '銀行預金') return false;
+        const name = item.name || '';
+        return name.includes('PAYPAY銀行') || name.includes('楽天銀行') || name.includes('りそな銀行');
+      };
+
       const sortedKeys = sortKeysByMenuOrder(Object.keys(appData));
       sortedKeys.forEach(key => {
         const item = appData[key];
         const { diffVal, diffPct, prev } = calcDiff(item, targetTargetDateStr);
         const { diffVal: dailyDiffVal, diffPct: dailyDiffPct, dailyAmt } = calcDailyDiff(item, targetDailyDateStr);
 
-        const cumulativeInv = item.cumulativeInvestment || 0;
-        const profitVal = item.current - cumulativeInv;
-        const profitPct = cumulativeInv !== 0 ? (profitVal / cumulativeInv) * 100 : 0;
+        const cumulativeInv = isAutoSyncBankItem(item)
+          ? item.current
+          : (item.cumulativeInvestment || 0);
+
+        // 副業状況カテゴリの損益額(%)は、ダッシュボードの「年間累積」表示と同じ計算(annualProfitLoss込み)にして一致させる
+        let profitVal, profitPct;
+        if (item.category === '副業状況') {
+          const sideJobProfit = calcSideJobProfitLoss(item);
+          profitVal = sideJobProfit.diffVal;
+          profitPct = sideJobProfit.diffPct;
+        } else {
+          profitVal = item.current - cumulativeInv;
+          profitPct = cumulativeInv !== 0 ? (profitVal / cumulativeInv) * 100 : 0;
+        }
 
         sumCurrent += item.current;
         sumPrev += prev;
@@ -3491,8 +3515,11 @@
 
         const division = item.assetDivision || '未設定';
         const tr = document.createElement('tr');
-        
-        const curStr = `¥${item.current.toLocaleString()}`;
+
+        const curDisplayVal = isAnnualCumulativeDisplayItem(item)
+          ? calcSideJobProfitLoss(item).diffVal
+          : item.current;
+        const curStr = `¥${curDisplayVal.toLocaleString()}`;
         const prevStr = `¥${prev.toLocaleString()}`;
         const dailyStr = `¥${dailyAmt.toLocaleString()}`;
         const invStr = `¥${cumulativeInv.toLocaleString()}`;
