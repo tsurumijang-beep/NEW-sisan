@@ -1314,7 +1314,7 @@
         </div>
         <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">設定された「区分」と項目名ごとに前回比較および損益額を一覧表示しています。</p>
         <div class="export-buttons">
-          <button class="btn-export" onclick="exportTableToCSV('all-assets-table-body', '全資産_前回比較一覧.csv')"><i class="fa-solid fa-download"></i> CSVダウンロード</button>
+          <button class="btn-export" onclick="exportTableToCSV('all-assets-table-body', `全資産_前回比較一覧_${new Date().toISOString().slice(0,10)}.csv`)"><i class="fa-solid fa-download"></i> CSVダウンロード</button>
           <button class="btn-export" style="background:#27ae60;" onclick="copyTableToClipboard('all-assets-table-body')"><i class="fa-solid fa-copy"></i> クリップボードにコピー</button>
         </div>
         <div style="overflow-x: auto;">
