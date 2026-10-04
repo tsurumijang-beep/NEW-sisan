@@ -3584,6 +3584,13 @@
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
       let csv = [];
+      // 全資産(前回比較一覧)のみ、見出し行(区分/項目名/最新金額 等)も一緒に出力する
+      if (tbodyId === 'all-assets-table-body') {
+        const headCells = tbody.parentElement.querySelectorAll('thead th');
+        if (headCells.length) {
+          csv.push(Array.from(headCells).map(th => `"${th.innerText.replace(/[\n\r]+/g, ' ').trim().replace(/"/g, '""')}"`).join(','));
+        }
+      }
       const rows = tbody.querySelectorAll('tr');
 
       rows.forEach(row => {
@@ -3618,6 +3625,13 @@
       const tbody = document.getElementById(tbodyId);
       if (!tbody) return;
       let textData = [];
+      // 全資産(前回比較一覧)のみ、見出し行も一緒にコピーする
+      if (tbodyId === 'all-assets-table-body') {
+        const headCells = tbody.parentElement.querySelectorAll('thead th');
+        if (headCells.length) {
+          textData.push(Array.from(headCells).map(th => th.innerText.replace(/[\n\r]+/g, ' ').trim()).join('\t'));
+        }
+      }
       const rows = tbody.querySelectorAll('tr');
 
       rows.forEach(row => {
