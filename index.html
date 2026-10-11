@@ -3441,7 +3441,11 @@
 
     // ※メルカリ売上の「最新金額」は累積額ではなく現在残高(item.current)を表示する。
     //   累積額のうち出金分は他の資産へ移動・再投資済みのため、全資産表の最新金額には含めない。
-    //   (損益額の列は従来どおり calcSideJobProfitLoss の年間累積込みの値を表示)
+    //   損益額も最新金額(残高)に合わせて「最新金額 − 累積投資額」で算出する。
+    // ※キー名(item_xxxxx等)ではなく項目名で判定するため、UIから追加・再作成した項目でも正しく反映される
+    function isMercariBalanceItem(item) {
+      return item.category === '副業状況' && (item.name || '').includes('メルカリ');
+    }
     // PAYPAY銀行 / 楽天銀行 / りそな銀行: 累積投資額を常に最新金額と同額に自動同期し、損益額(%)を常に±0にする
     // ※キー名ではなく項目名で判定するため、UIから追加・再作成した項目でも正しく反映される
     function isAutoSyncBankItem(item) {
@@ -3456,7 +3460,9 @@
         ? (item.current || 0)
         : (item.cumulativeInvestment || 0);
       let profitVal;
-      if (item.category === '副業状況') {
+      if (isMercariBalanceItem(item)) {
+        profitVal = (item.current || 0) - cumulativeInv;
+      } else if (item.category === '副業状況') {
         profitVal = calcSideJobProfitLoss(item).diffVal;
       } else {
         profitVal = (item.current || 0) - cumulativeInv;
