@@ -4509,12 +4509,11 @@
         const item = appData[key];
         const { diffVal, diffPct } = calcSideJobProfitLoss(item);
 
-        // 月間変動額は「収益・損失」区分の履歴のみを合算し、入金・出金による評価額の増減は含めない
-        const monthlyChange = calcMonthlySideJobProfitLoss(item, currentMonthKey);
-        const changeSign = monthlyChange >= 0 ? '+' : '-';
-        const displayAmount = `${changeSign}¥${Math.abs(monthlyChange).toLocaleString()}`;
+        // 今月の損益ではなく、現在の残高(評価残高)を表示する
+        const currentBalance = item.current || 0;
+        const displayAmount = `${currentBalance < 0 ? '-' : ''}¥${Math.abs(currentBalance).toLocaleString()}`;
         // プラス(0含む)は青、マイナスは赤で表示
-        const monthlyColor = monthlyChange < 0 ? 'var(--accent-red)' : '#2563eb';
+        const monthlyColor = currentBalance < 0 ? 'var(--accent-red)' : '#2563eb';
         
         const tile = document.createElement('div');
         tile.className = 'info-tile';
