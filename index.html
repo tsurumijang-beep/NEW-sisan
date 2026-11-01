@@ -4244,8 +4244,11 @@
         }
       }
 
-      const totalProfitVal = sumCurrent - sumCumulative;
-      const totalProfitPct = sumCumulative !== 0 ? (totalProfitVal / sumCumulative) * 100 : 0;
+      // ヘッダー総資産の損益額(%)は「全資産の推移(総資産)」・全資産表の合計行と同じ計算式に統一
+      // (銀行預金の自動同期・副業状況のannualProfitLoss込み計算を反映)
+      const overallSummary = calcOverallProfitSummary();
+      const totalProfitVal = overallSummary.sumProfit;
+      const totalProfitPct = overallSummary.sumProfitPct;
 
       const totalAssetsStr = isHeaderPrivate ? '¥*,***,***' : `¥${sumCurrent.toLocaleString()}`;
       const sideIncomeSign = sideJobTotal < 0 ? '-' : '+';
